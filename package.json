@@ -1,0 +1,30 @@
+{
+  "name": "allexo-mdf-calculator",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy:pages": "vite build && wrangler pages deploy dist --project-name=allexo-mdf-calculator",
+    "optimize:work-images": "node scripts/generate-work-images.mjs",
+    "generate:work-images": "node scripts/generate-work-images.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "sharp": "^0.34.5",
+    "vite": "^6.0.7",
+    "wrangler": "^4.87.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "workerd"
+    ]
+  }
+}

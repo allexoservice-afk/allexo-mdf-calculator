@@ -1,0 +1,445 @@
+<script setup>
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useLocale } from '../i18n/useLocale.js'
+
+const COUNT = 15
+
+/** Публічні URL (файли в `public/images/works/`). */
+const ALL_THUMB = Array.from({ length: COUNT }, (_, i) => `/images/works/work${i + 1}-thumb.webp`)
+const ALL_LARGE = Array.from({ length: COUNT }, (_, i) => `/images/works/work${i + 1}-large.webp`)
+
+const { t } = useLocale()
+
+/** @type {import('vue').Ref<string[]>} */
+const brokenThumbs = ref([])
+
+/** @param {string} thumbUrl */
+function onThumbError(thumbUrl) {
+  if (!brokenThumbs.value.includes(thumbUrl)) {
+    brokenThumbs.value = [...brokenThumbs.value, thumbUrl]
+  }
+}
+
+/** Пари thumb + large для видимих мініатюр (large не завантажується, поки не відкрито lightbox). */
+const visiblePairs = computed(() => {
+  const out = []
+  for (let i = 0; i < COUNT; i++) {
+    const thumb = ALL_THUMB[i]
+    if (!brokenThumbs.value.includes(thumb)) {
+      out.push({ thumb, large: ALL_LARGE[i] })
+    }
+  }
+  return out
+})
+
+/** @type {import('vue').Ref<number | null>} */
+const lightboxIndex = ref(null)
+
+/** Велике зображення лише коли lightbox відкритий (img у DOM тільки тоді). */
+const lightboxLargeSrc = computed(() => {
+  const i = lightboxIndex.value
+  if (i == null) return null
+  return visiblePairs.value[i]?.large ?? null
+})
+
+const canNavigate = computed(() => visiblePairs.value.length > 1)
+
+/** @param {number} idx індекс у visiblePairs */
+function openLightbox(idx) {
+  lightboxIndex.value = idx
+}
+
+function closeLightbox() {
+  lightboxIndex.value = null
+}
+
+function goPrev() {
+  const n = visiblePairs.value.length
+  if (n <= 1 || lightboxIndex.value == null) return
+  lightboxIndex.value = (lightboxIndex.value - 1 + n) % n
+}
+
+function goNext() {
+  const n = visiblePairs.value.length
+  if (n <= 1 || lightboxIndex.value == null) return
+  lightboxIndex.value = (lightboxIndex.value + 1) % n
+}
+
+/** @param {MouseEvent} e */
+function onBackdropClick(e) {
+  e.stopPropagation()
+  closeLightbox()
+}
+
+/** @param {MouseEvent} e */
+function onCloseButtonClick(e) {
+  e.stopPropagation()
+  closeLightbox()
+}
+
+/** @param {MouseEvent} e */
+function onPrevArrowClick(e) {
+  e.stopPropagation()
+  goPrev()
+}
+
+/** @param {MouseEvent} e */
+function onNextArrowClick(e) {
+  e.stopPropagation()
+  goNext()
+}
+
+/** @param {MouseEvent} e */
+function onLargeImageClick(e) {
+  e.stopPropagation()
+  if (canNavigate.value) goNext()
+}
+
+/** @type {import('vue').Ref<number | null>} */
+const touchStartX = ref(null)
+
+/** @param {TouchEvent} e */
+function onTouchStart(e) {
+  touchStartX.value = e.changedTouches[0]?.clientX ?? null
+}
+
+/** @param {TouchEvent} e */
+function onTouchEnd(e) {
+  const start = touchStartX.value
+  touchStartX.value = null
+  if (start == null || !canNavigate.value) return
+  const end = e.changedTouches[0]?.clientX
+  if (end == null) return
+  const d = end - start
+  if (Math.abs(d) < 56) return
+  if (d < 0) goNext()
+  else goPrev()
+}
+
+/** @param {KeyboardEvent} e */
+function onKeydown(e) {
+  if (e.key === 'Escape') closeLightbox()
+  else if (e.key === 'ArrowLeft') goPrev()
+  else if (e.key === 'ArrowRight') goNext()
+}
+
+watch(lightboxLargeSrc, (src) => {
+  if (typeof document === 'undefined') return
+  if (src) {
+    document.addEventListener('keydown', onKeydown)
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.removeEventListener('keydown', onKeydown)
+    document.body.style.overflow = ''
+  }
+})
+
+watch(visiblePairs, (pairs) => {
+  const i = lightboxIndex.value
+  if (i != null && (pairs.length === 0 || i >= pairs.length)) closeLightbox()
+})
+
+onBeforeUnmount(() => {
+  if (typeof document === 'undefined') return
+  document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
+</script>
+
+<template>
+  <section
+    v-if="visiblePairs.length"
+    class="works"
+    aria-labelledby="works-title"
+  >
+    <h2 id="works-title" class="works__title">{{ t('works.title') }}</h2>
+    <p class="works__subtitle">{{ t('works.subtitle') }}</p>
+
+    <div class="works__strip">
+      <button
+        v-for="(pair, idx) in visiblePairs"
+        :key="pair.thumb"
+        type="button"
+        class="works__thumb"
+        :aria-label="`${t('works.openPreview')} ${idx + 1}`"
+        @click="openLightbox(idx)"
+      >
+        <img
+          :src="pair.thumb"
+          alt=""
+          width="320"
+          height="240"
+          loading="lazy"
+          decoding="async"
+          fetchpriority="low"
+          @error="onThumbError(pair.thumb)"
+        />
+      </button>
+    </div>
+
+    <Teleport to="body">
+      <div
+        v-if="lightboxLargeSrc"
+        class="lightbox"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('works.lightboxAria')"
+      >
+        <div
+          class="lightbox__backdrop"
+          @click="onBackdropClick"
+          @touchstart.passive="onTouchStart"
+          @touchend.passive="onTouchEnd"
+        />
+
+        <button
+          type="button"
+          class="lightbox__close"
+          :aria-label="t('works.closeLightbox')"
+          @click="onCloseButtonClick"
+        >
+          ❌
+        </button>
+        <button
+          v-if="canNavigate"
+          type="button"
+          class="lightbox__nav lightbox__nav--prev"
+          :aria-label="t('works.prevPhoto')"
+          @click="onPrevArrowClick"
+        >
+          ←
+        </button>
+        <button
+          v-if="canNavigate"
+          type="button"
+          class="lightbox__nav lightbox__nav--next"
+          :aria-label="t('works.nextPhoto')"
+          @click="onNextArrowClick"
+        >
+          →
+        </button>
+
+        <div
+          class="lightbox__stage"
+          @click.stop
+          @touchstart.passive="onTouchStart"
+          @touchend.passive="onTouchEnd"
+        >
+          <img
+            :key="lightboxLargeSrc"
+            class="lightbox__img"
+            :class="{ 'lightbox__img--no-nav': !canNavigate }"
+            :src="lightboxLargeSrc"
+            alt=""
+            width="1600"
+            height="1100"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+            @click="onLargeImageClick"
+          />
+          <p v-if="canNavigate" class="lightbox__hint">{{ t('works.lightboxPhotoHint') }}</p>
+        </div>
+      </div>
+    </Teleport>
+  </section>
+</template>
+
+<style scoped>
+.works {
+  margin: 0 0 1.2rem;
+}
+
+.works__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--allexo-teal);
+  letter-spacing: -0.02em;
+}
+
+.works__subtitle {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  color: var(--allexo-muted);
+  line-height: 1.4;
+  max-width: 34rem;
+}
+
+.works__strip {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 3px 0 6px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-color: var(--allexo-border) transparent;
+}
+
+.works__strip::-webkit-scrollbar {
+  height: 5px;
+}
+
+.works__strip::-webkit-scrollbar-thumb {
+  background: var(--allexo-border);
+  border-radius: 999px;
+}
+
+.works__thumb {
+  display: block;
+  width: 160px;
+  height: 110px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.works__thumb:hover {
+  transform: scale(1.03);
+}
+
+.works__thumb:focus-visible {
+  outline: 2px solid var(--allexo-teal);
+  outline-offset: 2px;
+}
+
+.works__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  pointer-events: none;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+}
+
+.lightbox__stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: min(90vw, 960px);
+  pointer-events: auto;
+}
+
+.lightbox__img {
+  max-width: 90vw;
+  max-height: min(78vh, 820px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.lightbox__img--no-nav {
+  cursor: default;
+}
+
+.lightbox__hint {
+  margin: 0;
+  padding: 0 0.5rem;
+  max-width: 22rem;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.lightbox__close {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--allexo-text);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s ease;
+}
+
+.lightbox__close:hover {
+  background: #fff;
+}
+
+.lightbox__nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--allexo-text);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s ease;
+}
+
+.lightbox__nav:hover {
+  background: #fff;
+}
+
+.lightbox__nav--prev {
+  left: 0.75rem;
+}
+
+.lightbox__nav--next {
+  right: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .lightbox__nav--prev {
+    left: 1rem;
+  }
+
+  .lightbox__nav--next {
+    right: 1rem;
+  }
+}
+</style>

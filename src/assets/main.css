@@ -1,0 +1,55 @@
+:root {
+  --allexo-teal: #0f3d3e;
+  --allexo-teal-light: #1a5c5e;
+  --allexo-accent: #c4a35a;
+  --allexo-accent-soft: #e8dcc0;
+  --allexo-bg: #f6f8f8;
+  --allexo-surface: #ffffff;
+  --allexo-text: #1c2424;
+  --allexo-muted: #5c6b6b;
+  --allexo-border: #d9e3e3;
+  --allexo-danger: #b42318;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(15, 61, 62, 0.08);
+  --shadow-md: 0 8px 24px rgba(15, 61, 62, 0.1);
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--allexo-text);
+  background-color: var(--allexo-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+#app {
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+button {
+  font-family: inherit;
+}
+
+input {
+  font-family: inherit;
+}

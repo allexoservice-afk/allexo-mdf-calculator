@@ -1,0 +1,5 @@
+# Cloudflare Pages (статичний сайт після `npm run build` → папка `dist`).
+# Ім’я проєкту має збігатися з тим, що в `package.json` → скрипт `deploy:pages`.
+name = "allexo-mdf-calculator"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "dist"
