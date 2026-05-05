@@ -35,34 +35,87 @@ const visiblePairs = computed(() => {
 /** @type {import('vue').Ref<number | null>} */
 const lightboxIndex = ref(null)
 
+const photoCount = computed(() => visiblePairs.value.length)
+
+/**
+ * Фіксуємо на момент відкриття лайтбоксу: чи додаємо хвіст-CTA в цьому відкритті.
+ * Важливо: значення не змінюється під час поточного відкриття, інакше індекс CTA “зламається”.
+ */
+const includeCtaForOpen = ref(false)
+
+const slideCount = computed(() => photoCount.value + (includeCtaForOpen.value ? 1 : 0))
+
+const lightboxOpen = computed(() => lightboxIndex.value != null)
+
+const onCtaSlide = computed(() => {
+  if (lightboxIndex.value == null) return false
+  if (!includeCtaForOpen.value) return false
+  return lightboxIndex.value === photoCount.value
+})
+
 /** Велике зображення лише коли lightbox відкритий (img у DOM тільки тоді). */
 const lightboxLargeSrc = computed(() => {
   const i = lightboxIndex.value
-  if (i == null) return null
+  if (i == null || onCtaSlide.value) return null
   return visiblePairs.value[i]?.large ?? null
 })
 
-const canNavigate = computed(() => visiblePairs.value.length > 1)
+const lightboxStageKey = computed(() => {
+  if (lightboxIndex.value == null) return 'closed'
+  if (onCtaSlide.value) return 'cta'
+  return lightboxLargeSrc.value ?? `photo-${lightboxIndex.value}`
+})
+
+const canNavigate = computed(() => slideCount.value > 1)
 
 /** @param {number} idx індекс у visiblePairs */
 function openLightbox(idx) {
+  includeCtaForOpen.value = photoCount.value > 0
   lightboxIndex.value = idx
 }
 
 function closeLightbox() {
   lightboxIndex.value = null
+  includeCtaForOpen.value = false
+}
+
+function goToCalculatorFromCta() {
+  closeLightbox()
+  const el = document.getElementById('calculator')
+  if (!el) return
+  // Let lightbox unmount first to avoid jank.
+  window.setTimeout(() => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, 0)
 }
 
 function goPrev() {
-  const n = visiblePairs.value.length
+  const n = slideCount.value
   if (n <= 1 || lightboxIndex.value == null) return
   lightboxIndex.value = (lightboxIndex.value - 1 + n) % n
 }
 
 function goNext() {
-  const n = visiblePairs.value.length
-  if (n <= 1 || lightboxIndex.value == null) return
-  lightboxIndex.value = (lightboxIndex.value + 1) % n
+  const nPhotos = photoCount.value
+  const i = lightboxIndex.value
+  if (i == null) return
+
+  // Якщо є CTA-слайд: з останнього фото переходимо на CTA, з CTA — на перше фото.
+  if (includeCtaForOpen.value) {
+    if (i === nPhotos - 1) {
+      lightboxIndex.value = nPhotos
+      return
+    }
+    if (i === nPhotos) {
+      lightboxIndex.value = 0
+      return
+    }
+    lightboxIndex.value = i + 1
+    return
+  }
+
+  if (nPhotos <= 1) return
+  lightboxIndex.value = (i + 1) % nPhotos
 }
 
 /** @param {MouseEvent} e */
@@ -92,7 +145,7 @@ function onNextArrowClick(e) {
 /** @param {MouseEvent} e */
 function onLargeImageClick(e) {
   e.stopPropagation()
-  if (canNavigate.value) goNext()
+  if (canNavigate.value && !onCtaSlide.value) goNext()
 }
 
 /** @type {import('vue').Ref<number | null>} */
@@ -123,9 +176,9 @@ function onKeydown(e) {
   else if (e.key === 'ArrowRight') goNext()
 }
 
-watch(lightboxLargeSrc, (src) => {
+watch(lightboxOpen, (open) => {
   if (typeof document === 'undefined') return
-  if (src) {
+  if (open) {
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
   } else {
@@ -136,7 +189,15 @@ watch(lightboxLargeSrc, (src) => {
 
 watch(visiblePairs, (pairs) => {
   const i = lightboxIndex.value
-  if (i != null && (pairs.length === 0 || i >= pairs.length)) closeLightbox()
+  if (i == null) return
+  if (pairs.length === 0) {
+    closeLightbox()
+    return
+  }
+  // Якщо індекс вказує на фото, якого вже немає — закриваємо.
+  if (i < pairs.length) return
+  if (includeCtaForOpen.value && i === pairs.length) return
+  closeLightbox()
 })
 
 onBeforeUnmount(() => {
@@ -179,7 +240,7 @@ onBeforeUnmount(() => {
 
     <Teleport to="body">
       <div
-        v-if="lightboxLargeSrc"
+        v-if="lightboxOpen"
         class="lightbox"
         role="dialog"
         aria-modal="true"
@@ -225,20 +286,32 @@ onBeforeUnmount(() => {
           @touchstart.passive="onTouchStart"
           @touchend.passive="onTouchEnd"
         >
-          <img
-            :key="lightboxLargeSrc"
-            class="lightbox__img"
-            :class="{ 'lightbox__img--no-nav': !canNavigate }"
-            :src="lightboxLargeSrc"
-            alt=""
-            width="1600"
-            height="1100"
-            loading="eager"
-            decoding="async"
-            fetchpriority="high"
-            @click="onLargeImageClick"
-          />
-          <p v-if="canNavigate" class="lightbox__hint">{{ t('works.lightboxPhotoHint') }}</p>
+          <div :key="lightboxStageKey" class="lightbox__stage-inner">
+            <img
+              v-if="!onCtaSlide && lightboxLargeSrc"
+              class="lightbox__img"
+              :class="{ 'lightbox__img--no-nav': !canNavigate }"
+              :src="lightboxLargeSrc"
+              alt=""
+              width="1600"
+              height="1100"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              @click="onLargeImageClick"
+            />
+
+            <div v-else-if="onCtaSlide" class="lightbox__cta-slide">
+              <p class="lightbox__cta-title">{{ t('works.ctaTitle') }}</p>
+              <button type="button" class="lightbox__cta-btn" @click="goToCalculatorFromCta">
+                {{ t('app.calcCta') }}
+              </button>
+            </div>
+
+            <p v-if="canNavigate && !onCtaSlide" class="lightbox__hint">
+              {{ t('works.lightboxPhotoHint') }}
+            </p>
+          </div>
         </div>
       </div>
     </Teleport>
@@ -349,6 +422,15 @@ onBeforeUnmount(() => {
   pointer-events: auto;
 }
 
+.lightbox__stage-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  animation: lightboxStageIn 180ms ease-out;
+}
+
 .lightbox__img {
   max-width: 90vw;
   max-height: min(78vh, 820px);
@@ -431,6 +513,61 @@ onBeforeUnmount(() => {
 
 .lightbox__nav--next {
   right: 0.75rem;
+}
+
+.lightbox__cta-slide {
+  width: min(92vw, 720px);
+  max-width: 90vw;
+  min-height: min(52vh, 520px);
+  max-height: min(78vh, 820px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.25rem 1.1rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 250, 249, 0.96));
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.lightbox__cta-title {
+  margin: 0;
+  max-width: 26rem;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--allexo-text);
+  line-height: 1.25;
+}
+
+.lightbox__cta-btn {
+  min-height: 2.85rem;
+  padding: 0.65rem 1.05rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--allexo-border);
+  background: var(--allexo-teal);
+  color: #fff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox__cta-btn:hover {
+  background: var(--allexo-teal-light);
+}
+
+@keyframes lightboxStageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (min-width: 640px) {

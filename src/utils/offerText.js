@@ -5,6 +5,7 @@ import {
   quoteRollerBoxOnlyRoundedEuros,
   quoteWindowHours,
   quoteWindowRoundedEuros,
+  quoteWindowsillAddonRoundedEuros,
   quoteWindowsillOnlyHours,
   quoteWindowsillOnlyRoundedEuros,
 } from '../pricing/windowQuote.js'
@@ -37,7 +38,7 @@ function windowsForLine(line) {
         sillDepthCm: line.sillDepthCm,
         windowsillDepthMm: line.windowsillDepthMm,
         depthCategory: line.depthCategory,
-        windowsillCategory: line.windowsillCategory,
+        windowsillCategory: null,
         rollerCategory: line.rollerCategory,
         profileLengthM: line.profileLengthM,
         quantity: line.quantity,
@@ -76,9 +77,7 @@ function windowPriceEuros(line, win) {
     /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
     ty.hasSill,
     ty.hasRoller,
-    win.windowsillCategory != null
-      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.windowsillCategory)
-      : null,
+    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
     win.rollerCategory != null
       ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
       : null,
@@ -151,9 +150,16 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
         parts.push(
           `- ${translate(locale, 'offer.depth')} ${sizeCategoryLabel(locale, String(win.depthCategory))}`,
         )
-        parts.push(
-          `- ${translate(locale, 'offer.sill')} ${t.hasSill ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`,
-        )
+        parts.push(`- ${translate(locale, 'offer.sill')} ${t.hasSill ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`)
+        if (t.hasSill) {
+          const dCm = typeof win.windowsillDepthMm === 'number' ? Math.round(Number(win.windowsillDepthMm) / 10) : null
+          const wSillCm = wCm + 15
+          parts.push(`- ${translate(locale, 'offer.sillWidthLine').replace('{n}', String(wSillCm))}`)
+          if (dCm != null) {
+            parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dCm))}`)
+          }
+          parts.push(`- ${translate(locale, 'offer.sillPriceLine')} ${formatEuroExclVat(quoteWindowsillAddonRoundedEuros(Number(win.widthMm), win.windowsillDepthMm), locale)}`)
+        }
         parts.push(
           `- ${translate(locale, 'offer.roller')} ${t.hasRoller ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`,
         )

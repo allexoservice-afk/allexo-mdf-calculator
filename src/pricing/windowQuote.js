@@ -33,12 +33,8 @@ const _INSULATION = /** @type {Record<SizeCategoryId, number>} */ ({
   custom: 90,
 })
 
-const _WINDOWSILL_COEFF = /** @type {Record<SizeCategoryId, number>} */ ({
-  small: 1.15,
-  medium: 1.25,
-  large: 1.35,
-  custom: 1.5,
-})
+const _WINDOWSILL_WIDTH_ADDON_MM = 150
+const _WINDOWSILL_BASE_COEFF = 1.3
 
 const _DEPTH_HOURS = /** @type {Record<SizeCategoryId, number>} */ ({
   small: 0,
@@ -64,6 +60,32 @@ function _pick(map, key) {
   return map[key] ?? map.small
 }
 
+/** @param {number | null | undefined} windowsillDepthMm */
+function _windowsillExtraPerMeter(windowsillDepthMm) {
+  // +5 €/m for every +5 cm depth step starting from 15 cm
+  const depthMm = Number(windowsillDepthMm)
+  if (!Number.isFinite(depthMm)) return 0
+  const depthCm = Math.round(depthMm / 10)
+  const clamped = Math.min(40, Math.max(15, depthCm))
+  const steps = Math.floor((clamped - 15) / 5)
+  return steps * 5
+}
+
+/**
+ * Ціна підвіконника (окремо), € без ПДВ, округлення вгору до 5€.
+ * - ширина = widthMm + 15 см (для підвіконника разом з вікном)
+ * - коефіцієнт завжди 1.5
+ * - глибина додає +5 €/м за кожні +5 см (від 15 см)
+ * @param {number} windowWidthMm
+ * @param {number | null | undefined} windowsillDepthMm
+ */
+export function quoteWindowsillAddonRoundedEuros(windowWidthMm, windowsillDepthMm) {
+  if (!Number.isFinite(windowWidthMm) || windowWidthMm <= 0) return 0
+  const widthM = (windowWidthMm + _WINDOWSILL_WIDTH_ADDON_MM) / 1000
+  const perM = _BASE_PER_M * _WINDOWSILL_BASE_COEFF + _windowsillExtraPerMeter(windowsillDepthMm)
+  return _roundUpToFiveEuros(widthM * perM)
+}
+
 /**
  * Ціна за вікно в €, округлена вгору до кратних 5€.
  */
@@ -73,7 +95,7 @@ export function quoteWindowRoundedEuros(
   depthCategory,
   hasSill,
   hasRoller,
-  windowsillCategory,
+  windowsillDepthMm,
   rollerCategory,
 ) {
   const widthM = widthMm / 1000
@@ -93,8 +115,8 @@ export function quoteWindowRoundedEuros(
   }
 
   if (hasSill) {
-    const ws = windowsillCategory ?? 'small'
-    price *= _pick(_WINDOWSILL_COEFF, ws)
+    // підвіконник рахується окремо і додається до ціни відкосів
+    price += quoteWindowsillAddonRoundedEuros(widthMm, windowsillDepthMm)
   }
 
   return _roundUpToFiveEuros(price)
@@ -128,45 +150,16 @@ export function quoteRollerBoxOnlyRoundedEuros(widthMm, rollerBoxHeightMm) {
 }
 
 /**
- * Коефіцієнт підвіконника для типу «лише підвіконник» за фіксованою глибиною (15–40 см).
- * @param {number} windowsillDepthMm
- */
-function _windowsillStandaloneCoeff(windowsillDepthMm) {
-  const d = Math.round(Number(windowsillDepthMm))
-  switch (d) {
-    case 150:
-    case 200:
-      return 1.15
-    case 250:
-    case 300:
-      return 1.25
-    case 350:
-    case 400:
-      return 1.35
-    default:
-      return _pick(_WINDOWSILL_COEFF, mmToSizeCategory(windowsillDepthMm))
-  }
-}
-
-/** Мінімальна ціна за один підвіконник (лише тип «Підвіконник»), € без ПДВ. */
-const _WINDOWSILL_STANDALONE_MIN_EUR = 80
-
-/**
  * Ціна лише підвіконника, € (без ПДВ), за шириною в см і коефіцієнтом глибини.
- * widthCm = widthMm / 10, widthM = widthCm / 100, basePrice = widthM × 51, calculated = basePrice × коеф. глибини;
- * не менше `_WINDOWSILL_STANDALONE_MIN_EUR` €, далі округлення вгору до 5€.
+ * widthCm = widthMm / 10, widthM = widthCm / 100, price = widthM × 51 × 1.5 (+ надбавка за глибину).
  * @param {number} widthMm ширина в мм (поле «Ширина», см × 10)
- * @param {number} windowsillDepthMm глибина в мм (лише коефіцієнт 15–40 см)
+ * @param {number} windowsillDepthMm глибина в мм (15–40 см, крок 5 см)
  */
 export function quoteWindowsillOnlyRoundedEuros(widthMm, windowsillDepthMm) {
   if (!Number.isFinite(widthMm) || widthMm <= 0) return 0
-  const widthCm = widthMm / 10
-  const widthM = widthCm / 100
-  const basePrice = widthM * _BASE_PER_M
-  const windowsillCoefficient = _windowsillStandaloneCoeff(windowsillDepthMm)
-  const calculatedPrice = basePrice * windowsillCoefficient
-  const floored = Math.max(calculatedPrice, _WINDOWSILL_STANDALONE_MIN_EUR)
-  return _roundUpToFiveEuros(floored)
+  const widthM = widthMm / 1000
+  const perM = _BASE_PER_M * _WINDOWSILL_BASE_COEFF + _windowsillExtraPerMeter(windowsillDepthMm)
+  return _roundUpToFiveEuros(widthM * perM)
 }
 
 /** Орієнтовний час на один «короб ролети» (год). */

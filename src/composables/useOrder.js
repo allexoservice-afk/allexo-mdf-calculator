@@ -16,7 +16,7 @@ const STORAGE_KEY = 'allexo-mdf-order'
  * @property {number} widthMm
  * @property {number} heightMm
  * @property {SizeCategoryId} depthCategory
- * @property {SizeCategoryId | null} windowsillCategory
+ * @property {number | null | undefined} windowsillDepthMm
  * @property {SizeCategoryId | null} rollerCategory
  * @property {number} profileLengthM
  * @property {number} quantity
@@ -68,7 +68,7 @@ function migrateLine(line) {
         sillDepthCm: l.sillDepthCm,
         windowsillDepthMm: l.windowsillDepthMm,
         depthCategory: l.depthCategory,
-        windowsillCategory: l.windowsillCategory,
+        windowsillCategory: null,
         rollerCategory: l.rollerCategory,
         profileLengthM: l.profileLengthM,
       },

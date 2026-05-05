@@ -157,12 +157,14 @@ export function normalizeStoredWindow(raw, typeId) {
     depthCategory = mmToSizeCategory(o.slopeDepthCm * 10)
   }
 
-  /** @type {SizeCategoryId | null} */
-  let windowsillCategory = null
-  if (typeof o.windowsillCategory === 'string' && isValidSizeCategory(o.windowsillCategory)) {
-    windowsillCategory = /** @type {SizeCategoryId} */ (o.windowsillCategory)
-  } else if (typeof o.sillWidthCm === 'number') {
-    windowsillCategory = mmToSizeCategory(o.sillWidthCm * 10)
+  /** @type {number | null} */
+  let windowsillDepthMm = null
+  if (typeof o.windowsillDepthMm === 'number' && Number.isFinite(o.windowsillDepthMm)) {
+    windowsillDepthMm = o.windowsillDepthMm
+  } else if (typeof o.sillDepthCm === 'number' && Number.isFinite(o.sillDepthCm)) {
+    windowsillDepthMm = o.sillDepthCm * 10
+  } else if (typeof o.windowsillDepthCm === 'number' && Number.isFinite(o.windowsillDepthCm)) {
+    windowsillDepthMm = o.windowsillDepthCm * 10
   }
 
   /** @type {SizeCategoryId | null} */
@@ -184,7 +186,7 @@ export function normalizeStoredWindow(raw, typeId) {
     widthMm,
     heightMm,
     depthCategory,
-    windowsillCategory,
+    windowsillDepthMm,
     rollerCategory,
     profileLengthM,
     quantity,

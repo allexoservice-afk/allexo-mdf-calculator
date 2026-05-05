@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { CALCULATOR_TYPES } from './constants/calculatorTypes.js'
 import { useOrder } from './composables/useOrder.js'
 import { useLocale } from './i18n/useLocale.js'
@@ -11,6 +11,15 @@ import OrderSummary from './components/OrderSummary.vue'
 import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
 import { LOCALE_SWITCH_ORDER } from './i18n/translations.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
+import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
+import {
+  quoteRollerBoxOnlyRoundedEuros,
+  quoteWindowRoundedEuros,
+  quoteWindowsillOnlyRoundedEuros,
+} from './pricing/windowQuote.js'
+import { formatEuroExclVat } from './utils/priceDisplay.js'
+import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './utils/windowDimensions.js'
+import { getTypeById } from './constants/calculatorTypes.js'
 
 const { lines, addLine, removeLine, clearOrder } = useOrder()
 const { locale, setLocale, t } = useLocale()
@@ -40,6 +49,71 @@ function onSubmit(payload) {
 function pickLang(code) {
   setLocale(code)
 }
+
+function scrollToSummary() {
+  const el = document.getElementById('summary')
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/** @param {Record<string, unknown>} line */
+function windowsForLine(line) {
+  const tid = typeof line.typeId === 'string' ? line.typeId : undefined
+  if (Array.isArray(line.windows) && line.windows.length > 0) {
+    return line.windows.map((w) => normalizeStoredWindow(w, tid)).filter(Boolean)
+  }
+  return []
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowPriceEuros(line, win) {
+  if (!win) return 0
+  const tid = line.typeId
+  if (tid === 'roller_box') {
+    const wm = Number(win.widthMm)
+    const rh = Number(win.rollerBoxHeightMm ?? win.heightMm)
+    if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
+    return quoteRollerBoxOnlyRoundedEuros(wm, rh)
+  }
+  if (tid === 'windowsill') {
+    const wm = Number(win.widthMm)
+    const d = Number(win.windowsillDepthMm ?? win.heightMm)
+    if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
+    return quoteWindowsillOnlyRoundedEuros(wm, d)
+  }
+  const ty = getTypeById(tid)
+  if (!ty) return 0
+  const wm = Number(win.widthMm)
+  const hm = Number(win.heightMm)
+  if (!windowEligibleForAutoQuote(wm, hm)) return 0
+  return quoteWindowRoundedEuros(
+    wm,
+    hm,
+    /** @type {import('./constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
+    ty.hasSill,
+    ty.hasRoller,
+    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
+    win.rollerCategory != null
+      ? /** @type {import('./constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
+      : null,
+  )
+}
+
+/** Підсумок робіт без виїзду (той самий підхід, що й у summary). */
+const orderTotalEuros = computed(() =>
+  lines.value.reduce((sum, line) => {
+    const L = /** @type {Record<string, unknown>} */ (line)
+    return (
+      sum +
+      windowsForLine(L).reduce(
+        (s, w) => s + windowPriceEuros(L, w) * normalizeWindowQuantity(w.quantity),
+        0,
+      )
+    )
+  }, 0),
+)
+
+const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value.length > 0)
 </script>
 
 <template>
@@ -66,6 +140,11 @@ function pickLang(code) {
     </header>
 
     <main class="main">
+      <section class="about" :aria-label="t('about.aria')">
+        <p class="about__line">{{ t('about.line1') }}</p>
+        <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
+      </section>
+
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
           <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
@@ -78,24 +157,35 @@ function pickLang(code) {
         </li>
       </ul>
 
-      <p class="intro">
-        {{ t('app.intro') }}
-      </p>
-
       <WorksGallery />
 
-      <div class="grid">
-        <CalculatorCard
-          v-for="ty in CALCULATOR_TYPES"
-          :key="ty.id"
-          :type-id="ty.id"
-          :visual="ty.visual"
-          @select="openForm(ty.id)"
-        />
-      </div>
+      <section id="calculator" class="calc">
+        <div class="grid">
+          <CalculatorCard
+            v-for="ty in CALCULATOR_TYPES"
+            :key="ty.id"
+            :type-id="ty.id"
+            :visual="ty.visual"
+            @select="openForm(ty.id)"
+          />
+        </div>
 
-      <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
+        <div id="summary">
+          <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
+        </div>
+      </section>
     </main>
+
+    <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
+      <div class="sticky-total__inner">
+        <p class="sticky-total__sum">
+          {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
+        </p>
+        <button type="button" class="sticky-total__btn" @click="scrollToSummary">
+          {{ t('summary.title') }}
+        </button>
+      </div>
+    </div>
 
     <footer class="footer">
       <p class="footer__copy">{{ t('app.footer') }}</p>
@@ -221,6 +311,10 @@ function pickLang(code) {
   padding: 1.25rem max(1rem, env(safe-area-inset-left)) 2rem max(1rem, env(safe-area-inset-right));
 }
 
+.app:has(.sticky-total) .main {
+  padding-bottom: 6.25rem;
+}
+
 @media (min-width: 640px) {
   .main {
     padding: 1.5rem 1.25rem 2.5rem;
@@ -257,11 +351,89 @@ function pickLang(code) {
   margin-right: 0.25rem;
 }
 
-.intro {
-  margin: 0 0 1.25rem;
-  color: var(--allexo-muted);
-  font-size: 0.95rem;
+.about {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1rem;
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius-lg);
+  background: var(--allexo-surface);
+  box-shadow: var(--shadow);
   max-width: 40rem;
+}
+
+.about__line {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--allexo-teal);
+  line-height: 1.35;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.about__line + .about__line {
+  margin-top: 0.35rem;
+}
+
+.about__line--secondary {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--allexo-muted);
+}
+
+.calc {
+  margin-top: 1.25rem;
+}
+
+.sticky-total {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 40;
+  padding: 0.65rem max(1rem, env(safe-area-inset-left)) max(0.65rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-right));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--allexo-border);
+}
+
+.sticky-total__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sticky-total__sum {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--allexo-teal);
+}
+
+.sticky-total__btn {
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--allexo-border);
+  background: var(--allexo-teal);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sticky-total__btn:hover {
+  background: var(--allexo-teal-light);
+}
+
+@media (max-width: 430px) {
+  .sticky-total__sum {
+    font-size: 0.9rem;
+  }
 }
 
 .grid {

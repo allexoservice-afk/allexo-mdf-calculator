@@ -43,7 +43,6 @@ function newWindowRow() {
     sillDepthCm: 15,
     quantity: 1,
     depthCategory: 'small',
-    windowsillCategory: 'small',
     rollerCategory: 'small',
   })
 }
@@ -53,6 +52,7 @@ const windows = ref([newWindowRow()])
 const currentType = computed(() => (props.typeId ? getTypeById(props.typeId) : null))
 
 const isSimplifiedLine = computed(() => isSimplifiedProductLine(props.typeId))
+const isWithSillType = computed(() => props.typeId === 'with_sill')
 
 /** Явні залежності для live-ціни: зміна ширини / глибини / кількості завжди інвалідує прев’ю. */
 const orderFormPriceDeps = computed(() =>
@@ -66,7 +66,6 @@ const orderFormPriceDeps = computed(() =>
         w.rollerBoxHeightCm,
         w.quantity,
         w.depthCategory,
-        w.windowsillCategory,
         w.rollerCategory,
       ].join('\u001f'),
     )
@@ -76,6 +75,28 @@ const orderFormPriceDeps = computed(() =>
 const formTitle = computed(() => (props.typeId ? t(`types.${props.typeId}.title`) : ''))
 const formHint = computed(() => (props.typeId ? t(`types.${props.typeId}.hint`) : ''))
 const formHintRoller = computed(() => (props.typeId ? t(`types.${props.typeId}.hintRoller`) : ''))
+
+// Lock background scroll while modal is open.
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (typeof document === 'undefined') return
+    const root = document.documentElement
+    const body = document.body
+    if (!root || !body) return
+
+    if (isOpen) {
+      root.style.overflow = 'hidden'
+      body.style.overflow = 'hidden'
+      body.style.touchAction = 'none'
+    } else {
+      root.style.overflow = ''
+      body.style.overflow = ''
+      body.style.touchAction = ''
+    }
+  },
+  { immediate: true },
+)
 
 watch(
   () => props.typeId,
@@ -121,8 +142,11 @@ const windowErrors = computed(() => {
       if (!isValidSizeCategory(String(formW.depthCategory))) e.depthCategory = t('form.errCategory')
 
       const ty = currentType.value
-      if (ty?.hasSill && !isValidSizeCategory(String(formW.windowsillCategory))) {
-        e.windowsillCategory = t('form.errCategory')
+      if (ty?.hasSill) {
+        const dCm = Number(formW.sillDepthCm)
+        if (!WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === dCm)) {
+          e.sillDepthCm = t('form.errSillDepthSelect')
+        }
       }
       if (ty?.hasRoller && !isValidSizeCategory(String(formW.rollerCategory))) {
         e.rollerCategory = t('form.errCategory')
@@ -226,11 +250,8 @@ function onSubmit() {
         depthCategory: isValidSizeCategory(String(formW.depthCategory))
           ? formW.depthCategory
           : 'small',
-        windowsillCategory: ty?.hasSill
-          ? isValidSizeCategory(String(formW.windowsillCategory))
-            ? formW.windowsillCategory
-            : 'small'
-          : null,
+        windowsillDepthMm: ty?.hasSill ? Number(formW.sillDepthCm) * 10 : null,
+        windowsillCategory: null,
         rollerCategory: ty?.hasRoller
           ? isValidSizeCategory(String(formW.rollerCategory))
             ? formW.rollerCategory
@@ -316,9 +337,9 @@ const windowPreviews = computed(() => {
       if (showPreview) {
         const depth = isValidSizeCategory(String(formW.depthCategory)) ? formW.depthCategory : 'small'
         const ws = ty.hasSill
-          ? isValidSizeCategory(String(formW.windowsillCategory))
-            ? formW.windowsillCategory
-            : 'small'
+          ? (WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === Number(formW.sillDepthCm))
+              ? Number(formW.sillDepthCm) * 10
+              : 150)
           : null
         const roller = ty.hasRoller
           ? isValidSizeCategory(String(formW.rollerCategory))
@@ -331,7 +352,7 @@ const windowPreviews = computed(() => {
           /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (depth),
           ty.hasSill,
           ty.hasRoller,
-          ws != null ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (ws) : null,
+          ws != null ? Number(ws) : null,
           roller != null ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (roller) : null,
         )
       }
@@ -362,7 +383,7 @@ function sizeLabel(id) {
       aria-labelledby="order-form-title"
       @click="onBackdrop"
     >
-      <div class="modal" @click.stop>
+      <div class="modal" :class="{ 'modal--no-inner-scroll': isWithSillType }" @click.stop>
         <div class="modal__head">
           <h2 id="order-form-title" class="modal__title">{{ formTitle }}</h2>
           <button type="button" class="modal__close" :aria-label="t('common.close')" @click="emit('close')">
@@ -515,22 +536,19 @@ function sizeLabel(id) {
             </label>
 
             <label v-if="!isSimplifiedLine && currentType.hasSill" class="field">
-              <span class="field__label">{{ t('form.sillMm') }}</span>
+              <span class="field__label">{{ t('form.sillDepthCm') }}</span>
               <select
-                v-model="windows[idx].windowsillCategory"
+                v-model.number="windows[idx].sillDepthCm"
                 class="field__input"
-                :class="{ 'field__input--error': windowErrors[idx]?.windowsillCategory }"
+                autocomplete="off"
+                :class="{ 'field__input--error': windowErrors[idx]?.sillDepthCm }"
               >
-                <option
-                  v-for="opt in SIZE_CATEGORY_OPTIONS"
-                  :key="opt.id"
-                  :value="opt.id"
-                >
-                  {{ sizeLabel(opt.id) }}
+                <option v-for="cm in WINDOWSILL_DEPTH_CM_OPTIONS" :key="cm" :value="cm">
+                  {{ cm }} {{ t('common.cm') }}
                 </option>
               </select>
-              <span v-if="windowErrors[idx]?.windowsillCategory" class="field__err">{{
-                windowErrors[idx].windowsillCategory
+              <span v-if="windowErrors[idx]?.sillDepthCm" class="field__err">{{
+                windowErrors[idx].sillDepthCm
               }}</span>
             </label>
 
@@ -589,42 +607,47 @@ function sizeLabel(id) {
 <style scoped>
 .backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 50;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: rgba(28, 36, 36, 0.45);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: 0;
-}
-
-@media (min-width: 640px) {
-  .backdrop {
-    align-items: center;
-    padding: 1rem;
-  }
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  box-sizing: border-box;
 }
 
 .modal {
   width: min(100%, 420px);
   max-width: calc(100vw - 1.5rem);
-  max-height: min(92vh, 720px);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
   background: var(--allexo-surface);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 1.25rem 1.25rem 0;
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
+/* Для “Відкоси з підвіконником” прибираємо внутрішній вертикальний скрол. */
+.modal--no-inner-scroll {
+  overflow-y: visible;
+}
+
 @media (min-width: 640px) {
   .modal {
-    border-radius: var(--radius-lg);
     padding: 1.5rem;
     padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   }
@@ -686,12 +709,9 @@ function sizeLabel(id) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  flex: 1 1 auto;
-  min-height: 0;
   min-width: 0;
   overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: visible;
   padding-bottom: 0.5rem;
 }
 
@@ -901,7 +921,7 @@ select.field__input {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--allexo-surface) 14%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--allexo-surface) 12%);
   border-top: 1px solid var(--allexo-border);
 }
 

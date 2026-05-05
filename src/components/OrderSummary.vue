@@ -9,6 +9,7 @@ import {
   quoteRollerBoxOnlyRoundedEuros,
   quoteWindowHours,
   quoteWindowRoundedEuros,
+  quoteWindowsillAddonRoundedEuros,
   quoteWindowsillOnlyHours,
   quoteWindowsillOnlyRoundedEuros,
 } from '../pricing/windowQuote.js'
@@ -83,11 +84,29 @@ function catLabel(id) {
   return sizeCategoryLabel(locale.value, String(id))
 }
 
+const _TIME_BUFFER_COEFF = 1.2
+
+/** @param {number} h */
+function _roundUpToHalfHour(h) {
+  if (!Number.isFinite(h) || h <= 0) return 0
+  return Math.ceil(h * 2) / 2
+}
+
 /** @param {number} h */
 function formatHoursDisplay(h) {
-  const r = Math.round(h * 10) / 10
+  const r = _roundUpToHalfHour(h)
   if (Number.isInteger(r)) return String(r)
   return String(r)
+}
+
+/** @param {number} h */
+function formatWorkDaysApprox(h) {
+  const hh = _roundUpToHalfHour(h)
+  // Не показуємо “рівно 1 день”, щоб не створювати небезпечне очікування.
+  if (hh <= 8) return t('summary.workDays1to2')
+  if (hh <= 16) return t('summary.workDays1to2')
+  const minDays = Math.floor(hh / 8)
+  return translate(locale.value, 'summary.workDays2plus').replace('{n}', String(Math.max(minDays, 2)))
 }
 
 /** @param {Record<string, unknown>} line */
@@ -110,7 +129,7 @@ function windowsForLine(line) {
         sillDepthCm: line.sillDepthCm,
         windowsillDepthMm: line.windowsillDepthMm,
         depthCategory: line.depthCategory,
-        windowsillCategory: line.windowsillCategory,
+        windowsillCategory: null,
         rollerCategory: line.rollerCategory,
         profileLengthM: line.profileLengthM,
         quantity: line.quantity,
@@ -149,13 +168,35 @@ function windowPriceEuros(line, win) {
     /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
     ty.hasSill,
     ty.hasRoller,
-    win.windowsillCategory != null
-      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.windowsillCategory)
-      : null,
+    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
     win.rollerCategory != null
       ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
       : null,
   )
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowsillAddonPriceEuros(line, win) {
+  const ty = getTypeById(line.typeId)
+  if (!ty?.hasSill) return 0
+  const wm = Number(win.widthMm)
+  if (!Number.isFinite(wm) || wm <= 0) return 0
+  const d = typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null
+  return quoteWindowsillAddonRoundedEuros(wm, d)
+}
+
+/** @param {Record<string, unknown>} win */
+function windowsillAddonWidthCm(win) {
+  const wCm = Math.round(Number(win.widthMm) / 10)
+  if (!Number.isFinite(wCm)) return null
+  return wCm + 15
+}
+
+/** @param {Record<string, unknown>} win */
+function windowsillDepthCm(win) {
+  const mm = Number(win.windowsillDepthMm)
+  if (!Number.isFinite(mm)) return null
+  return Math.round(mm / 10)
 }
 
 /** @param {Record<string, unknown>} line */
@@ -165,7 +206,37 @@ function lineSubtotalEuros(line) {
 
 const orderTotalEuros = computed(() => props.lines.reduce((s, line) => s + lineSubtotalEuros(line), 0))
 
-const orderTotalHours = computed(() =>
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowBaseHours(line, win) {
+  const tid = line.typeId
+  if (tid === 'roller_box') {
+    if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
+    return quoteRollerBoxOnlyHours()
+  }
+  if (tid === 'windowsill') {
+    if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
+    return quoteWindowsillOnlyHours()
+  }
+  const t = getTypeById(tid)
+  if (!t) return 0
+  if (!windowEligibleForAutoQuote(Number(win.widthMm), Number(win.heightMm))) return 0
+  return quoteWindowHours(
+    t.hasSill,
+    t.hasRoller,
+    /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
+    win.rollerCategory != null
+      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
+      : null,
+  )
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowBufferedHoursTotal(line, win) {
+  const base = windowBaseHours(line, win) * windowQty(win)
+  return _roundUpToHalfHour(base * _TIME_BUFFER_COEFF)
+}
+
+const orderTotalBaseHours = computed(() =>
   props.lines.reduce((sum, line) => {
     const tid = line.typeId
     if (tid === 'roller_box') {
@@ -192,7 +263,8 @@ const orderTotalHours = computed(() =>
       sum +
       windowsForLine(line).reduce((s, w) => {
         if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
-        const h =
+        return (
+          s +
           quoteWindowHours(
             t.hasSill,
             t.hasRoller,
@@ -200,14 +272,17 @@ const orderTotalHours = computed(() =>
             w.rollerCategory != null
               ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
               : null,
-          ) * windowQty(w)
-        return s + h
+          ) *
+            windowQty(w)
+        )
       }, 0)
     )
   }, 0),
 )
 
-const orderTotalHoursFormatted = computed(() => formatHoursDisplay(orderTotalHours.value))
+const orderTotalBufferedHours = computed(() => _roundUpToHalfHour(orderTotalBaseHours.value * _TIME_BUFFER_COEFF))
+const orderTotalHoursFormatted = computed(() => formatHoursDisplay(orderTotalBufferedHours.value))
+const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTotalBufferedHours.value))
 
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
@@ -309,6 +384,10 @@ function openContactEmailModal() {
       </button>
     </div>
 
+    <p v-if="lines.length" class="summary__intro">
+      {{ t('app.intro') }}
+    </p>
+
     <p v-if="!lines.length" class="summary__empty">{{ t('summary.empty') }}</p>
 
     <template v-else>
@@ -337,11 +416,28 @@ function openContactEmailModal() {
                   <dd>{{ catLabel(win.depthCategory) }}</dd>
                 </div>
                 <div
-                  v-if="getTypeById(line.typeId)?.hasSill && win.windowsillCategory != null"
+                  v-if="getTypeById(line.typeId)?.hasSill"
                   class="dims__row"
                 >
                   <dt>{{ t('summary.dtSill') }}</dt>
-                  <dd>{{ catLabel(win.windowsillCategory) }}</dd>
+                  <dd>
+                    <template v-if="windowsillAddonWidthCm(win) != null">
+                      {{ windowsillAddonWidthCm(win) }} {{ t('common.cm') }}
+                    </template>
+                    <template v-else>—</template>
+                  </dd>
+                </div>
+                <div
+                  v-if="getTypeById(line.typeId)?.hasSill"
+                  class="dims__row"
+                >
+                  <dt>{{ t('summary.dtSillDepthCm') }}</dt>
+                  <dd>
+                    <template v-if="windowsillDepthCm(win) != null">
+                      {{ windowsillDepthCm(win) }} {{ t('common.cm') }}
+                    </template>
+                    <template v-else>—</template>
+                  </dd>
                 </div>
                 <div
                   v-if="getTypeById(line.typeId)?.hasRoller && win.rollerCategory != null"
@@ -372,11 +468,23 @@ function openContactEmailModal() {
                     <dt>{{ t('summary.dtLineTotal') }}</dt>
                     <dd>{{ formatEuroExclVat(windowPriceEuros(line, win) * windowQty(win), locale) }}</dd>
                   </div>
+                  <div v-if="getTypeById(line.typeId)?.hasSill" class="dims__row">
+                    <dt>{{ t('summary.dtSillPrice') }}</dt>
+                    <dd>{{ formatEuroExclVat(windowsillAddonPriceEuros(line, win), locale) }}</dd>
+                  </div>
                 </dl>
               </template>
               <p v-else class="window-price">
                 {{ t('summary.priceLabel') }} {{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}
               </p>
+
+              <div class="window-time" v-if="windowBufferedHoursTotal(line, win) > 0">
+                <p class="window-time__main">
+                  {{ t('summary.windowTimeLabel') }} {{ formatHoursDisplay(windowBufferedHoursTotal(line, win)) }}
+                  {{ t('summary.hoursUnit') }}
+                </p>
+                <p class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
+              </div>
             </div>
 
             <p class="line-subtotal">
@@ -430,7 +538,13 @@ function openContactEmailModal() {
           </p>
         </template>
         <p class="order-totals__time">
-          {{ t('summary.hours') }} {{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
+          {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
+        </p>
+        <p class="order-totals__days">
+          {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
+        </p>
+        <p class="order-totals__fast">
+          {{ t('summary.fastExecutionNoDismantle') }}
         </p>
       </div>
 
@@ -534,6 +648,13 @@ function openContactEmailModal() {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--allexo-teal);
+}
+
+.summary__intro {
+  margin: 0 0 1rem;
+  color: var(--allexo-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .summary__clear {
@@ -662,6 +783,25 @@ function openContactEmailModal() {
   color: var(--allexo-teal-light);
 }
 
+.window-time {
+  margin-top: 0.55rem;
+}
+
+.window-time__main {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--allexo-muted);
+}
+
+.window-time__note {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--allexo-muted);
+  opacity: 0.9;
+}
+
 .line-subtotal {
   margin: 0.85rem 0 0;
   font-size: 0.95rem;
@@ -743,6 +883,20 @@ function openContactEmailModal() {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
+  color: var(--allexo-muted);
+}
+
+.order-totals__days {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--allexo-muted);
+}
+
+.order-totals__fast {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 400;
   color: var(--allexo-muted);
 }
 
