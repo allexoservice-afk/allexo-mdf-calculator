@@ -286,7 +286,6 @@ const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTot
 
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
-const waRequestModalOpen = ref(false)
 const emailRequestModalOpen = ref(false)
 
 const travelKmInput = ref('')
@@ -349,19 +348,28 @@ async function copyProposal() {
 /** Номер у міжнародному форматі без + (для https://wa.me/…) */
 const CONTACT_WHATSAPP_PHONE = '32493860753'
 
-function sendWhatsApp() {
-  if (orderHasInvalidWindowDimensions(props.lines)) {
-    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
-    return
-  }
-  const text = buildAllexoOfferText(props.lines, locale.value, offerTravelMeta.value)
-  if (!text) return
+function openWhatsAppDirect() {
+  const total = formatEuroExclVat(orderTotalEuros.value, locale.value)
+  const count = Array.isArray(props.lines) ? props.lines.length : 0
+  const types = Array.from(
+    new Set(
+      (props.lines ?? [])
+        .map((l) => String(l?.typeId ?? ''))
+        .filter(Boolean)
+        .map((id) => t(`types.${id}.title`)),
+    ),
+  ).join(', ')
+
+  const text =
+    `Доброго дня!\n` +
+    `Хочу отримати прорахунок:\n` +
+    `Сума: ${total}\n` +
+    `Кількість позицій: ${count}\n` +
+    `Тип робіт: ${types || '—'}\n` +
+    `Можете уточнити деталі?`
+
   const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
   window.open(url, '_blank', 'noopener,noreferrer')
-}
-
-function openContactWhatsAppModal() {
-  waRequestModalOpen.value = true
 }
 
 function openContactEmailModal() {
@@ -546,39 +554,52 @@ function openContactEmailModal() {
         <p class="order-totals__fast">
           {{ t('summary.fastExecutionNoDismantle') }}
         </p>
+        <p class="order-totals__includes">
+          {{ t('summary.turnkeyIncludes') }}
+        </p>
       </div>
 
       <div class="contact-section" aria-labelledby="contact-heading">
         <h3 id="contact-heading" class="contact-section__title">{{ t('summary.contact') }}</h3>
         <div class="contact-section__actions">
           <div class="contact-wa-block">
-            <button type="button" class="contact-btn contact-btn--whatsapp" @click="openContactWhatsAppModal">
+            <button
+              id="contact-whatsapp-request"
+              type="button"
+              class="contact-btn contact-btn--whatsapp"
+              @click="openWhatsAppDirect"
+            >
               {{ t('summary.whRequest') }}
             </button>
             <p class="contact-wa-hint">
               {{ t('summary.whHint') }}
+            </p>
+            <p class="contact-wa-call">
+              {{ t('summary.callAlternative') }}
+              <a class="contact-wa-call__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
+                {{ t('contacts.phoneDisplay') }}
+              </a>
             </p>
           </div>
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
           </button>
         </div>
-      </div>
 
-      <div class="summary-actions">
-        <button type="button" class="summary-action-btn" @click="copyProposal">
-          {{ t('summary.copyOffer') }}
-        </button>
-        <button type="button" class="summary-action-btn" @click="sendWhatsApp">
-          {{ t('summary.sendWh') }}
-        </button>
-        <p
-          v-if="copyNotice"
-          class="summary-action-feedback"
-          :class="{ 'summary-action-feedback--error': copyNoticeIsError }"
-        >
-          {{ copyNotice }}
-        </p>
+        <div class="contact-section__utils">
+          <button type="button" class="contact-util-btn" @click="copyProposal">
+            <span class="contact-util-btn__icon" aria-hidden="true">⧉</span>
+            {{ t('summary.copyOffer') }}
+          </button>
+          <p
+            v-if="copyNotice"
+            class="contact-util-feedback"
+            :class="{ 'contact-util-feedback--error': copyNoticeIsError }"
+            role="status"
+          >
+            {{ copyNotice }}
+          </p>
+        </div>
       </div>
 
       <div class="direct-contacts" aria-labelledby="direct-contacts-heading">
@@ -602,13 +623,6 @@ function openContactEmailModal() {
     </template>
   </section>
 
-  <WhatsAppRequestModal
-    channel="whatsapp"
-    :open="waRequestModalOpen"
-    :lines="lines"
-    :travel-meta="offerTravelMeta"
-    @close="waRequestModalOpen = false"
-  />
   <WhatsAppRequestModal
     channel="email"
     :open="emailRequestModalOpen"
@@ -900,6 +914,13 @@ function openContactEmailModal() {
   color: var(--allexo-muted);
 }
 
+.order-totals__includes {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--allexo-muted);
+}
+
 .contact-section {
   margin-top: 1.35rem;
   padding-top: 1.25rem;
@@ -919,6 +940,52 @@ function openContactEmailModal() {
   gap: 0.75rem;
 }
 
+.contact-section__utils {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.contact-util-btn {
+  padding: 0.35rem 0;
+  min-height: 2.25rem;
+  border: none;
+  background: transparent;
+  color: var(--allexo-teal);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.contact-util-btn:hover {
+  color: var(--allexo-teal-light);
+}
+
+.contact-util-btn__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.contact-util-feedback {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--allexo-muted);
+}
+
+.contact-util-feedback--error {
+  color: var(--allexo-danger);
+  font-weight: 600;
+}
+
 .contact-wa-block {
   display: flex;
   flex-direction: column;
@@ -931,6 +998,26 @@ function openContactEmailModal() {
   font-size: 0.75rem;
   line-height: 1.4;
   color: var(--allexo-muted);
+}
+
+.contact-wa-call {
+  margin: 0.35rem 0 0;
+  padding: 0 0.15rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--allexo-muted);
+}
+
+.contact-wa-call__link {
+  margin-left: 0.35rem;
+  color: var(--allexo-teal);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.contact-wa-call__link:hover {
+  color: var(--allexo-teal-light);
 }
 
 .contact-btn {
@@ -972,41 +1059,6 @@ function openContactEmailModal() {
 .contact-btn--email:hover {
   background: #f0f4f8;
   border-color: #547896;
-}
-
-.summary-actions {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.summary-action-btn {
-  min-height: 2.75rem;
-  padding: 0.55rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--allexo-teal);
-  background: var(--allexo-surface);
-  border: 1px solid var(--allexo-teal);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
-.summary-action-btn:hover {
-  background: var(--allexo-bg);
-}
-
-.summary-action-feedback {
-  margin: 0.15rem 0 0;
-  font-size: 0.85rem;
-  color: var(--allexo-muted);
-}
-
-.summary-action-feedback--error {
-  color: var(--allexo-danger);
-  font-weight: 600;
 }
 
 .direct-contacts {

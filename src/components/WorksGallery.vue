@@ -37,19 +37,15 @@ const lightboxIndex = ref(null)
 
 const photoCount = computed(() => visiblePairs.value.length)
 
-/**
- * Фіксуємо на момент відкриття лайтбоксу: чи додаємо хвіст-CTA в цьому відкритті.
- * Важливо: значення не змінюється під час поточного відкриття, інакше індекс CTA “зламається”.
- */
-const includeCtaForOpen = ref(false)
-
-const slideCount = computed(() => photoCount.value + (includeCtaForOpen.value ? 1 : 0))
+// CTA як “додатковий слайд” після останнього фото (завжди, якщо фото є).
+const includeCta = computed(() => photoCount.value > 0)
+const slideCount = computed(() => photoCount.value + (includeCta.value ? 1 : 0))
 
 const lightboxOpen = computed(() => lightboxIndex.value != null)
 
 const onCtaSlide = computed(() => {
   if (lightboxIndex.value == null) return false
-  if (!includeCtaForOpen.value) return false
+  if (!includeCta.value) return false
   return lightboxIndex.value === photoCount.value
 })
 
@@ -70,13 +66,11 @@ const canNavigate = computed(() => slideCount.value > 1)
 
 /** @param {number} idx індекс у visiblePairs */
 function openLightbox(idx) {
-  includeCtaForOpen.value = photoCount.value > 0
   lightboxIndex.value = idx
 }
 
 function closeLightbox() {
   lightboxIndex.value = null
-  includeCtaForOpen.value = false
 }
 
 function goToCalculatorFromCta() {
@@ -100,8 +94,8 @@ function goNext() {
   const i = lightboxIndex.value
   if (i == null) return
 
-  // Якщо є CTA-слайд: з останнього фото переходимо на CTA, з CTA — на перше фото.
-  if (includeCtaForOpen.value) {
+  if (includeCta.value) {
+    // з останнього фото -> CTA, з CTA -> перше фото
     if (i === nPhotos - 1) {
       lightboxIndex.value = nPhotos
       return
@@ -196,7 +190,7 @@ watch(visiblePairs, (pairs) => {
   }
   // Якщо індекс вказує на фото, якого вже немає — закриваємо.
   if (i < pairs.length) return
-  if (includeCtaForOpen.value && i === pairs.length) return
+  if (includeCta.value && i === pairs.length) return
   closeLightbox()
 })
 
@@ -569,6 +563,7 @@ onBeforeUnmount(() => {
     transform: translateY(0);
   }
 }
+
 
 @media (min-width: 640px) {
   .lightbox__nav--prev {

@@ -180,12 +180,12 @@ export const TRANSLATIONS = {
       fastExecutionNoDismantle: 'Швидке виконання без демонтажу',
       contact: 'Зв’язатися',
       whRequest: 'Відправити заявку в WhatsApp',
-      whHint:
-        "Після натискання відкриється WhatsApp — натисніть 'Continue' і потім 'Надіслати'.",
+      whHint: 'Ми відповімо вам у WhatsApp протягом дня',
+      callAlternative: 'Або телефонуйте:',
       sendEmail: 'Надіслати Email',
       copyOffer: 'Скопіювати пропозицію',
       sendWh: 'Відправити в WhatsApp',
-      copied: 'Пропозицію скопійовано',
+      copied: 'Скопійовано ✓',
       errMinDimensions:
         'Перевірте розміри: для відкосів — мінімум 45×45 см; для короба ролети та підвіконника — ширина від 45 см, друга величина від 10 см',
       remove: 'Видалити',
@@ -193,8 +193,10 @@ export const TRANSLATIONS = {
       travelBlockTitle: 'Виїзд / транспорт',
       travelDistanceLabel: 'Відстань від Brugge, км',
       travelDistancePlaceholder: 'Наприклад 45',
-      workSubtotal: 'Сума робіт:',
+      workSubtotal: 'Разом:',
       stickyTotalAria: 'Підсумок замовлення',
+      turnkeyIncludes:
+        'У ціну входить: фінальні заміри, всі матеріали, прибирання та вивіз сміття — під ключ (без покраски).',
       travelTransportTotal: 'Виїзд / транспорт:',
       travelFree: 'безкоштовно',
       travelLine: 'Виїзд:',
@@ -276,8 +278,8 @@ export const TRANSLATIONS = {
       calcCta: 'Calculate price',
     },
     hero: {
-      title: 'Neat MDF window slopes without extra renovation',
-      subtitle: 'Usually ready in 1–3 days',
+      title: 'Finished MDF window reveals without extra renovation',
+      subtitle: 'Usually ready within 1–3 days',
     },
     contacts: {
       title: 'Contact',
@@ -308,8 +310,8 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'About',
-      line1: '20+ years of window experience',
-      line2: 'Working in Belgium for 4+ years',
+      line1: 'Over 20 years of experience with windows',
+      line2: 'Over 4 years working on the Belgian market (Bruges)',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Interface language' },
     card: { selectType: 'Select type', ariaPrefix: 'Select type:' },
@@ -427,12 +429,12 @@ export const TRANSLATIONS = {
       fastExecutionNoDismantle: 'Fast execution without dismantling',
       contact: 'Contact',
       whRequest: 'Send request via WhatsApp',
-      whHint:
-        "After tapping, WhatsApp opens — tap 'Continue', then 'Send'.",
+      whHint: 'We will reply to you on WhatsApp within a day',
+      callAlternative: 'Or call:',
       sendEmail: 'Send email',
       copyOffer: 'Copy quote',
       sendWh: 'Send via WhatsApp',
-      copied: 'Quote copied',
+      copied: 'Copied ✓',
       errMinDimensions:
         'Check dimensions: jambs — minimum 45×45 cm; roller box and windowsill — width from 45 cm, second dimension from 10 cm',
       remove: 'Remove',
@@ -440,8 +442,10 @@ export const TRANSLATIONS = {
       travelBlockTitle: 'Travel / transport',
       travelDistanceLabel: 'Distance from Brugge, km',
       travelDistancePlaceholder: 'e.g. 45',
-      workSubtotal: 'Labour total:',
+      workSubtotal: 'Total:',
       stickyTotalAria: 'Order total',
+      turnkeyIncludes:
+        'Price includes: final measurements, all materials, cleanup and waste disposal — turnkey (no painting).',
       travelTransportTotal: 'Travel / transport:',
       travelFree: 'free of charge',
       travelLine: 'Travel:',
@@ -523,8 +527,8 @@ export const TRANSLATIONS = {
       calcCta: 'Prijs berekenen',
     },
     hero: {
-      title: 'Nette MDF dagkanten zonder extra renovatie',
-      subtitle: 'Meestal klaar in 1–3 dagen',
+      title: 'Afgewerkte MDF-dagkanten zonder breekwerk',
+      subtitle: 'Meestal klaar binnen 1–3 dagen',
     },
     contacts: {
       title: 'Contact',
@@ -544,8 +548,8 @@ export const TRANSLATIONS = {
       bullet4: 'U kunt ons vragen om uw gegevens te verwijderen.',
     },
     works: {
-      title: 'Voorbeelden van uitgevoerd werk',
-      subtitle: "Foto's van echte MDF raamafwerkingen",
+      title: 'Voorbeelden van uitgevoerde werken',
+      subtitle: 'Foto’s van echte MDF-raamafwerkingen',
       lightboxAria: 'Fotovoorbeeld',
       closeLightbox: 'Sluiten',
       openPreview: 'Foto openen',
@@ -556,8 +560,8 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'Over mij',
-      line1: '20+ jaar ervaring met ramen',
-      line2: 'Al 4+ jaar actief in België',
+      line1: 'Meer dan 20 jaar ervaring met ramen',
+      line2: 'Meer dan 4 jaar actief op de Belgische markt (Brugge)',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Taal van de interface' },
     card: { selectType: 'Type kiezen', ariaPrefix: 'Type kiezen:' },
@@ -675,12 +679,12 @@ export const TRANSLATIONS = {
       fastExecutionNoDismantle: 'Snelle uitvoering zonder demontage',
       contact: 'Contact',
       whRequest: 'Aanvraag via WhatsApp',
-      whHint:
-        "Na tikken opent WhatsApp — tik op 'Continue' en daarna op 'Verzenden'.",
+      whHint: 'We antwoorden je binnen 1 dag via WhatsApp',
+      callAlternative: 'Of bel:',
       sendEmail: 'E-mail verzenden',
       copyOffer: 'Offerte kopiëren',
       sendWh: 'Verzenden via WhatsApp',
-      copied: 'Offerte gekopieerd',
+      copied: 'Gekopieerd ✓',
       errMinDimensions:
         'Controleer de afmetingen: omlijsting — minimaal 45×45 cm; rolluikkast en vensterbank — breedte vanaf 45 cm, tweede afmeting vanaf 10 cm',
       remove: 'Verwijderen',
@@ -688,8 +692,10 @@ export const TRANSLATIONS = {
       travelBlockTitle: 'Rit / transport',
       travelDistanceLabel: 'Afstand van Brugge, km',
       travelDistancePlaceholder: 'bv. 45',
-      workSubtotal: 'Totaal arbeid:',
+      workSubtotal: 'Totaal:',
       stickyTotalAria: 'Totaal bestelling',
+      turnkeyIncludes:
+        'Inbegrepen: laatste opmetingen, alle materialen, opruimen en afvoer van afval — sleutel-op-de-deur (zonder schilderwerk).',
       travelTransportTotal: 'Rit / transport:',
       travelFree: 'gratis',
       travelLine: 'Rit:',
@@ -771,8 +777,8 @@ export const TRANSLATIONS = {
       calcCta: 'Calculer le prix',
     },
     hero: {
-      title: 'Tableaux MDF soignés sans travaux inutiles',
-      subtitle: 'Généralement prêt en 1–3 jours',
+      title: 'Finitions MDF pour fenêtres sans gros travaux',
+      subtitle: 'Généralement prêt en 1 à 3 jours',
     },
     contacts: {
       title: 'Contact',
@@ -792,8 +798,8 @@ export const TRANSLATIONS = {
       bullet4: 'Vous pouvez nous demander de supprimer vos données.',
     },
     works: {
-      title: 'Exemples de travaux réalisés',
-      subtitle: 'Photos de finitions MDF réelles sur fenêtres',
+      title: 'Exemples de réalisations',
+      subtitle: 'Photos de vraies finitions MDF de fenêtres',
       lightboxAria: 'Aperçu de la photo',
       closeLightbox: 'Fermer l’aperçu',
       openPreview: 'Ouvrir la photo',
@@ -804,8 +810,8 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'À propos',
-      line1: '20+ ans d’expérience avec les fenêtres',
-      line2: 'Actif en Belgique depuis plus de 4 ans',
+      line1: 'Plus de 20 ans d’expérience dans les fenêtres',
+      line2: 'Plus de 4 ans d’activité sur le marché belge (Bruges)',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Langue de l’interface' },
     card: { selectType: 'Choisir le type', ariaPrefix: 'Choisir le type :' },
@@ -887,7 +893,7 @@ export const TRANSLATIONS = {
       lineTotal: 'Sous-total :',
     },
     summary: {
-      title: 'Récapitulatif',
+      title: 'Résumé de la commande',
       clear: 'Vider la commande',
       clearAria: 'Vider toute la commande',
       empty: 'Aucune ligne pour l’instant. Choisissez un type de finition ci-dessus.',
@@ -923,12 +929,12 @@ export const TRANSLATIONS = {
       fastExecutionNoDismantle: 'Exécution rapide sans démontage',
       contact: 'Contact',
       whRequest: 'Envoyer une demande par WhatsApp',
-      whHint:
-        "Après l’appui, WhatsApp s’ouvre — appuyez sur « Continue », puis sur « Envoyer ».",
+      whHint: 'Nous vous répondrons sur WhatsApp dans la journée',
+      callAlternative: 'Ou appelez :',
       sendEmail: 'Envoyer un e-mail',
       copyOffer: 'Copier l’offre',
       sendWh: 'Envoyer par WhatsApp',
-      copied: 'Offre copiée',
+      copied: 'Copié ✓',
       errMinDimensions:
         'Vérifiez les dimensions : tableaux — minimum 45×45 cm ; coffre de volet et appui — largeur à partir de 45 cm, seconde dimension à partir de 10 cm',
       remove: 'Supprimer',
@@ -936,8 +942,10 @@ export const TRANSLATIONS = {
       travelBlockTitle: 'Déplacement / transport',
       travelDistanceLabel: 'Distance depuis Bruges, km',
       travelDistancePlaceholder: 'ex. 45',
-      workSubtotal: 'Total travaux :',
+      workSubtotal: 'Total :',
       stickyTotalAria: 'Total de la commande',
+      turnkeyIncludes:
+        'Inclus : mesures finales, tous les matériaux, nettoyage et évacuation des déchets — clé en main (sans peinture).',
       travelTransportTotal: 'Déplacement / transport :',
       travelFree: 'gratuit',
       travelLine: 'Déplacement :',

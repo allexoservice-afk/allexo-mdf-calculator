@@ -56,6 +56,33 @@ function scrollToSummary() {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+const CONTACT_WHATSAPP_PHONE = '32493860753'
+
+function openWhatsAppFromSticky() {
+  const total = formatEuroExclVat(orderTotalEuros.value, locale.value)
+  const count = Array.isArray(lines.value) ? lines.value.length : 0
+
+  const types = Array.from(
+    new Set(
+      (lines.value ?? [])
+        .map((l) => String(l?.typeId ?? ''))
+        .filter(Boolean)
+        .map((id) => t(`types.${id}.title`)),
+    ),
+  ).join(', ')
+
+  const text =
+    `Доброго дня!\n` +
+    `Хочу отримати прорахунок:\n` +
+    `Сума: ${total}\n` +
+    `Кількість позицій: ${count}\n` +
+    `Тип робіт: ${types || '—'}\n` +
+    `Можете уточнити деталі?`
+
+  const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
   const tid = typeof line.typeId === 'string' ? line.typeId : undefined
@@ -122,19 +149,30 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
       <div class="header__inner hero">
         <div class="header__row">
           <Hero />
-          <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-            <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
-              <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
-              <button
-                type="button"
-                class="lang__btn"
-                :class="{ 'lang__btn--active': locale === code }"
-                @click="pickLang(code)"
-              >
-                {{ t(`lang.${code}`) }}
-              </button>
-            </template>
-          </nav>
+          <div class="header__right">
+            <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+              <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
+                <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  class="lang__btn"
+                  :class="{ 'lang__btn--active': locale === code }"
+                  @click="pickLang(code)"
+                >
+                  {{ t(`lang.${code}`) }}
+                </button>
+              </template>
+            </nav>
+          </div>
+        </div>
+
+        <div class="hero-corner-contacts" role="region" :aria-label="t('contacts.title')">
+          <a class="hero-corner-contacts__link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
+            {{ t('contacts.emailDisplay') }}
+          </a>
+          <a class="hero-corner-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
+            {{ t('contacts.phoneDisplay') }}
+          </a>
         </div>
       </div>
     </header>
@@ -181,9 +219,14 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
         <p class="sticky-total__sum">
           {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
         </p>
-        <button type="button" class="sticky-total__btn" @click="scrollToSummary">
-          {{ t('summary.title') }}
-        </button>
+        <div class="sticky-total__actions">
+          <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">
+            {{ t('summary.title') }}
+          </button>
+          <button type="button" class="sticky-total__btn" @click="openWhatsAppFromSticky">
+            {{ t('summary.whRequest') }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -241,6 +284,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 .hero {
   padding-top: 40px;
   padding-bottom: 40px;
+  position: relative;
 }
 
 @media (min-width: 640px) {
@@ -257,6 +301,49 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   justify-content: space-between;
   gap: 1rem 1.5rem;
 }
+
+.header__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.hero-corner-contacts {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.hero-corner-contacts__link {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.hero-corner-contacts__link:hover {
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .hero-corner-contacts {
+    position: static;
+    margin-top: 0.9rem;
+    align-items: center;
+    text-align: center;
+  }
+}
+
 
 .lang {
   display: flex;
@@ -412,6 +499,13 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   color: var(--allexo-teal);
 }
 
+.sticky-total__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .sticky-total__btn {
   flex-shrink: 0;
   min-height: 2.75rem;
@@ -424,6 +518,16 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.sticky-total__btn--ghost {
+  background: transparent;
+  color: var(--allexo-teal);
+}
+
+.sticky-total__btn--ghost:hover {
+  background: var(--allexo-bg);
+  color: var(--allexo-teal);
 }
 
 .sticky-total__btn:hover {
@@ -470,14 +574,16 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .footer__contacts {
   margin: 0.45rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   line-height: 1.45;
 }
 
 .footer__link {
   display: inline-block;
   color: var(--allexo-teal);
-  text-decoration: none;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   word-break: break-word;
   padding: 0.2rem 0;
   min-height: 2.75rem;
@@ -485,7 +591,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .footer__link:hover {
-  text-decoration: underline;
+  color: var(--allexo-teal-light);
 }
 
 .footer__sep {
