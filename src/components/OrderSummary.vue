@@ -33,21 +33,21 @@ const emit = defineEmits(['remove', 'clear'])
 
 const { locale, t } = useLocale()
 
-function formatWindowCmFromMm(mm) {
+function formatWindowMm(mm) {
   if (mm == null || Number.isNaN(mm)) return '—'
-  return `${Math.round(mm / 10)} ${t('common.cm')}`
+  return `${Math.round(mm)} ${t('common.mm')}`
 }
 
 /** @param {Record<string, unknown>} win */
 function rollerBoxHeightLineSummary(win) {
-  const cm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm) / 10)
-  return translate(locale.value, 'summary.rollerBoxHeightLine').replace('{n}', String(cm))
+  const mm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
+  return translate(locale.value, 'summary.rollerBoxHeightLine').replace('{n}', String(mm))
 }
 
 /** @param {Record<string, unknown>} win */
 function sillDepthLineSummary(win) {
-  const cm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm) / 10)
-  return translate(locale.value, 'summary.sillDepthLine').replace('{n}', String(cm))
+  const mm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
+  return translate(locale.value, 'summary.sillDepthLine').replace('{n}', String(mm))
 }
 
 /** @param {Record<string, unknown>} win */
@@ -59,22 +59,22 @@ function windowQty(win) {
 function windowEntryHeading(line, win) {
   const q = windowQty(win)
   if (line.typeId === 'roller_box') {
-    const w = Math.round(Number(win.widthMm) / 10)
-    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm) / 10)
-    const dims = `${w}×${hb} ${t('common.cm')}`
+    const w = Math.round(Number(win.widthMm))
+    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
+    const dims = `${w}×${hb} ${t('common.mm')}`
     if (q > 1) return `${dims} × ${q} ${t('summary.pcs')}`
     return dims
   }
   if (line.typeId === 'windowsill') {
-    const w = Math.round(Number(win.widthMm) / 10)
-    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm) / 10)
-    const dims = `${w}×${d} ${t('common.cm')}`
+    const w = Math.round(Number(win.widthMm))
+    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
+    const dims = `${w}×${d} ${t('common.mm')}`
     if (q > 1) return `${dims} × ${q} ${t('summary.pcs')}`
     return dims
   }
-  const w = Math.round(Number(win.widthMm) / 10)
-  const h = Math.round(Number(win.heightMm) / 10)
-  const dims = `${w}×${h} ${t('common.cm')}`
+  const w = Math.round(Number(win.widthMm))
+  const h = Math.round(Number(win.heightMm))
+  const dims = `${w}×${h} ${t('common.mm')}`
   if (q > 1) return `${t('summary.windowLabel')} ${dims} × ${q} ${t('summary.pcs')}`
   return `${t('summary.windowLabel')} ${dims}`
 }
@@ -186,17 +186,17 @@ function windowsillAddonPriceEuros(line, win) {
 }
 
 /** @param {Record<string, unknown>} win */
-function windowsillAddonWidthCm(win) {
-  const wCm = Math.round(Number(win.widthMm) / 10)
-  if (!Number.isFinite(wCm)) return null
-  return wCm + 15
+function windowsillAddonWidthMm(win) {
+  const wMm = Math.round(Number(win.widthMm))
+  if (!Number.isFinite(wMm)) return null
+  return wMm + 150
 }
 
 /** @param {Record<string, unknown>} win */
-function windowsillDepthCm(win) {
+function windowsillDepthMm(win) {
   const mm = Number(win.windowsillDepthMm)
   if (!Number.isFinite(mm)) return null
-  return Math.round(mm / 10)
+  return Math.round(mm)
 }
 
 /** @param {Record<string, unknown>} line */
@@ -413,7 +413,7 @@ function openContactEmailModal() {
               <dl v-if="isSimplifiedProductLine(line.typeId)" class="dims">
                 <div class="dims__row">
                   <dt>{{ t('summary.dtWidth') }}</dt>
-                  <dd>{{ formatWindowCmFromMm(win.widthMm) }}</dd>
+                  <dd>{{ formatWindowMm(win.widthMm) }}</dd>
                 </div>
                 <p v-if="line.typeId === 'roller_box'" class="dims-explicit">{{ rollerBoxHeightLineSummary(win) }}</p>
                 <p v-else-if="line.typeId === 'windowsill'" class="dims-explicit">{{ sillDepthLineSummary(win) }}</p>
@@ -429,8 +429,8 @@ function openContactEmailModal() {
                 >
                   <dt>{{ t('summary.dtSill') }}</dt>
                   <dd>
-                    <template v-if="windowsillAddonWidthCm(win) != null">
-                      {{ windowsillAddonWidthCm(win) }} {{ t('common.cm') }}
+                    <template v-if="windowsillAddonWidthMm(win) != null">
+                      {{ windowsillAddonWidthMm(win) }} {{ t('common.mm') }}
                     </template>
                     <template v-else>—</template>
                   </dd>
@@ -441,8 +441,8 @@ function openContactEmailModal() {
                 >
                   <dt>{{ t('summary.dtSillDepthCm') }}</dt>
                   <dd>
-                    <template v-if="windowsillDepthCm(win) != null">
-                      {{ windowsillDepthCm(win) }} {{ t('common.cm') }}
+                    <template v-if="windowsillDepthMm(win) != null">
+                      {{ windowsillDepthMm(win) }} {{ t('common.mm') }}
                     </template>
                     <template v-else>—</template>
                   </dd>

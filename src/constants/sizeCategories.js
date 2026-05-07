@@ -44,21 +44,17 @@ export function mmToSizeCategory(mm) {
   return 'custom'
 }
 
-/** Варіанти висоти короба ролети (см) — відповідають категоріям 20–30 / 30–40 / 40+ / 40+. */
-export const ROLLER_BOX_HEIGHT_CM_OPTIONS = Object.freeze([30, 40, 50, 60])
+/** Варіанти висоти короба ролети (мм). */
+export const ROLLER_BOX_HEIGHT_MM_OPTIONS = Object.freeze([300, 400, 500, 600])
 
-/** Варіанти глибини підвіконника (см). */
-export const WINDOWSILL_DEPTH_CM_OPTIONS = Object.freeze([15, 20, 25, 30, 35, 40])
+/** Варіанти глибини підвіконника (мм). */
+export const WINDOWSILL_DEPTH_MM_OPTIONS = Object.freeze([150, 200, 250, 300, 350, 400])
 
-/** @type {readonly number[]} */
-export const ROLLER_BOX_HEIGHT_MM_OPTIONS = Object.freeze(
-  ROLLER_BOX_HEIGHT_CM_OPTIONS.map((cm) => cm * 10),
-)
-
-/** @type {readonly number[]} */
-export const WINDOWSILL_DEPTH_MM_OPTIONS = Object.freeze(
-  WINDOWSILL_DEPTH_CM_OPTIONS.map((cm) => cm * 10),
-)
+// Legacy exports kept (backward compatibility for stored data).
+/** @deprecated use ROLLER_BOX_HEIGHT_MM_OPTIONS */
+export const ROLLER_BOX_HEIGHT_CM_OPTIONS = Object.freeze(ROLLER_BOX_HEIGHT_MM_OPTIONS.map((mm) => mm / 10))
+/** @deprecated use WINDOWSILL_DEPTH_MM_OPTIONS */
+export const WINDOWSILL_DEPTH_CM_OPTIONS = Object.freeze(WINDOWSILL_DEPTH_MM_OPTIONS.map((mm) => mm / 10))
 
 /** @param {number} mm */
 export function isAllowedRollerBoxHeightMm(mm) {

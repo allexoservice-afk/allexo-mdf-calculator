@@ -4,9 +4,9 @@ import { getTypeById, isSimplifiedProductLine } from '../constants/calculatorTyp
 import {
   isValidSizeCategory,
   normalizeWindowQuantity,
-  ROLLER_BOX_HEIGHT_CM_OPTIONS,
+  ROLLER_BOX_HEIGHT_MM_OPTIONS,
   SIZE_CATEGORY_OPTIONS,
-  WINDOWSILL_DEPTH_CM_OPTIONS,
+  WINDOWSILL_DEPTH_MM_OPTIONS,
   WINDOW_QUANTITIES,
 } from '../constants/sizeCategories.js'
 import { useLocale } from '../i18n/useLocale.js'
@@ -37,10 +37,10 @@ const { locale, t } = useLocale()
 function newWindowRow() {
   return reactive({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-    widthCm: '',
-    heightCm: '',
-    rollerBoxHeightCm: 30,
-    sillDepthCm: 15,
+    widthMm: '',
+    heightMm: '',
+    rollerBoxHeightMm: 300,
+    sillDepthMm: 150,
     quantity: 1,
     depthCategory: 'small',
     rollerCategory: 'small',
@@ -60,10 +60,10 @@ const orderFormPriceDeps = computed(() =>
     .map((w) =>
       [
         w.id,
-        w.widthCm,
-        w.heightCm,
-        w.sillDepthCm,
-        w.rollerBoxHeightCm,
+        w.widthMm,
+        w.heightMm,
+        w.sillDepthMm,
+        w.rollerBoxHeightMm,
         w.quantity,
         w.depthCategory,
         w.rollerCategory,
@@ -110,11 +110,11 @@ function parseNum(v) {
   return Number.isFinite(n) ? n : NaN
 }
 
-/** Користувач вводить см; розрахунки лишаються в мм. */
-function parseCmToMm(v) {
-  const cm = parseNum(v)
-  if (!Number.isFinite(cm) || cm <= 0) return NaN
-  return cm * 10
+/** Користувач вводить мм. */
+function parseMm(v) {
+  const mm = parseNum(v)
+  if (!Number.isFinite(mm) || mm <= 0) return NaN
+  return mm
 }
 
 const windowErrors = computed(() => {
@@ -122,30 +122,30 @@ const windowErrors = computed(() => {
   const tid = props.typeId
   return windows.value.map((formW) => {
     const e = {}
-    const wMm = parseCmToMm(formW.widthCm)
-    if (!Number.isFinite(wMm) || wMm <= 0) e.widthCm = t('form.errWidth')
-    else if (wMm < MIN_WINDOW_SIDE_MM) e.widthCm = t('form.errMinWindowSize')
+    const wMm = parseMm(formW.widthMm)
+    if (!Number.isFinite(wMm) || wMm <= 0) e.widthMm = t('form.errWidth')
+    else if (wMm < MIN_WINDOW_SIDE_MM) e.widthMm = t('form.errMinWindowSize')
 
     if (tid === 'roller_box') {
-      const rhCm = Number(formW.rollerBoxHeightCm)
-      if (!ROLLER_BOX_HEIGHT_CM_OPTIONS.includes(rhCm)) e.rollerBoxHeightCm = t('form.errRollerBoxSelect')
+      const rhMm = Number(formW.rollerBoxHeightMm)
+      if (!ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(rhMm)) e.rollerBoxHeightMm = t('form.errRollerBoxSelect')
     } else if (tid === 'windowsill') {
-      const dCm = Number(formW.sillDepthCm)
-      if (!WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === dCm)) {
-        e.sillDepthCm = t('form.errSillDepthSelect')
+      const dMm = Number(formW.sillDepthMm)
+      if (!WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)) {
+        e.sillDepthMm = t('form.errSillDepthSelect')
       }
     } else {
-      const hMm = parseCmToMm(formW.heightCm)
-      if (!Number.isFinite(hMm) || hMm <= 0) e.heightCm = t('form.errHeight')
-      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightCm = t('form.errMinWindowSize')
+      const hMm = parseMm(formW.heightMm)
+      if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = t('form.errHeight')
+      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = t('form.errMinWindowSize')
 
       if (!isValidSizeCategory(String(formW.depthCategory))) e.depthCategory = t('form.errCategory')
 
       const ty = currentType.value
       if (ty?.hasSill) {
-        const dCm = Number(formW.sillDepthCm)
-        if (!WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === dCm)) {
-          e.sillDepthCm = t('form.errSillDepthSelect')
+        const dMm = Number(formW.sillDepthMm)
+        if (!WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)) {
+          e.sillDepthMm = t('form.errSillDepthSelect')
         }
       }
       if (ty?.hasRoller && !isValidSizeCategory(String(formW.rollerCategory))) {
@@ -160,28 +160,28 @@ const isValid = computed(() => windowErrors.value.every((err) => Object.keys(err
 
 /** @param {Record<string, unknown>} formW */
 function formWindowIsOversized(formW) {
-  const w = parseCmToMm(formW.widthCm)
+  const w = parseMm(formW.widthMm)
   if (props.typeId === 'roller_box') {
-    const rhCm = Number(formW.rollerBoxHeightCm)
-    const rh = Number.isFinite(rhCm) ? rhCm * 10 : NaN
+    const rhMm = Number(formW.rollerBoxHeightMm)
+    const rh = Number.isFinite(rhMm) ? rhMm : NaN
     return (
       Number.isFinite(w) &&
       w >= MIN_WINDOW_SIDE_MM &&
-      ROLLER_BOX_HEIGHT_CM_OPTIONS.includes(rhCm) &&
+      ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(rhMm) &&
       windowExceedsStandardMax(w, rh)
     )
   }
   if (props.typeId === 'windowsill') {
-    const dCm = Number(formW.sillDepthCm)
-    const d = Number.isFinite(dCm) ? dCm * 10 : NaN
+    const dMm = Number(formW.sillDepthMm)
+    const d = Number.isFinite(dMm) ? dMm : NaN
     return (
       Number.isFinite(w) &&
       w >= MIN_WINDOW_SIDE_MM &&
-      WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === dCm) &&
+      WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm) &&
       windowExceedsStandardMax(w, d)
     )
   }
-  const h = parseCmToMm(formW.heightCm)
+  const h = parseMm(formW.heightMm)
   return (
     Number.isFinite(w) &&
     w >= MIN_WINDOW_SIDE_MM &&
@@ -214,10 +214,9 @@ function onSubmit() {
   emit('submit', {
     typeId: props.typeId,
     windows: windows.value.map((formW) => {
-      const widthMm = parseCmToMm(formW.widthCm)
+      const widthMm = parseMm(formW.widthMm)
       if (props.typeId === 'roller_box') {
-        const rhCm = Number(formW.rollerBoxHeightCm)
-        const rollerBoxHeightMm = rhCm * 10
+        const rollerBoxHeightMm = Number(formW.rollerBoxHeightMm)
         return {
           widthMm,
           rollerBoxHeightMm,
@@ -230,8 +229,7 @@ function onSubmit() {
         }
       }
       if (props.typeId === 'windowsill') {
-        const dCm = Number(formW.sillDepthCm)
-        const windowsillDepthMm = dCm * 10
+        const windowsillDepthMm = Number(formW.sillDepthMm)
         return {
           widthMm,
           windowsillDepthMm,
@@ -243,14 +241,14 @@ function onSubmit() {
           quantity: normalizeWindowQuantity(formW.quantity),
         }
       }
-      const heightMm = parseCmToMm(formW.heightCm)
+      const heightMm = parseMm(formW.heightMm)
       return {
         widthMm,
         heightMm,
         depthCategory: isValidSizeCategory(String(formW.depthCategory))
           ? formW.depthCategory
           : 'small',
-        windowsillDepthMm: ty?.hasSill ? Number(formW.sillDepthCm) * 10 : null,
+        windowsillDepthMm: ty?.hasSill ? Number(formW.sillDepthMm) : null,
         windowsillCategory: null,
         rollerCategory: ty?.hasRoller
           ? isValidSizeCategory(String(formW.rollerCategory))
@@ -270,7 +268,8 @@ function onBackdrop(e) {
 }
 
 /**
- * Live-прев’ю ціни: спочатку збираємо «відбиток» усіх полів рядків, щоб Vue гарантовано відстежував зміни widthCm / sillDepthCm / quantity.
+ * Live-прев’ю ціни: спочатку збираємо «відбиток» усіх полів рядків,
+ * щоб Vue гарантовано відстежував зміни widthMm / sillDepthMm / quantity.
  */
 const windowPreviews = computed(() => {
   void locale.value
@@ -291,11 +290,10 @@ const windowPreviews = computed(() => {
     let unitEuros = 0
 
     if (tid === 'windowsill') {
-      const wMm = parseCmToMm(formW.widthCm)
-      const dCm = Number(formW.sillDepthCm)
-      const dMm = Number.isFinite(dCm) ? dCm * 10 : NaN
+    const wMm = parseMm(formW.widthMm)
+    const dMm = Number(formW.sillDepthMm)
       const depthOk =
-        Number.isFinite(dCm) && WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === dCm)
+      Number.isFinite(dMm) && WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)
       const widthOk = Number.isFinite(wMm) && wMm >= MIN_WINDOW_SIDE_MM
       showPreview =
         widthOk &&
@@ -309,10 +307,9 @@ const windowPreviews = computed(() => {
         windowExceedsStandardMax(wMm, dMm)
       if (showPreview) unitEuros = quoteWindowsillOnlyRoundedEuros(wMm, dMm)
     } else if (tid === 'roller_box') {
-      const wMm = parseCmToMm(formW.widthCm)
-      const rhCm = Number(formW.rollerBoxHeightCm)
-      const rhMm = Number.isFinite(rhCm) ? rhCm * 10 : NaN
-      const rollerOk = ROLLER_BOX_HEIGHT_CM_OPTIONS.some((cm) => Number(cm) === rhCm)
+    const wMm = parseMm(formW.widthMm)
+    const rhMm = Number(formW.rollerBoxHeightMm)
+    const rollerOk = ROLLER_BOX_HEIGHT_MM_OPTIONS.some((mm) => Number(mm) === rhMm)
       const widthOk = Number.isFinite(wMm) && wMm >= MIN_WINDOW_SIDE_MM
       showPreview =
         widthOk &&
@@ -326,8 +323,8 @@ const windowPreviews = computed(() => {
         windowExceedsStandardMax(wMm, rhMm)
       if (showPreview) unitEuros = quoteRollerBoxOnlyRoundedEuros(wMm, rhMm)
     } else {
-      const wMm = parseCmToMm(formW.widthCm)
-      const hMm = parseCmToMm(formW.heightCm)
+    const wMm = parseMm(formW.widthMm)
+    const hMm = parseMm(formW.heightMm)
       showPreview = windowEligibleForAutoQuote(wMm, hMm)
       oversized =
         Number.isFinite(wMm) &&
@@ -337,8 +334,8 @@ const windowPreviews = computed(() => {
       if (showPreview) {
         const depth = isValidSizeCategory(String(formW.depthCategory)) ? formW.depthCategory : 'small'
         const ws = ty.hasSill
-          ? (WINDOWSILL_DEPTH_CM_OPTIONS.some((cm) => Number(cm) === Number(formW.sillDepthCm))
-              ? Number(formW.sillDepthCm) * 10
+          ? (WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === Number(formW.sillDepthMm))
+              ? Number(formW.sillDepthMm)
               : 150)
           : null
         const roller = ty.hasRoller
@@ -416,31 +413,31 @@ function sizeLabel(id) {
               <label class="field">
                 <span class="field__label">{{ t('form.widthMm') }}</span>
                 <input
-                  v-model="windows[idx].widthCm"
+                  v-model="windows[idx].widthMm"
                   type="text"
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthCm }"
+                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
                 />
-                <span v-if="windowErrors[idx]?.widthCm" class="field__err">{{
-                  windowErrors[idx].widthCm
+                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
+                  windowErrors[idx].widthMm
                 }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.rollerBoxHeightCm') }}</span>
                 <select
-                  v-model.number="windows[idx].rollerBoxHeightCm"
+                  v-model.number="windows[idx].rollerBoxHeightMm"
                   class="field__input"
                   autocomplete="off"
-                  :class="{ 'field__input--error': windowErrors[idx]?.rollerBoxHeightCm }"
+                  :class="{ 'field__input--error': windowErrors[idx]?.rollerBoxHeightMm }"
                 >
-                  <option v-for="cm in ROLLER_BOX_HEIGHT_CM_OPTIONS" :key="cm" :value="cm">
-                    {{ cm }} {{ t('common.cm') }}
+                  <option v-for="mm in ROLLER_BOX_HEIGHT_MM_OPTIONS" :key="mm" :value="mm">
+                    {{ mm }} {{ t('common.mm') }}
                   </option>
                 </select>
-                <span v-if="windowErrors[idx]?.rollerBoxHeightCm" class="field__err">{{
-                  windowErrors[idx].rollerBoxHeightCm
+                <span v-if="windowErrors[idx]?.rollerBoxHeightMm" class="field__err">{{
+                  windowErrors[idx].rollerBoxHeightMm
                 }}</span>
               </label>
             </div>
@@ -448,31 +445,31 @@ function sizeLabel(id) {
               <label class="field">
                 <span class="field__label">{{ t('form.widthMm') }}</span>
                 <input
-                  v-model="windows[idx].widthCm"
+                  v-model="windows[idx].widthMm"
                   type="text"
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthCm }"
+                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
                 />
-                <span v-if="windowErrors[idx]?.widthCm" class="field__err">{{
-                  windowErrors[idx].widthCm
+                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
+                  windowErrors[idx].widthMm
                 }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.sillDepthCm') }}</span>
                 <select
-                  v-model.number="windows[idx].sillDepthCm"
+                  v-model.number="windows[idx].sillDepthMm"
                   class="field__input"
                   autocomplete="off"
-                  :class="{ 'field__input--error': windowErrors[idx]?.sillDepthCm }"
+                  :class="{ 'field__input--error': windowErrors[idx]?.sillDepthMm }"
                 >
-                  <option v-for="cm in WINDOWSILL_DEPTH_CM_OPTIONS" :key="cm" :value="cm">
-                    {{ cm }} {{ t('common.cm') }}
+                  <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
+                    {{ mm }} {{ t('common.mm') }}
                   </option>
                 </select>
-                <span v-if="windowErrors[idx]?.sillDepthCm" class="field__err">{{
-                  windowErrors[idx].sillDepthCm
+                <span v-if="windowErrors[idx]?.sillDepthMm" class="field__err">{{
+                  windowErrors[idx].sillDepthMm
                 }}</span>
               </label>
             </div>
@@ -480,29 +477,29 @@ function sizeLabel(id) {
               <label class="field">
                 <span class="field__label">{{ t('form.widthMm') }}</span>
                 <input
-                  v-model="windows[idx].widthCm"
+                  v-model="windows[idx].widthMm"
                   type="text"
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthCm }"
+                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
                 />
-                <span v-if="windowErrors[idx]?.widthCm" class="field__err">{{
-                  windowErrors[idx].widthCm
+                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
+                  windowErrors[idx].widthMm
                 }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.heightMm') }}</span>
                 <input
-                  v-model="windows[idx].heightCm"
+                  v-model="windows[idx].heightMm"
                   type="text"
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.heightCm }"
+                  :class="{ 'field__input--error': windowErrors[idx]?.heightMm }"
                 />
-                <span v-if="windowErrors[idx]?.heightCm" class="field__err">{{
-                  windowErrors[idx].heightCm
+                <span v-if="windowErrors[idx]?.heightMm" class="field__err">{{
+                  windowErrors[idx].heightMm
                 }}</span>
               </label>
             </div>
@@ -538,17 +535,17 @@ function sizeLabel(id) {
             <label v-if="!isSimplifiedLine && currentType.hasSill" class="field">
               <span class="field__label">{{ t('form.sillDepthCm') }}</span>
               <select
-                v-model.number="windows[idx].sillDepthCm"
+                v-model.number="windows[idx].sillDepthMm"
                 class="field__input"
                 autocomplete="off"
-                :class="{ 'field__input--error': windowErrors[idx]?.sillDepthCm }"
+                :class="{ 'field__input--error': windowErrors[idx]?.sillDepthMm }"
               >
-                <option v-for="cm in WINDOWSILL_DEPTH_CM_OPTIONS" :key="cm" :value="cm">
-                  {{ cm }} {{ t('common.cm') }}
+                <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
+                  {{ mm }} {{ t('common.mm') }}
                 </option>
               </select>
-              <span v-if="windowErrors[idx]?.sillDepthCm" class="field__err">{{
-                windowErrors[idx].sillDepthCm
+              <span v-if="windowErrors[idx]?.sillDepthMm" class="field__err">{{
+                windowErrors[idx].sillDepthMm
               }}</span>
             </label>
 

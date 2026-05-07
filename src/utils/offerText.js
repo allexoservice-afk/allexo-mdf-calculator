@@ -128,23 +128,23 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
     const wins = windowsForLine(L)
     const itemTitle = typeTitle(locale, String(L.typeId))
     for (const win of wins) {
-      const wCm = Math.round(Number(win.widthMm) / 10)
+      const wMm = Math.round(Number(win.widthMm))
       const qty = normalizeWindowQuantity(win.quantity)
       if (L.typeId === 'roller_box') {
-        const hbCm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm) / 10)
-        let winHead = `- ${itemTitle}: ${wCm} × ${hbCm} ${translate(locale, 'common.cm')}`
+        const hbMm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
+        let winHead = `- ${itemTitle}: ${wMm} × ${hbMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
-        parts.push(`- ${translate(locale, 'offer.rollerBoxHeightLine').replace('{n}', String(hbCm))}`)
+        parts.push(`- ${translate(locale, 'offer.rollerBoxHeightLine').replace('{n}', String(hbMm))}`)
       } else if (L.typeId === 'windowsill') {
-        const dCm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm) / 10)
-        let winHead = `- ${itemTitle}: ${wCm} × ${dCm} ${translate(locale, 'common.cm')}`
+        const dMm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
+        let winHead = `- ${itemTitle}: ${wMm} × ${dMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
-        parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dCm))}`)
+        parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
       } else {
-        const hCm = Math.round(Number(win.heightMm) / 10)
-        let winHead = `- ${translate(locale, 'offer.windowLine')} ${wCm} × ${hCm} ${translate(locale, 'common.cm')}`
+        const hMm = Math.round(Number(win.heightMm))
+        let winHead = `- ${translate(locale, 'offer.windowLine')} ${wMm} × ${hMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
         parts.push(
@@ -152,11 +152,11 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
         )
         parts.push(`- ${translate(locale, 'offer.sill')} ${t.hasSill ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`)
         if (t.hasSill) {
-          const dCm = typeof win.windowsillDepthMm === 'number' ? Math.round(Number(win.windowsillDepthMm) / 10) : null
-          const wSillCm = wCm + 15
-          parts.push(`- ${translate(locale, 'offer.sillWidthLine').replace('{n}', String(wSillCm))}`)
-          if (dCm != null) {
-            parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dCm))}`)
+          const dMm = typeof win.windowsillDepthMm === 'number' ? Math.round(Number(win.windowsillDepthMm)) : null
+          const wSillMm = wMm + 150
+          parts.push(`- ${translate(locale, 'offer.sillWidthLine').replace('{n}', String(wSillMm))}`)
+          if (dMm != null) {
+            parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
           }
           parts.push(`- ${translate(locale, 'offer.sillPriceLine')} ${formatEuroExclVat(quoteWindowsillAddonRoundedEuros(Number(win.widthMm), win.windowsillDepthMm), locale)}`)
         }
