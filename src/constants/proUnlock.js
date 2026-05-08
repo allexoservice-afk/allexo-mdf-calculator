@@ -27,6 +27,13 @@ export function setProUnlocked(v) {
   } catch {
     /* ignore */
   }
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('allexo-pro-change'))
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 /** @returns {Promise<boolean>} */

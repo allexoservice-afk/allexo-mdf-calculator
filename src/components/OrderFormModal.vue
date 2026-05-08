@@ -389,6 +389,7 @@ function onSubmit() {
   const ty = getTypeById(props.typeId)
   emit('submit', {
     typeId: props.typeId,
+    uiMode: isClientMode.value ? 'client' : 'pro',
     windows: windows.value.map((formW) => {
       const widthMm = parseMm(formW.widthMm)
       if (props.typeId === 'roller_box') {
@@ -854,7 +855,12 @@ function sizeLabel(id) {
             </p>
           </div>
 
-          <button type="button" class="btn-add-window" @click="addWindow">
+          <button
+            type="button"
+            class="btn-add-window"
+            :class="{ 'btn-add-window--subtle': isClientMode }"
+            @click="addWindow"
+          >
             {{ t('form.addWindow') }}
           </button>
 
@@ -1088,6 +1094,18 @@ function sizeLabel(id) {
 .btn-add-window:hover {
   background: var(--allexo-accent-soft);
   border-color: var(--allexo-teal-light);
+}
+
+.btn-add-window--subtle {
+  background: transparent;
+  border-color: var(--allexo-border);
+  color: var(--allexo-teal);
+  box-shadow: none;
+}
+
+.btn-add-window--subtle:hover {
+  background: var(--allexo-bg);
+  border-color: var(--allexo-muted);
 }
 
 .row {

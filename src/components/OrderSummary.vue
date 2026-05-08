@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { getTypeById, isSimplifiedProductLine } from '../constants/calculatorTypes.js'
 import { normalizeStoredWindow, normalizeWindowQuantity } from '../constants/sizeCategories.js'
 import { useLocale } from '../i18n/useLocale.js'
@@ -24,6 +24,7 @@ import {
   windowEligibleForAutoQuote,
 } from '../utils/windowDimensions.js'
 import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
+import { isProUnlocked } from '../constants/proUnlock.js'
 
 const props = defineProps({
   lines: { type: Array, required: true },
@@ -78,6 +79,43 @@ function windowEntryHeading(line, win) {
   if (q > 1) return `${t('summary.windowLabel')} ${dims} × ${q} ${t('summary.pcs')}`
   return `${t('summary.windowLabel')} ${dims}`
 }
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowDimsLabel(line, win) {
+  if (line.typeId === 'roller_box') {
+    const w = Math.round(Number(win.widthMm))
+    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
+    return `${w}×${hb} ${t('common.mm')}`
+  }
+  if (line.typeId === 'windowsill') {
+    const w = Math.round(Number(win.widthMm))
+    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
+    return `${w}×${d} ${t('common.mm')}`
+  }
+  const w = Math.round(Number(win.widthMm))
+  const h = Math.round(Number(win.heightMm))
+  return `${w}×${h} ${t('common.mm')}`
+}
+
+const proActive = ref(false)
+function syncProActive() {
+  proActive.value = isProUnlocked()
+}
+
+onMounted(() => {
+  syncProActive()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('allexo-pro-change', syncProActive)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('allexo-pro-change', syncProActive)
+  }
+})
+
+const isPublicMode = computed(() => !proActive.value)
 
 /** @param {string | undefined} id */
 function catLabel(id) {
@@ -409,8 +447,10 @@ function openContactEmailModal() {
               :key="wIdx"
               class="window-entry"
             >
-              <h4 class="window-entry__title">{{ windowEntryHeading(line, win) }}</h4>
-              <dl v-if="isSimplifiedProductLine(line.typeId)" class="dims">
+              <h4 v-if="!isPublicMode" class="window-entry__title">{{ windowEntryHeading(line, win) }}</h4>
+              <p v-else class="window-entry__title window-entry__title--public">{{ windowDimsLabel(line, win) }}</p>
+
+              <dl v-if="!isPublicMode && isSimplifiedProductLine(line.typeId)" class="dims">
                 <div class="dims__row">
                   <dt>{{ t('summary.dtWidth') }}</dt>
                   <dd>{{ formatWindowMm(win.widthMm) }}</dd>
@@ -418,7 +458,7 @@ function openContactEmailModal() {
                 <p v-if="line.typeId === 'roller_box'" class="dims-explicit">{{ rollerBoxHeightLineSummary(win) }}</p>
                 <p v-else-if="line.typeId === 'windowsill'" class="dims-explicit">{{ sillDepthLineSummary(win) }}</p>
               </dl>
-              <dl v-else class="dims">
+              <dl v-else-if="!isPublicMode" class="dims">
                 <div class="dims__row">
                   <dt>{{ t('summary.dtDepth') }}</dt>
                   <dd>{{ catLabel(win.depthCategory) }}</dd>
@@ -463,7 +503,7 @@ function openContactEmailModal() {
                 </p>
               </template>
               <template v-else-if="windowPriceEuros(line, win) > 0">
-                <dl class="dims dims--price">
+                <dl v-if="!isPublicMode" class="dims dims--price">
                   <div class="dims__row">
                     <dt>{{ t('summary.dtPricePerUnit') }}</dt>
                     <dd>{{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}</dd>
@@ -481,6 +521,16 @@ function openContactEmailModal() {
                     <dd>{{ formatEuroExclVat(windowsillAddonPriceEuros(line, win), locale) }}</dd>
                   </div>
                 </dl>
+                <dl v-else class="dims dims--price dims--price-public">
+                  <div class="dims__row">
+                    <dt>{{ t('summary.dtQuantity') }}</dt>
+                    <dd>{{ windowQty(win) }}</dd>
+                  </div>
+                  <div class="dims__row">
+                    <dt>{{ t('summary.dtLineTotal') }}</dt>
+                    <dd>{{ formatEuroExclVat(windowPriceEuros(line, win) * windowQty(win), locale) }}</dd>
+                  </div>
+                </dl>
               </template>
               <p v-else class="window-price">
                 {{ t('summary.priceLabel') }} {{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}
@@ -491,7 +541,7 @@ function openContactEmailModal() {
                   {{ t('summary.windowTimeLabel') }} {{ formatHoursDisplay(windowBufferedHoursTotal(line, win)) }}
                   {{ t('summary.hoursUnit') }}
                 </p>
-                <p class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
+                <p v-if="!isPublicMode" class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
               </div>
             </div>
 
@@ -747,6 +797,17 @@ function openContactEmailModal() {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--allexo-muted);
+}
+
+.window-entry__title--public {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: var(--allexo-text);
+  letter-spacing: -0.01em;
+}
+
+.dims--price-public .dims__row dd {
+  font-weight: 750;
 }
 
 .dims {

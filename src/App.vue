@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { CALCULATOR_TYPES } from './constants/calculatorTypes.js'
 import { useOrder } from './composables/useOrder.js'
 import { useLocale } from './i18n/useLocale.js'
@@ -21,6 +21,7 @@ import {
 import { formatEuroExclVat } from './utils/priceDisplay.js'
 import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './utils/windowDimensions.js'
 import { getTypeById } from './constants/calculatorTypes.js'
+import { isProUnlocked } from './constants/proUnlock.js'
 
 const { lines, addLine, removeLine, clearOrder } = useOrder()
 const { locale, setLocale, t } = useLocale()
@@ -43,7 +44,12 @@ function closeForm() {
 
 /** @param {Parameters<typeof addLine>[0]} payload */
 function onSubmit(payload) {
-  addLine(payload)
+  const { uiMode, ...rest } = /** @type {any} */ (payload)
+  addLine(rest)
+  if (uiMode === 'client') {
+    scrollToSummary()
+    flashSummary()
+  }
 }
 
 /** @param {import('./i18n/translations.js').Locale} code */
@@ -56,6 +62,56 @@ function scrollToSummary() {
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
+
+const summaryFlash = ref(false)
+let _flashTimer = /** @type {number | null} */ (null)
+function flashSummary() {
+  summaryFlash.value = true
+  if (_flashTimer != null) window.clearTimeout(_flashTimer)
+  _flashTimer = window.setTimeout(() => {
+    summaryFlash.value = false
+    _flashTimer = null
+  }, 1200)
+}
+
+const showWaFab = ref(false)
+let _io = /** @type {IntersectionObserver | null} */ (null)
+
+const proActive = ref(false)
+function syncProActive() {
+  proActive.value = isProUnlocked()
+}
+
+onMounted(() => {
+  syncProActive()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('allexo-pro-change', syncProActive)
+  }
+
+  const el = document.getElementById('calculator') || document.getElementById('summary')
+  if (!el || typeof IntersectionObserver === 'undefined') {
+    showWaFab.value = true
+    return
+  }
+  _io = new IntersectionObserver(
+    (entries) => {
+      const e = entries[0]
+      showWaFab.value = !!e?.isIntersecting
+    },
+    { root: null, threshold: 0.15 },
+  )
+  _io.observe(el)
+})
+
+onBeforeUnmount(() => {
+  if (_io) _io.disconnect()
+  _io = null
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('allexo-pro-change', syncProActive)
+  }
+  if (_flashTimer != null) window.clearTimeout(_flashTimer)
+  _flashTimer = null
+})
 
 const CONTACT_WHATSAPP_PHONE = '32493860753'
 
@@ -237,7 +293,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
           />
         </div>
 
-        <div id="summary">
+        <div id="summary" :class="{ 'summary-flash': summaryFlash }">
           <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
         </div>
       </section>
@@ -284,6 +340,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     </footer>
 
     <a
+      v-if="showWaFab"
       class="wa-fab"
       :href="CONTACT_WHATSAPP_HREF"
       target="_blank"
@@ -291,8 +348,10 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
       :aria-label="t('fab.waAria')"
       title="WhatsApp"
     >
-      <span aria-hidden="true">WA</span>
+      <span aria-hidden="true" class="wa-fab__label">WhatsApp</span>
     </a>
+
+    <div v-if="proActive" class="pro-indicator" aria-hidden="true">PRO</div>
 
     <OrderFormModal
       :open="formOpen"
@@ -792,7 +851,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   right: max(1rem, env(safe-area-inset-right));
   bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--sticky-offset, 0px));
   z-index: 80;
-  width: 3.15rem;
+  width: auto;
   height: 3.15rem;
   border-radius: 999px;
   display: inline-flex;
@@ -808,6 +867,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   backdrop-filter: blur(10px);
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.14s ease, box-shadow 0.2s ease;
+  padding: 0 0.95rem;
 }
 
 .wa-fab:hover {
@@ -819,7 +879,50 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   transform: translateY(0);
 }
 
+.wa-fab__label {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
 .app:has(.sticky-total) .wa-fab {
   --sticky-offset: 4.9rem;
+}
+
+.summary-flash {
+  animation: summaryFlash 900ms ease-out;
+}
+
+@keyframes summaryFlash {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  15% {
+    transform: translateY(-2px);
+  }
+  40% {
+    box-shadow: 0 0 0 6px rgba(196, 163, 90, 0.18);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+.pro-indicator {
+  position: fixed;
+  left: max(0.85rem, env(safe-area-inset-left));
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  z-index: 70;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 61, 62, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  color: var(--allexo-teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
 }
 </style>
