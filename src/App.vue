@@ -183,6 +183,8 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
         <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
       </section>
 
+      <WorksGallery />
+
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
           <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
@@ -194,8 +196,6 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
           <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
         </li>
       </ul>
-
-      <WorksGallery />
 
       <section id="calculator" class="calc">
         <div class="grid">

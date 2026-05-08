@@ -51,23 +51,42 @@ const slideCount = computed(() => (photoCount.value > 0 ? photoCount.value + 1 :
 
 const lightboxOpen = computed(() => lightboxIndex.value != null)
 
+/**
+ * Визначаємо CTA слайд максимально надійно:
+ * - будь-який індекс >= photoCount вважаємо CTA (щоб ніколи не було "порожнього" слайду)
+ */
 const onCtaSlide = computed(() => {
-  if (lightboxIndex.value == null) return false
+  const i = lightboxIndex.value
+  if (i == null) return false
   if (photoCount.value <= 0) return false
-  return lightboxIndex.value === ctaIndex.value
+  return i >= ctaIndex.value
 })
 
 /** Велике зображення лише коли lightbox відкритий (img у DOM тільки тоді). */
 const lightboxLargeSrc = computed(() => {
   const i = lightboxIndex.value
-  if (i == null || onCtaSlide.value) return null
-  return (lightboxOpen.value ? lightboxPairs.value : visiblePairs.value)[i]?.large ?? null
+  if (i == null) return null
+  // Якщо індекс вийшов за межі фото — це CTA.
+  if (i >= photoCount.value) return null
+  const src = (lightboxOpen.value ? lightboxPairs.value : visiblePairs.value)[i]?.large ?? null
+  return src || null
 })
 
 const lightboxStageKey = computed(() => {
   if (lightboxIndex.value == null) return 'closed'
   if (onCtaSlide.value) return 'cta'
   return lightboxLargeSrc.value ?? `photo-${lightboxIndex.value}`
+})
+
+// Додатковий захист: якщо індекс вийшов за межі слайдів — переводимо на CTA.
+watch([lightboxOpen, photoCount], () => {
+  if (!lightboxOpen.value) return
+  const i = lightboxIndex.value
+  if (i == null) return
+  if (photoCount.value <= 0) return
+  if (i > ctaIndex.value) {
+    lightboxIndex.value = ctaIndex.value
+  }
 })
 
 const canNavigate = computed(() => slideCount.value > 1)
