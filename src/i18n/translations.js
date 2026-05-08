@@ -100,7 +100,7 @@ export const TRANSLATIONS = {
       ctaWa: 'Залишити відгук у WhatsApp',
       ctaEmail: 'Залишити відгук на Email',
       hint:
-        'У повідомленні можна вказати ім’я/місто або написати анонімно. Також додайте, будь ласка, чи можна публікувати відгук на сайті.',
+        'У повідомленні можна вказати ім’я/місто або написати анонімно. Обов’язково додайте “можна / не можна” для публікації на сайті. Не вказуйте адресу чи телефон — це приватна інформація.',
       waTemplate:
         'Доброго дня!\n\nХочу залишити відгук про роботу ALLEXO:\n\n[Напишіть 1–2 речення]\n\nПублікація на сайті: можна / не можна\nІм’я/місто: (або анонімно)',
       emailSubject: 'ALLEXO · Відгук',
@@ -398,7 +398,7 @@ export const TRANSLATIONS = {
       ctaWa: 'Leave a WhatsApp review',
       ctaEmail: 'Leave an email review',
       hint:
-        'You can add your name/city or stay anonymous. Please also mention whether I may publish your review on the website.',
+        'You can add your name/city or stay anonymous. Please specify “yes / no” for publishing on the website. Don’t include your address or phone number (private information).',
       waTemplate:
         'Hello!\n\nI’d like to leave a review about ALLEXO:\n\n[Write 1–2 sentences]\n\nPublish on website: yes / no\nName/City: (or anonymous)',
       emailSubject: 'ALLEXO · Review',
@@ -697,7 +697,7 @@ export const TRANSLATIONS = {
       ctaWa: 'Review via WhatsApp',
       ctaEmail: 'Review via e-mail',
       hint:
-        'Je kan je naam/stad vermelden of anoniem blijven. Laat ook even weten of ik je review op de website mag plaatsen.',
+        'Je kan je naam/stad vermelden of anoniem blijven. Vermeld zeker “ja / nee” voor publicatie op de website. Zet geen adres of telefoonnummer in je bericht (privégegevens).',
       waTemplate:
         'Hallo!\n\nIk wil graag een review achterlaten over ALLEXO:\n\n[Schrijf 1–2 zinnen]\n\nPubliceren op de website: ja / nee\nNaam/Stad: (of anoniem)',
       emailSubject: 'ALLEXO · Review',
@@ -996,7 +996,7 @@ export const TRANSLATIONS = {
       ctaWa: 'Laisser un avis via WhatsApp',
       ctaEmail: 'Laisser un avis par e-mail',
       hint:
-        'Vous pouvez indiquer votre nom/ville ou rester anonyme. Merci de préciser si je peux publier l’avis sur le site.',
+        'Vous pouvez indiquer votre nom/ville ou rester anonyme. Merci de préciser “oui / non” pour la publication sur le site. N’indiquez pas d’adresse ni de numéro de téléphone (données privées).',
       waTemplate:
         'Bonjour !\n\nJe souhaite laisser un avis sur ALLEXO :\n\n[Écrivez 1–2 phrases]\n\nPublication sur le site : oui / non\nNom/Ville : (ou anonyme)',
       emailSubject: 'ALLEXO · Avis',
