@@ -132,7 +132,7 @@ function _roundUpToHalfHour(h) {
 
 /** @param {number} h */
 function formatHoursDisplay(h) {
-  const r = _roundUpToHalfHour(h)
+  const r = Math.round(h * 10) / 10
   if (Number.isInteger(r)) return String(r)
   return String(r)
 }
@@ -271,7 +271,7 @@ function windowBaseHours(line, win) {
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowBufferedHoursTotal(line, win) {
   const base = windowBaseHours(line, win) * windowQty(win)
-  return _roundUpToHalfHour(base * _TIME_BUFFER_COEFF)
+  return base * _TIME_BUFFER_COEFF
 }
 
 const orderTotalBaseHours = computed(() =>
@@ -318,7 +318,7 @@ const orderTotalBaseHours = computed(() =>
   }, 0),
 )
 
-const orderTotalBufferedHours = computed(() => _roundUpToHalfHour(orderTotalBaseHours.value * _TIME_BUFFER_COEFF))
+const orderTotalBufferedHours = computed(() => orderTotalBaseHours.value * _TIME_BUFFER_COEFF)
 const orderTotalHoursFormatted = computed(() => formatHoursDisplay(orderTotalBufferedHours.value))
 const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTotalBufferedHours.value))
 
