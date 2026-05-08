@@ -35,10 +35,8 @@ const ariaDescription = computed(() => {
       <TypeVisual :variant="visual" />
     </div>
     <h2 class="card__title">{{ title }}</h2>
-    <div class="card__body">
-      <p class="card__hint">{{ clientHint }}</p>
-      <p v-if="clientHintRoller" class="card__hint card__hint--secondary">{{ clientHintRoller }}</p>
-    </div>
+    <p class="card__hint">{{ clientHint }}</p>
+    <p v-if="clientHintRoller" class="card__hint card__hint--secondary">{{ clientHintRoller }}</p>
     <span class="card__cta">{{ t('card.selectType') }}</span>
   </button>
 </template>
@@ -50,8 +48,7 @@ const ariaDescription = computed(() => {
   align-items: stretch;
   text-align: left;
   width: 100%;
-  height: 100%;
-  padding: 0.65rem;
+  padding: 1.25rem;
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
   background: var(--allexo-surface);
@@ -83,37 +80,32 @@ const ariaDescription = computed(() => {
 .card__visual {
   background: linear-gradient(145deg, #f0f6f6 0%, #e8f4f3 100%);
   border-radius: var(--radius);
-  padding: 0.5rem;
-  margin-bottom: 0.55rem;
-  min-height: 52px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .card__title {
-  margin: 0 0 0.25rem;
-  font-size: 0.98rem;
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--allexo-teal);
   line-height: 1.35;
 }
 
-.card__body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
 .card__hint {
-  margin: 0 0 0.25rem;
-  font-size: 0.78rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
   color: var(--allexo-muted);
   line-height: 1.45;
+  flex: 1;
 }
 
 .card__hint:last-child {
-  margin-bottom: 0.65rem;
+  margin-bottom: 1rem;
 }
 
 .card__hint--secondary {
@@ -121,8 +113,7 @@ const ariaDescription = computed(() => {
 }
 
 .card__cta {
-  margin-top: auto;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--allexo-teal-light);
 }

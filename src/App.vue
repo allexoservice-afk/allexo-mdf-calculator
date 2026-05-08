@@ -178,42 +178,40 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     </header>
 
     <main class="main">
-      <div class="content">
-        <section class="about" :aria-label="t('about.aria')">
-          <p class="about__line">{{ t('about.line1') }}</p>
-          <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
-        </section>
+      <section class="about" :aria-label="t('about.aria')">
+        <p class="about__line">{{ t('about.line1') }}</p>
+        <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
+      </section>
 
-        <WorksGallery />
+      <ul class="steps" :aria-label="t('app.stepsAria')">
+        <li class="steps__item">
+          <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
+        </li>
+        <li class="steps__item">
+          <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
+        </li>
+        <li class="steps__item">
+          <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
+        </li>
+      </ul>
 
-        <ul class="steps" :aria-label="t('app.stepsAria')">
-          <li class="steps__item">
-            <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
-          </li>
-          <li class="steps__item">
-            <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
-          </li>
-          <li class="steps__item">
-            <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
-          </li>
-        </ul>
+      <WorksGallery />
 
-        <section id="calculator" class="calc">
-          <div class="grid">
-            <CalculatorCard
-              v-for="ty in CALCULATOR_TYPES"
-              :key="ty.id"
-              :type-id="ty.id"
-              :visual="ty.visual"
-              @select="openForm(ty.id)"
-            />
-          </div>
+      <section id="calculator" class="calc">
+        <div class="grid">
+          <CalculatorCard
+            v-for="ty in CALCULATOR_TYPES"
+            :key="ty.id"
+            :type-id="ty.id"
+            :visual="ty.visual"
+            @select="openForm(ty.id)"
+          />
+        </div>
 
-          <div id="summary">
-            <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
-          </div>
-        </section>
-      </div>
+        <div id="summary">
+          <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
+        </div>
+      </section>
     </main>
 
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
@@ -279,7 +277,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .header__inner {
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -394,16 +392,10 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .main {
   flex: 1;
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
   width: 100%;
-  padding: 1.25rem max(1rem, env(safe-area-inset-right)) 2rem max(1rem, env(safe-area-inset-left));
-}
-
-.content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
+  padding: 1.25rem max(1rem, env(safe-area-inset-left)) 2rem max(1rem, env(safe-area-inset-right));
 }
 
 .app:has(.sticky-total) .main {
@@ -417,7 +409,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .steps {
-  margin: 0;
+  margin: 0 0 1.25rem;
   padding: 0.85rem 1rem;
   list-style: none;
   background: var(--allexo-surface);
@@ -447,13 +439,13 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .about {
-  margin: 0;
+  margin: 0 0 1.5rem;
   padding: 1rem 1rem;
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
   background: var(--allexo-surface);
   box-shadow: var(--shadow);
-  max-width: none;
+  max-width: 40rem;
 }
 
 .about__line {
@@ -477,7 +469,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .calc {
-  margin-top: 0;
+  margin-top: 1.25rem;
 }
 
 .sticky-total {
@@ -492,7 +484,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .sticky-total__inner {
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -550,21 +542,19 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .grid {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
   grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-  align-items: stretch;
 }
 
 @media (min-width: 640px) {
   .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 780px) {
+@media (min-width: 960px) {
   .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
