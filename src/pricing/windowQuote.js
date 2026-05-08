@@ -10,7 +10,7 @@ import { mmToSizeCategory } from '../constants/sizeCategories.js'
  */
 
 /** Базова ставка за погонний метр профілю (€/м), без ПДВ; коефіцієнти нижче множаться на цю базу. */
-const _BASE_PER_M = 51
+const _BASE_PER_M = 60
 
 const _DEPTH_COEFF = /** @type {Record<SizeCategoryId, number>} */ ({
   small: 1.0,
@@ -151,7 +151,7 @@ export function quoteRollerBoxOnlyRoundedEuros(widthMm, rollerBoxHeightMm) {
 
 /**
  * Ціна лише підвіконника, € (без ПДВ), за шириною в см і коефіцієнтом глибини.
- * widthCm = widthMm / 10, widthM = widthCm / 100, price = widthM × 51 × 1.5 (+ надбавка за глибину).
+ * widthCm = widthMm / 10, widthM = widthCm / 100, price = widthM × 60 × 1.5 (+ надбавка за глибину).
  * @param {number} widthMm ширина в мм (поле «Ширина», см × 10)
  * @param {number} windowsillDepthMm глибина в мм (15–40 см, крок 5 см)
  */
