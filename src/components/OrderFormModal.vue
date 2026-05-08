@@ -45,7 +45,7 @@ const DEFAULTS_CLIENT = {
 const proUnlocked = ref(false)
 const mode = ref('client') // 'client' | 'pro'
 const isClientMode = computed(() => mode.value === 'client')
-const canUsePro = computed(() => proUnlocked.value)
+const isProMode = computed(() => !isClientMode.value)
 
 const modalEl = ref(/** @type {HTMLElement | null} */ (null))
 
@@ -493,23 +493,10 @@ function sizeLabel(id) {
           <p class="modal__hint">{{ formHint }}</p>
           <p v-if="formHintRoller" class="modal__hint">{{ formHintRoller }}</p>
         </div>
-        <div v-if="canUsePro" class="mode-switch" role="group" :aria-label="t('form.modeLabel')">
-          <button
-            type="button"
-            class="mode-switch__btn"
-            :class="{ 'mode-switch__btn--active': mode === 'client' }"
-            @click="mode = 'client'"
-          >
-            {{ t('form.modeClient') }}
-          </button>
-          <button
-            type="button"
-            class="mode-switch__btn"
-            :class="{ 'mode-switch__btn--active': mode === 'pro' }"
-            @click="mode = 'pro'"
-          >
-            {{ t('form.modePro') }}
-          </button>
+        <div class="mode-badge" aria-label="Mode">
+          <span class="mode-badge__pill" :class="{ 'mode-badge__pill--pro': isProMode }">
+            {{ isProMode ? t('form.modePro') : t('form.modeClient') }}
+          </span>
         </div>
         <form class="form" @submit.prevent="onSubmit">
           <div
@@ -877,36 +864,28 @@ function sizeLabel(id) {
   margin-bottom: 0;
 }
 
-.mode-switch {
+.mode-badge {
   margin: 0 0 0.9rem;
+}
+
+.mode-badge__pill {
   display: inline-flex;
   align-items: center;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.8rem;
   border-radius: 999px;
   border: 1px solid var(--allexo-border);
   background: var(--allexo-bg);
-  padding: 0.2rem;
-  gap: 0.2rem;
-  width: fit-content;
-}
-
-.mode-switch__btn {
-  min-height: 2.35rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
   color: var(--allexo-muted);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
-.mode-switch__btn--active {
-  background: var(--allexo-surface);
+.mode-badge__pill--pro {
   color: var(--allexo-teal);
-  box-shadow: var(--shadow);
+  background: rgba(196, 163, 90, 0.16);
+  border-color: rgba(196, 163, 90, 0.38);
 }
 
 .form {
