@@ -30,6 +30,8 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Готові відкоси МДФ без зайвого ремонту',
       subtitle: 'Зазвичай готові за 1–3 дні',
+      callCta: 'Подзвонити',
+      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Контакти',
@@ -51,6 +53,7 @@ export const TRANSLATIONS = {
     works: {
       title: 'Приклади виконаних робіт',
       subtitle: 'Фото реальних MDF обробок вікон',
+      scrollHint: 'Гортайте →',
       lightboxAria: 'Перегляд фото',
       closeLightbox: 'Закрити перегляд',
       openPreview: 'Відкрити фото',
@@ -282,6 +285,8 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finished MDF window reveals without extra renovation',
       subtitle: 'Usually ready within 1–3 days',
+      callCta: 'Call',
+      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Contact',
@@ -302,6 +307,7 @@ export const TRANSLATIONS = {
     works: {
       title: 'Examples of completed work',
       subtitle: 'Photos of real MDF window finishes',
+      scrollHint: 'Swipe →',
       lightboxAria: 'Photo preview',
       closeLightbox: 'Close preview',
       openPreview: 'Open photo',
@@ -533,6 +539,8 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Afgewerkte MDF-dagkanten zonder breekwerk',
       subtitle: 'Meestal klaar binnen 1–3 dagen',
+      callCta: 'Bellen',
+      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Contact',
@@ -554,6 +562,7 @@ export const TRANSLATIONS = {
     works: {
       title: 'Voorbeelden van uitgevoerde werken',
       subtitle: 'Foto’s van echte MDF-raamafwerkingen',
+      scrollHint: 'Swipe →',
       lightboxAria: 'Fotovoorbeeld',
       closeLightbox: 'Sluiten',
       openPreview: 'Foto openen',
@@ -785,6 +794,8 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finitions MDF pour fenêtres sans gros travaux',
       subtitle: 'Généralement prêt en 1 à 3 jours',
+      callCta: 'Appeler',
+      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Contact',
@@ -806,6 +817,7 @@ export const TRANSLATIONS = {
     works: {
       title: 'Exemples de réalisations',
       subtitle: 'Photos de vraies finitions MDF de fenêtres',
+      scrollHint: 'Faites glisser →',
       lightboxAria: 'Aperçu de la photo',
       closeLightbox: 'Fermer l’aperçu',
       openPreview: 'Ouvrir la photo',

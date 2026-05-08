@@ -458,6 +458,12 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   position: relative;
 }
 
+@media (max-width: 430px) {
+  .about {
+    padding: 0.85rem 0.9rem;
+  }
+}
+
 .about::before {
   content: '';
   position: absolute;

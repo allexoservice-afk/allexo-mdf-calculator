@@ -239,7 +239,10 @@ onBeforeUnmount(() => {
     aria-labelledby="works-title"
   >
     <h2 id="works-title" class="works__title">{{ t('works.title') }}</h2>
-    <p class="works__subtitle">{{ t('works.subtitle') }}</p>
+    <div class="works__subrow">
+      <p class="works__subtitle">{{ t('works.subtitle') }}</p>
+      <p class="works__scroll-hint" aria-hidden="true">{{ t('works.scrollHint') }}</p>
+    </div>
 
     <div class="works__strip">
       <button
@@ -364,6 +367,24 @@ onBeforeUnmount(() => {
   color: var(--allexo-muted);
   line-height: 1.4;
   max-width: 34rem;
+}
+
+.works__subrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.works__scroll-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--allexo-teal);
+  opacity: 0.9;
+  user-select: none;
 }
 
 .works__strip {
