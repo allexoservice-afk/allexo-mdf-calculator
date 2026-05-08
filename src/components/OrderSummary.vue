@@ -670,12 +670,6 @@ function openContactEmailModal() {
             <p class="contact-wa-hint">
               {{ t('summary.whHint') }}
             </p>
-            <p class="contact-wa-call">
-              {{ t('summary.callAlternative') }}
-              <a class="contact-wa-call__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
-                {{ t('contacts.phoneDisplay') }}
-              </a>
-            </p>
           </div>
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
@@ -696,25 +690,6 @@ function openContactEmailModal() {
             {{ copyNotice }}
           </p>
         </div>
-      </div>
-
-      <div class="direct-contacts" aria-labelledby="direct-contacts-heading">
-        <h3 id="direct-contacts-heading" class="direct-contacts__title">{{ t('contacts.title') }}</h3>
-        <p class="direct-contacts__hint">{{ t('contacts.directHint') }}</p>
-        <p class="direct-contacts__row">
-          <a
-            class="direct-contacts__link"
-            :href="CONTACT_PHONE_HREF"
-            :aria-label="t('contacts.phoneAria')"
-          >{{ t('contacts.phoneDisplay') }}</a>
-        </p>
-        <p class="direct-contacts__row">
-          <a
-            class="direct-contacts__link"
-            :href="CONTACT_EMAIL_HREF"
-            :aria-label="t('contacts.emailAria')"
-          >{{ t('contacts.emailDisplay') }}</a>
-        </p>
       </div>
     </template>
   </section>
@@ -1126,26 +1101,6 @@ function openContactEmailModal() {
   color: var(--allexo-muted);
 }
 
-.contact-wa-call {
-  margin: 0.35rem 0 0;
-  padding: 0 0.15rem;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--allexo-muted);
-}
-
-.contact-wa-call__link {
-  margin-left: 0.35rem;
-  color: var(--allexo-teal);
-  font-weight: 800;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.contact-wa-call__link:hover {
-  color: var(--allexo-teal-light);
-}
-
 .contact-btn {
   width: 100%;
   padding: 0.95rem 1.25rem;
@@ -1187,44 +1142,6 @@ function openContactEmailModal() {
   border-color: #547896;
 }
 
-.direct-contacts {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--allexo-border);
-}
-
-.direct-contacts__title {
-  margin: 0 0 0.35rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--allexo-teal);
-}
-
-.direct-contacts__hint {
-  margin: 0 0 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--allexo-muted);
-}
-
-.direct-contacts__row {
-  margin: 0.2rem 0 0;
-}
-
-.direct-contacts__link {
-  display: inline-block;
-  min-height: 2.75rem;
-  line-height: 2.35rem;
-  padding: 0.2rem 0;
-  font-size: 0.85rem;
-  color: var(--allexo-teal);
-  text-decoration: none;
-  word-break: break-word;
-}
-
-.direct-contacts__link:hover {
-  text-decoration: underline;
-}
 
 .line__remove {
   flex-shrink: 0;
