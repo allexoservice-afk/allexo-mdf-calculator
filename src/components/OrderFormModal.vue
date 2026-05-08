@@ -153,9 +153,12 @@ const windowErrors = computed(() => {
 
     // У режимі “Клієнт” показуємо лише ширину/висоту/кількість і підставляємо інші параметри автоматично.
     if (isClientMode.value) {
-      const hMm = parseMm(formW.heightMm)
-      if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = t('form.errHeight')
-      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = t('form.errMinWindowSize')
+      // Для “Підвіконник” та “Короб ролети” клієнт вводить тільки довжину (ширину).
+      if (tid !== 'windowsill' && tid !== 'roller_box') {
+        const hMm = parseMm(formW.heightMm)
+        if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = t('form.errHeight')
+        else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = t('form.errMinWindowSize')
+      }
       return e
     }
 
@@ -476,7 +479,26 @@ function sizeLabel(id) {
               </button>
             </div>
 
-            <div v-if="isClientMode" class="row row--dims">
+            <div
+              v-if="isClientMode && (props.typeId === 'windowsill' || props.typeId === 'roller_box')"
+              class="row row--dims row--single"
+            >
+              <label class="field">
+                <span class="field__label">{{ t('form.widthMm') }}</span>
+                <input
+                  v-model="windows[idx].widthMm"
+                  type="text"
+                  inputmode="decimal"
+                  class="field__input"
+                  :placeholder="t('form.placeholderWidth')"
+                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                />
+                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
+                  windowErrors[idx].widthMm
+                }}</span>
+              </label>
+            </div>
+            <div v-else-if="isClientMode" class="row row--dims">
               <label class="field">
                 <span class="field__label">{{ t('form.widthMm') }}</span>
                 <input
@@ -941,6 +963,10 @@ function sizeLabel(id) {
   max-width: 100%;
 }
 
+.row--single {
+  grid-template-columns: minmax(0, 8.75rem);
+}
+
 @media (max-width: 420px) {
   .row {
     grid-template-columns: 1fr;
@@ -948,6 +974,10 @@ function sizeLabel(id) {
 
   .row--dims {
     width: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .row--single {
     grid-template-columns: 1fr;
   }
 }
