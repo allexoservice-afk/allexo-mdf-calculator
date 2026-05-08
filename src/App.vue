@@ -279,7 +279,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .header__inner {
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -394,10 +394,10 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .main {
   flex: 1;
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-  padding: 1.25rem max(1rem, env(safe-area-inset-left)) 2rem max(1rem, env(safe-area-inset-right));
+  padding: 1.25rem max(1rem, env(safe-area-inset-right)) 2rem max(1rem, env(safe-area-inset-left));
 }
 
 .content {
@@ -492,7 +492,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .sticky-total__inner {
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -552,6 +552,8 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   display: grid;
   gap: 1.25rem;
   grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+  align-items: stretch;
 }
 
 @media (min-width: 640px) {
@@ -560,7 +562,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 900px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
