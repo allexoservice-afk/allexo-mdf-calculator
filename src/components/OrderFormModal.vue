@@ -49,6 +49,45 @@ const isProMode = computed(() => !isClientMode.value)
 
 const modalEl = ref(/** @type {HTMLElement | null} */ (null))
 
+function isDesktopKeyboardFriendly() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  // Avoid opening native selects on touch devices.
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+
+/** @param {HTMLSelectElement} sel */
+function openNativeSelect(sel) {
+  try {
+    sel.focus()
+    if (typeof sel.showPicker === 'function') {
+      sel.showPicker()
+    } else {
+      sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }))
+      sel.click()
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/** @param {HTMLElement} el */
+function focusNextFromElement(el) {
+  const block = el?.closest?.('.window-block')
+  if (!block) return
+  const focusables = _focusableWithin(block)
+  const i = focusables.indexOf(/** @type {any} */ (el))
+  if (i < 0) return
+  const next = focusables[i + 1]
+  if (next && typeof next.focus === 'function') {
+    next.focus()
+    return
+  }
+  // If last field in block, jump to submit.
+  const root = modalEl.value
+  const submit = root?.querySelector?.('.actions .btn--primary')
+  if (submit && typeof submit.focus === 'function') submit.focus()
+}
+
 watch(
   () => props.open,
   (open) => {
@@ -178,20 +217,9 @@ function focusNextFieldOnEnter(e) {
     if (!armed) {
       e.preventDefault()
       sel.dataset.allexoEnterArmed = '1'
+      sel.dataset.allexoAutoAdvance = '1'
       // Try to open dropdown
-      try {
-        sel.focus()
-        // Modern browsers (Chromium) support this for programmatic opening.
-        if (typeof sel.showPicker === 'function') {
-          sel.showPicker()
-        } else {
-          // Fallbacks: some browsers ignore click() for <select>
-          sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }))
-          sel.click()
-        }
-      } catch {
-        /* ignore */
-      }
+      openNativeSelect(sel)
       // Safety: if user doesn't pick, don't keep it armed forever.
       window.setTimeout(() => {
         try {
@@ -204,27 +232,44 @@ function focusNextFieldOnEnter(e) {
     }
     // If it was armed, treat Enter as "confirm & next"
     sel.dataset.allexoEnterArmed = '0'
+    sel.dataset.allexoAutoAdvance = '0'
   }
 
-  const focusables = _focusableWithin(block)
-  const i = focusables.indexOf(/** @type {any} */ (target))
-  if (i < 0) return
-  const next = focusables[i + 1]
-  if (next && typeof next.focus === 'function') {
+  if (target) {
     e.preventDefault()
-    next.focus()
-    return
-  }
-
-  // If this was the last field in this window block, jump to primary submit button.
-  const root = modalEl.value
-  const submit = root?.querySelector?.('.actions .btn--primary')
-  if (submit && typeof submit.focus === 'function') {
-    e.preventDefault()
-    submit.focus()
+    focusNextFromElement(target)
   }
 }
 
+/** @param {FocusEvent} e */
+function onSelectFocus(e) {
+  const sel = /** @type {HTMLSelectElement | null} */ (e.target)
+  if (!sel || sel.tagName !== 'SELECT') return
+  if (!isDesktopKeyboardFriendly()) return
+  // Open on focus (desktop), and allow auto-advance after selection.
+  sel.dataset.allexoAutoAdvance = '1'
+  openNativeSelect(sel)
+  window.setTimeout(() => {
+    try {
+      if (sel.dataset.allexoAutoAdvance === '1') sel.dataset.allexoAutoAdvance = '0'
+    } catch {
+      /* ignore */
+    }
+  }, 2500)
+}
+
+/** @param {Event} e */
+function onSelectChange(e) {
+  const sel = /** @type {HTMLSelectElement | null} */ (e.target)
+  if (!sel || sel.tagName !== 'SELECT') return
+  // Advance only when the dropdown was opened via keyboard flow.
+  if (sel.dataset.allexoAutoAdvance !== '1') return
+  sel.dataset.allexoAutoAdvance = '0'
+  sel.dataset.allexoEnterArmed = '0'
+  void nextTick().then(() => {
+    focusNextFromElement(sel)
+  })
+}
 function parseNum(v) {
   const n = Number(String(v).replace(',', '.'))
   return Number.isFinite(n) ? n : NaN
@@ -712,7 +757,13 @@ function sizeLabel(id) {
             </div>
             <label class="field field--compact">
               <span class="field__label">{{ t('form.windowQuantity') }}</span>
-              <select v-model.number="windows[idx].quantity" class="field__input">
+              <select
+                v-model.number="windows[idx].quantity"
+                class="field__input"
+                @focus="onSelectFocus"
+                @change="onSelectChange"
+                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+              >
                 <option v-for="q in WINDOW_QUANTITIES" :key="q" :value="q">{{ q }}</option>
               </select>
             </label>
@@ -725,8 +776,9 @@ function sizeLabel(id) {
                 v-model="windows[idx].depthCategory"
                 class="field__input"
                 :class="{ 'field__input--error': windowErrors[idx]?.depthCategory }"
-                  @change="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
-                  @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+                @focus="onSelectFocus"
+                @change="onSelectChange"
+                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
               >
                 <option
                   v-for="opt in SIZE_CATEGORY_OPTIONS"
@@ -748,8 +800,9 @@ function sizeLabel(id) {
                 class="field__input"
                 autocomplete="off"
                 :class="{ 'field__input--error': windowErrors[idx]?.sillDepthMm }"
-                  @change="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
-                  @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+                @focus="onSelectFocus"
+                @change="onSelectChange"
+                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
               >
                 <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
                   {{ mm }} {{ t('common.mm') }}
@@ -766,8 +819,9 @@ function sizeLabel(id) {
                 v-model="windows[idx].rollerCategory"
                 class="field__input"
                 :class="{ 'field__input--error': windowErrors[idx]?.rollerCategory }"
-                  @change="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
-                  @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+                @focus="onSelectFocus"
+                @change="onSelectChange"
+                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
               >
                 <option
                   v-for="opt in SIZE_CATEGORY_OPTIONS"
