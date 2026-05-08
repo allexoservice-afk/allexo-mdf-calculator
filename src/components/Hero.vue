@@ -25,7 +25,7 @@ function onBrandTap() {
     tapCount = 0
     tapTimer = null
   }, 650)
-  if (tapCount >= 3) {
+  if (tapCount >= 2) {
     tapCount = 0
     if (tapTimer != null) window.clearTimeout(tapTimer)
     tapTimer = null
