@@ -62,14 +62,14 @@ function windowEntryHeading(line, win) {
   if (line.typeId === 'roller_box') {
     const w = Math.round(Number(win.widthMm))
     const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-    const dims = `${w}×${hb} ${t('common.mm')}`
+    const dims = `${w} ${t('common.mm')}`
     if (q > 1) return `${dims} × ${q} ${t('summary.pcs')}`
     return dims
   }
   if (line.typeId === 'windowsill') {
     const w = Math.round(Number(win.widthMm))
     const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-    const dims = `${w}×${d} ${t('common.mm')}`
+    const dims = `${w} ${t('common.mm')}`
     if (q > 1) return `${dims} × ${q} ${t('summary.pcs')}`
     return dims
   }
@@ -85,12 +85,12 @@ function windowDimsLabel(line, win) {
   if (line.typeId === 'roller_box') {
     const w = Math.round(Number(win.widthMm))
     const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-    return `${w}×${hb} ${t('common.mm')}`
+    return `${w} ${t('common.mm')}`
   }
   if (line.typeId === 'windowsill') {
     const w = Math.round(Number(win.widthMm))
     const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-    return `${w}×${d} ${t('common.mm')}`
+    return `${w} ${t('common.mm')}`
   }
   const w = Math.round(Number(win.widthMm))
   const h = Math.round(Number(win.heightMm))

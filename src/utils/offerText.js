@@ -145,13 +145,13 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
       const qty = normalizeWindowQuantity(win.quantity)
       if (L.typeId === 'roller_box') {
         const hbMm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-        let winHead = `- ${itemTitle}: ${wMm} × ${hbMm} ${translate(locale, 'common.mm')}`
+        let winHead = `- ${itemTitle}: ${wMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
         parts.push(`- ${translate(locale, 'offer.rollerBoxHeightLine').replace('{n}', String(hbMm))}`)
       } else if (L.typeId === 'windowsill') {
         const dMm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-        let winHead = `- ${itemTitle}: ${wMm} × ${dMm} ${translate(locale, 'common.mm')}`
+        let winHead = `- ${itemTitle}: ${wMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
         parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
