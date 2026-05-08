@@ -139,7 +139,7 @@ function _focusableWithin(root) {
   if (!root) return []
   const all = Array.from(
     root.querySelectorAll(
-      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
+      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])',
     ),
   )
   return all.filter((el) => {
@@ -170,6 +170,27 @@ function focusNextFieldOnEnter(e) {
   const target = /** @type {HTMLElement | null} */ (e.target)
   const block = target?.closest?.('.window-block')
   if (!block) return
+
+  // Special handling for <select>: first Enter opens dropdown, second Enter advances.
+  if (target && target.tagName === 'SELECT') {
+    const sel = /** @type {HTMLSelectElement} */ (/** @type {any} */ (target))
+    const armed = sel.dataset.allexoEnterArmed === '1'
+    if (!armed) {
+      e.preventDefault()
+      sel.dataset.allexoEnterArmed = '1'
+      // Try to open dropdown
+      try {
+        sel.focus()
+        sel.click()
+      } catch {
+        /* ignore */
+      }
+      return
+    }
+    // If it was armed, treat Enter as "confirm & next"
+    sel.dataset.allexoEnterArmed = '0'
+  }
+
   const focusables = _focusableWithin(block)
   const i = focusables.indexOf(/** @type {any} */ (target))
   if (i < 0) return
@@ -177,6 +198,15 @@ function focusNextFieldOnEnter(e) {
   if (next && typeof next.focus === 'function') {
     e.preventDefault()
     next.focus()
+    return
+  }
+
+  // If this was the last field in this window block, jump to primary submit button.
+  const root = modalEl.value
+  const submit = root?.querySelector?.('.actions .btn--primary')
+  if (submit && typeof submit.focus === 'function') {
+    e.preventDefault()
+    submit.focus()
   }
 }
 
@@ -680,6 +710,8 @@ function sizeLabel(id) {
                 v-model="windows[idx].depthCategory"
                 class="field__input"
                 :class="{ 'field__input--error': windowErrors[idx]?.depthCategory }"
+                  @change="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+                  @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
               >
                 <option
                   v-for="opt in SIZE_CATEGORY_OPTIONS"
@@ -701,6 +733,8 @@ function sizeLabel(id) {
                 class="field__input"
                 autocomplete="off"
                 :class="{ 'field__input--error': windowErrors[idx]?.sillDepthMm }"
+                  @change="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+                  @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
               >
                 <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
                   {{ mm }} {{ t('common.mm') }}
@@ -717,6 +751,8 @@ function sizeLabel(id) {
                 v-model="windows[idx].rollerCategory"
                 class="field__input"
                 :class="{ 'field__input--error': windowErrors[idx]?.rollerCategory }"
+                  @change="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
+                  @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
               >
                 <option
                   v-for="opt in SIZE_CATEGORY_OPTIONS"
