@@ -13,10 +13,20 @@ const { t } = useLocale()
 /** @type {import('vue').Ref<string[]>} */
 const brokenThumbs = ref([])
 
+/** @type {import('vue').Ref<string[]>} */
+const brokenLarge = ref([])
+
 /** @param {string} thumbUrl */
 function onThumbError(thumbUrl) {
   if (!brokenThumbs.value.includes(thumbUrl)) {
     brokenThumbs.value = [...brokenThumbs.value, thumbUrl]
+  }
+}
+
+/** @param {string} largeUrl */
+function onLargeError(largeUrl) {
+  if (!brokenLarge.value.includes(largeUrl)) {
+    brokenLarge.value = [...brokenLarge.value, largeUrl]
   }
 }
 
@@ -69,6 +79,7 @@ const lightboxLargeSrc = computed(() => {
   // Якщо індекс вийшов за межі фото — це CTA.
   if (i >= photoCount.value) return null
   const src = (lightboxOpen.value ? lightboxPairs.value : visiblePairs.value)[i]?.large ?? null
+  if (src && brokenLarge.value.includes(src)) return null
   return src || null
 })
 
@@ -313,6 +324,7 @@ onBeforeUnmount(() => {
               decoding="async"
               fetchpriority="high"
               @click="onLargeImageClick"
+              @error="onLargeError(lightboxLargeSrc)"
             />
 
             <div v-else-if="showCtaSlide" class="lightbox__cta-slide">
