@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'allexo-mdf-pro-unlocked'
 
 // NOTE: Frontend-only gating. This hides Pro from normal users but cannot provide true security.
-const CODE_SHA256_HEX = 'e270b4dbebe035dfd27c06e8432791e6e3b4a59496f15a01f16db896b2daf620'
+const CODE_SHA256_HEX = 'b0c9e7a9e1f907bf5467b7510ad9bace032388f6fd76f7dbddf4d64bdf758dc5'
 
 /** @returns {Promise<string>} */
 async function sha256Hex(text) {
