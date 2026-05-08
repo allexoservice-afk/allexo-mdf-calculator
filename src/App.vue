@@ -178,40 +178,42 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     </header>
 
     <main class="main">
-      <section class="about" :aria-label="t('about.aria')">
-        <p class="about__line">{{ t('about.line1') }}</p>
-        <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
-      </section>
+      <div class="content">
+        <section class="about" :aria-label="t('about.aria')">
+          <p class="about__line">{{ t('about.line1') }}</p>
+          <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
+        </section>
 
-      <ul class="steps" :aria-label="t('app.stepsAria')">
-        <li class="steps__item">
-          <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
-        </li>
-        <li class="steps__item">
-          <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
-        </li>
-        <li class="steps__item">
-          <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
-        </li>
-      </ul>
+        <WorksGallery />
 
-      <WorksGallery />
+        <ul class="steps" :aria-label="t('app.stepsAria')">
+          <li class="steps__item">
+            <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
+          </li>
+          <li class="steps__item">
+            <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
+          </li>
+          <li class="steps__item">
+            <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
+          </li>
+        </ul>
 
-      <section id="calculator" class="calc">
-        <div class="grid">
-          <CalculatorCard
-            v-for="ty in CALCULATOR_TYPES"
-            :key="ty.id"
-            :type-id="ty.id"
-            :visual="ty.visual"
-            @select="openForm(ty.id)"
-          />
-        </div>
+        <section id="calculator" class="calc">
+          <div class="grid">
+            <CalculatorCard
+              v-for="ty in CALCULATOR_TYPES"
+              :key="ty.id"
+              :type-id="ty.id"
+              :visual="ty.visual"
+              @select="openForm(ty.id)"
+            />
+          </div>
 
-        <div id="summary">
-          <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
-        </div>
-      </section>
+          <div id="summary">
+            <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
+          </div>
+        </section>
+      </div>
     </main>
 
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
@@ -398,6 +400,12 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   padding: 1.25rem max(1rem, env(safe-area-inset-left)) 2rem max(1rem, env(safe-area-inset-right));
 }
 
+.content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
 .app:has(.sticky-total) .main {
   padding-bottom: 6.25rem;
 }
@@ -409,7 +417,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .steps {
-  margin: 0 0 1.25rem;
+  margin: 0;
   padding: 0.85rem 1rem;
   list-style: none;
   background: var(--allexo-surface);
@@ -439,13 +447,13 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .about {
-  margin: 0 0 1.5rem;
+  margin: 0;
   padding: 1rem 1rem;
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
   background: var(--allexo-surface);
   box-shadow: var(--shadow);
-  max-width: 40rem;
+  max-width: none;
 }
 
 .about__line {
@@ -469,7 +477,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .calc {
-  margin-top: 1.25rem;
+  margin-top: 0;
 }
 
 .sticky-total {
@@ -542,19 +550,19 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
   grid-template-columns: 1fr;
 }
 
 @media (min-width: 640px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 960px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

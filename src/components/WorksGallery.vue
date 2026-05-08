@@ -35,7 +35,14 @@ const visiblePairs = computed(() => {
 /** @type {import('vue').Ref<number | null>} */
 const lightboxIndex = ref(null)
 
-const photoCount = computed(() => visiblePairs.value.length)
+/**
+ * Snapshot списку фото для поточної сесії lightbox.
+ * Це робить індекси/CTA стабільними навіть якщо `visiblePairs` зміниться
+ * (наприклад, через `onThumbError` під час завантаження мініатюр).
+ */
+const lightboxPairs = ref(/** @type {{ thumb: string, large: string }[]} */ ([]))
+
+const photoCount = computed(() => (lightboxOpen.value ? lightboxPairs.value.length : visiblePairs.value.length))
 
 // CTA як “додатковий слайд” після останнього фото.
 // Індекси: 0..photoCount-1 = фото, ctaIndex = photoCount = CTA.
@@ -54,7 +61,7 @@ const onCtaSlide = computed(() => {
 const lightboxLargeSrc = computed(() => {
   const i = lightboxIndex.value
   if (i == null || onCtaSlide.value) return null
-  return visiblePairs.value[i]?.large ?? null
+  return (lightboxOpen.value ? lightboxPairs.value : visiblePairs.value)[i]?.large ?? null
 })
 
 const lightboxStageKey = computed(() => {
@@ -67,11 +74,13 @@ const canNavigate = computed(() => slideCount.value > 1)
 
 /** @param {number} idx індекс у visiblePairs */
 function openLightbox(idx) {
+  lightboxPairs.value = visiblePairs.value.slice()
   lightboxIndex.value = idx
 }
 
 function closeLightbox() {
   lightboxIndex.value = null
+  lightboxPairs.value = []
 }
 
 function goToCalculatorFromCta() {
@@ -175,18 +184,8 @@ watch(lightboxOpen, (open) => {
   }
 })
 
-watch(visiblePairs, (pairs) => {
-  const i = lightboxIndex.value
-  if (i == null) return
-  if (pairs.length === 0) {
-    closeLightbox()
-    return
-  }
-  // Якщо індекс вказує на фото, якого вже немає — закриваємо.
-  if (i < pairs.length) return
-  if (pairs.length > 0 && i === pairs.length) return
-  closeLightbox()
-})
+// Не реагуємо на зміни `visiblePairs` під час відкритого lightbox — індекси/CTA рахуються
+// від snapshot `lightboxPairs`. Зміни в галереї застосуються при наступному відкритті.
 
 onBeforeUnmount(() => {
   if (typeof document === 'undefined') return
