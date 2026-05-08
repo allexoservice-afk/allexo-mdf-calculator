@@ -140,6 +140,33 @@ function openWhatsAppFromSticky() {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
+function openEmailFromSticky() {
+  const total = formatEuroExclVat(orderTotalEuros.value, locale.value)
+  const count = Array.isArray(lines.value) ? lines.value.length : 0
+
+  const types = Array.from(
+    new Set(
+      (lines.value ?? [])
+        .map((l) => String(l?.typeId ?? ''))
+        .filter(Boolean)
+        .map((id) => t(`types.${id}.title`)),
+    ),
+  ).join(', ')
+
+  const subject = 'ALLEXO · Запит на прорахунок'
+  const body =
+    `Доброго дня!\n\n` +
+    `Хочу отримати прорахунок:\n` +
+    `Сума: ${total}\n` +
+    `Кількість позицій: ${count}\n` +
+    `Тип робіт: ${types || '—'}\n\n` +
+    `Можете уточнити деталі?`
+
+  const email = String(CONTACT_EMAIL_HREF || '').replace(/^mailto:/, '')
+  const url = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  window.location.href = url
+}
+
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
   const tid = typeof line.typeId === 'string' ? line.typeId : undefined
@@ -310,6 +337,9 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
           </button>
           <button type="button" class="sticky-total__btn" @click="openWhatsAppFromSticky">
             {{ t('summary.whRequest') }}
+          </button>
+          <button type="button" class="sticky-total__btn sticky-total__btn--secondary" @click="openEmailFromSticky">
+            {{ t('summary.sendEmail') }}
           </button>
         </div>
       </div>
@@ -728,6 +758,8 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .sticky-total__btn {
@@ -749,7 +781,17 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   color: var(--allexo-teal);
 }
 
+.sticky-total__btn--secondary {
+  background: transparent;
+  color: var(--allexo-teal);
+}
+
 .sticky-total__btn--ghost:hover {
+  background: var(--allexo-bg);
+  color: var(--allexo-teal);
+}
+
+.sticky-total__btn--secondary:hover {
   background: var(--allexo-bg);
   color: var(--allexo-teal);
 }
@@ -761,6 +803,10 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 @media (max-width: 430px) {
   .sticky-total__sum {
     font-size: 0.9rem;
+  }
+
+  .sticky-total__inner {
+    align-items: flex-start;
   }
 }
 
