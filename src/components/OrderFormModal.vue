@@ -34,16 +34,26 @@ const emit = defineEmits(['close', 'submit'])
 
 const { locale, t } = useLocale()
 
+const DEFAULTS_CLIENT = {
+  depthCategory: 'small',
+  windowsillDepthMm: 250,
+  rollerBoxHeightMm: 400,
+  rollerCategory: 'small',
+}
+
+const mode = ref('client') // 'client' | 'pro'
+const isClientMode = computed(() => mode.value === 'client')
+
 function newWindowRow() {
   return reactive({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     widthMm: '',
     heightMm: '',
-    rollerBoxHeightMm: 300,
-    sillDepthMm: 150,
+    rollerBoxHeightMm: DEFAULTS_CLIENT.rollerBoxHeightMm,
+    sillDepthMm: DEFAULTS_CLIENT.windowsillDepthMm,
     quantity: 1,
-    depthCategory: 'small',
-    rollerCategory: 'small',
+    depthCategory: DEFAULTS_CLIENT.depthCategory,
+    rollerCategory: DEFAULTS_CLIENT.rollerCategory,
   })
 }
 
@@ -102,6 +112,7 @@ watch(
   () => props.typeId,
   () => {
     windows.value = [newWindowRow()]
+    mode.value = 'client'
   },
 )
 
@@ -125,6 +136,14 @@ const windowErrors = computed(() => {
     const wMm = parseMm(formW.widthMm)
     if (!Number.isFinite(wMm) || wMm <= 0) e.widthMm = t('form.errWidth')
     else if (wMm < MIN_WINDOW_SIDE_MM) e.widthMm = t('form.errMinWindowSize')
+
+    // У режимі “Клієнт” показуємо лише ширину/висоту/кількість і підставляємо інші параметри автоматично.
+    if (isClientMode.value) {
+      const hMm = parseMm(formW.heightMm)
+      if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = t('form.errHeight')
+      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = t('form.errMinWindowSize')
+      return e
+    }
 
     if (tid === 'roller_box') {
       const rhMm = Number(formW.rollerBoxHeightMm)
@@ -216,7 +235,9 @@ function onSubmit() {
     windows: windows.value.map((formW) => {
       const widthMm = parseMm(formW.widthMm)
       if (props.typeId === 'roller_box') {
-        const rollerBoxHeightMm = Number(formW.rollerBoxHeightMm)
+        const rollerBoxHeightMm = isClientMode.value
+          ? DEFAULTS_CLIENT.rollerBoxHeightMm
+          : Number(formW.rollerBoxHeightMm)
         return {
           widthMm,
           rollerBoxHeightMm,
@@ -229,7 +250,7 @@ function onSubmit() {
         }
       }
       if (props.typeId === 'windowsill') {
-        const windowsillDepthMm = Number(formW.sillDepthMm)
+        const windowsillDepthMm = isClientMode.value ? DEFAULTS_CLIENT.windowsillDepthMm : Number(formW.sillDepthMm)
         return {
           widthMm,
           windowsillDepthMm,
@@ -245,15 +266,21 @@ function onSubmit() {
       return {
         widthMm,
         heightMm,
-        depthCategory: isValidSizeCategory(String(formW.depthCategory))
-          ? formW.depthCategory
-          : 'small',
-        windowsillDepthMm: ty?.hasSill ? Number(formW.sillDepthMm) : null,
+        depthCategory: isClientMode.value
+          ? DEFAULTS_CLIENT.depthCategory
+          : isValidSizeCategory(String(formW.depthCategory))
+            ? formW.depthCategory
+            : 'small',
+        windowsillDepthMm: ty?.hasSill
+          ? (isClientMode.value ? DEFAULTS_CLIENT.windowsillDepthMm : Number(formW.sillDepthMm))
+          : null,
         windowsillCategory: null,
         rollerCategory: ty?.hasRoller
-          ? isValidSizeCategory(String(formW.rollerCategory))
-            ? formW.rollerCategory
-            : 'small'
+          ? (isClientMode.value
+              ? DEFAULTS_CLIENT.rollerCategory
+              : isValidSizeCategory(String(formW.rollerCategory))
+                ? formW.rollerCategory
+                : 'small')
           : null,
         profileLengthM: windowProfileLengthMeters(widthMm, heightMm),
         quantity: normalizeWindowQuantity(formW.quantity),
@@ -332,16 +359,24 @@ const windowPreviews = computed(() => {
         windowSidesMeetMinimum(wMm, hMm) &&
         windowExceedsStandardMax(wMm, hMm)
       if (showPreview) {
-        const depth = isValidSizeCategory(String(formW.depthCategory)) ? formW.depthCategory : 'small'
+        const depth = isClientMode.value
+          ? DEFAULTS_CLIENT.depthCategory
+          : isValidSizeCategory(String(formW.depthCategory))
+            ? formW.depthCategory
+            : 'small'
         const ws = ty.hasSill
-          ? (WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === Number(formW.sillDepthMm))
-              ? Number(formW.sillDepthMm)
-              : 150)
+          ? (isClientMode.value
+              ? DEFAULTS_CLIENT.windowsillDepthMm
+              : WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === Number(formW.sillDepthMm))
+                ? Number(formW.sillDepthMm)
+                : DEFAULTS_CLIENT.windowsillDepthMm)
           : null
         const roller = ty.hasRoller
-          ? isValidSizeCategory(String(formW.rollerCategory))
-            ? formW.rollerCategory
-            : 'small'
+          ? (isClientMode.value
+              ? DEFAULTS_CLIENT.rollerCategory
+              : isValidSizeCategory(String(formW.rollerCategory))
+                ? formW.rollerCategory
+                : 'small')
           : null
         unitEuros = quoteWindowRoundedEuros(
           wMm,
@@ -391,6 +426,24 @@ function sizeLabel(id) {
           <p class="modal__hint">{{ formHint }}</p>
           <p v-if="formHintRoller" class="modal__hint">{{ formHintRoller }}</p>
         </div>
+        <div class="mode-switch" role="group" :aria-label="t('form.modeLabel')">
+          <button
+            type="button"
+            class="mode-switch__btn"
+            :class="{ 'mode-switch__btn--active': mode === 'client' }"
+            @click="mode = 'client'"
+          >
+            {{ t('form.modeClient') }}
+          </button>
+          <button
+            type="button"
+            class="mode-switch__btn"
+            :class="{ 'mode-switch__btn--active': mode === 'pro' }"
+            @click="mode = 'pro'"
+          >
+            {{ t('form.modePro') }}
+          </button>
+        </div>
         <form class="form" @submit.prevent="onSubmit">
           <div
             v-for="(win, idx) in windows"
@@ -409,7 +462,37 @@ function sizeLabel(id) {
               </button>
             </div>
 
-            <div v-if="isSimplifiedLine && props.typeId === 'roller_box'" class="row row--dims">
+            <div v-if="isClientMode" class="row row--dims">
+              <label class="field">
+                <span class="field__label">{{ t('form.widthMm') }}</span>
+                <input
+                  v-model="windows[idx].widthMm"
+                  type="text"
+                  inputmode="decimal"
+                  class="field__input"
+                  :placeholder="t('form.placeholderWidth')"
+                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                />
+                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
+                  windowErrors[idx].widthMm
+                }}</span>
+              </label>
+              <label class="field">
+                <span class="field__label">{{ t('form.heightMm') }}</span>
+                <input
+                  v-model="windows[idx].heightMm"
+                  type="text"
+                  inputmode="decimal"
+                  class="field__input"
+                  :placeholder="t('form.placeholderHeight')"
+                  :class="{ 'field__input--error': windowErrors[idx]?.heightMm }"
+                />
+                <span v-if="windowErrors[idx]?.heightMm" class="field__err">{{
+                  windowErrors[idx].heightMm
+                }}</span>
+              </label>
+            </div>
+            <div v-else-if="isSimplifiedLine && props.typeId === 'roller_box'" class="row row--dims">
               <label class="field">
                 <span class="field__label">{{ t('form.widthMm') }}</span>
                 <input
@@ -509,10 +592,10 @@ function sizeLabel(id) {
                 <option v-for="q in WINDOW_QUANTITIES" :key="q" :value="q">{{ q }}</option>
               </select>
             </label>
-            <p v-if="!isSimplifiedLine" class="dims-hint">{{ t('form.minSizeHint') }}</p>
+            <p v-if="!isSimplifiedLine && !isClientMode" class="dims-hint">{{ t('form.minSizeHint') }}</p>
             <p v-else class="dims-hint">{{ t('form.minSizeHintSimplified') }}</p>
 
-            <label v-if="!isSimplifiedLine" class="field">
+            <label v-if="!isSimplifiedLine && !isClientMode" class="field">
               <span class="field__label">{{ t('form.depthMm') }}</span>
               <select
                 v-model="windows[idx].depthCategory"
@@ -532,7 +615,7 @@ function sizeLabel(id) {
               }}</span>
             </label>
 
-            <label v-if="!isSimplifiedLine && currentType.hasSill" class="field">
+            <label v-if="!isSimplifiedLine && !isClientMode && currentType.hasSill" class="field">
               <span class="field__label">{{ t('form.sillDepthCm') }}</span>
               <select
                 v-model.number="windows[idx].sillDepthMm"
@@ -549,7 +632,7 @@ function sizeLabel(id) {
               }}</span>
             </label>
 
-            <label v-if="!isSimplifiedLine && currentType.hasRoller" class="field">
+            <label v-if="!isSimplifiedLine && !isClientMode && currentType.hasRoller" class="field">
               <span class="field__label">{{ t('form.rollerMm') }}</span>
               <select
                 v-model="windows[idx].rollerCategory"
@@ -700,6 +783,38 @@ function sizeLabel(id) {
 
 .modal__hint:last-child {
   margin-bottom: 0;
+}
+
+.mode-switch {
+  margin: 0 0 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--allexo-border);
+  background: var(--allexo-bg);
+  padding: 0.2rem;
+  gap: 0.2rem;
+  width: fit-content;
+}
+
+.mode-switch__btn {
+  min-height: 2.35rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--allexo-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mode-switch__btn--active {
+  background: var(--allexo-surface);
+  color: var(--allexo-teal);
+  box-shadow: var(--shadow);
 }
 
 .form {

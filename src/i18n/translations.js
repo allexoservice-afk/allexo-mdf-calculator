@@ -159,6 +159,9 @@ export const TRANSLATIONS = {
       pricePerUnit: 'За 1 шт:',
       quantityLabel: 'Кількість',
       lineTotal: 'Разом:',
+      modeLabel: 'Режим',
+      modeClient: 'Клієнт',
+      modePro: 'Pro',
     },
     summary: {
       title: 'Підсумок замовлення',
@@ -425,6 +428,9 @@ export const TRANSLATIONS = {
       pricePerUnit: 'Per unit:',
       quantityLabel: 'Quantity',
       lineTotal: 'Subtotal:',
+      modeLabel: 'Mode',
+      modeClient: 'Client',
+      modePro: 'Pro',
     },
     summary: {
       title: 'Order summary',
@@ -692,6 +698,9 @@ export const TRANSLATIONS = {
       pricePerUnit: 'Per stuk:',
       quantityLabel: 'Aantal',
       lineTotal: 'Subtotaal:',
+      modeLabel: 'Modus',
+      modeClient: 'Klant',
+      modePro: 'Pro',
     },
     summary: {
       title: 'Besteloverzicht',
@@ -959,6 +968,9 @@ export const TRANSLATIONS = {
       pricePerUnit: 'À l’unité :',
       quantityLabel: 'Quantité',
       lineTotal: 'Sous-total :',
+      modeLabel: 'Mode',
+      modeClient: 'Client',
+      modePro: 'Pro',
     },
     summary: {
       title: 'Résumé de la commande',

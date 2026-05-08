@@ -189,7 +189,7 @@ function windowsillAddonPriceEuros(line, win) {
 function windowsillAddonWidthMm(win) {
   const wMm = Math.round(Number(win.widthMm))
   if (!Number.isFinite(wMm)) return null
-  return wMm + 150
+  return wMm + 300
 }
 
 /** @param {Record<string, unknown>} win */

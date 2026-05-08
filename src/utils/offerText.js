@@ -153,7 +153,7 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
         parts.push(`- ${translate(locale, 'offer.sill')} ${t.hasSill ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`)
         if (t.hasSill) {
           const dMm = typeof win.windowsillDepthMm === 'number' ? Math.round(Number(win.windowsillDepthMm)) : null
-          const wSillMm = wMm + 150
+          const wSillMm = wMm + 300
           parts.push(`- ${translate(locale, 'offer.sillWidthLine').replace('{n}', String(wSillMm))}`)
           if (dMm != null) {
             parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
