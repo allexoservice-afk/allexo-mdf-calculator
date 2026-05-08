@@ -108,6 +108,7 @@ onBeforeUnmount(() => {
 })
 
 const CONTACT_WHATSAPP_PHONE = '32493860753'
+const CONTACT_EMAIL = 'allexo.service@gmail.com'
 
 function openWhatsAppFromSticky() {
   const totalRaw = orderTotalEuros.value
@@ -174,6 +175,19 @@ function openEmailFromSticky() {
 
   const email = String(CONTACT_EMAIL_HREF || '').replace(/^mailto:/, '')
   const url = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  window.location.href = url
+}
+
+function openWhatsAppReview() {
+  const text = t('reviews.waTemplate')
+  const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function openEmailReview() {
+  const subject = t('reviews.emailSubject')
+  const body = t('reviews.waTemplate')
+  const url = `mailto:${encodeURIComponent(CONTACT_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   window.location.href = url
 }
 
@@ -307,6 +321,22 @@ const minOrderDiffEuros = computed(() =>
           <p class="social-proof__stars" aria-hidden="true">★★★★★</p>
           <p class="social-proof__quote">{{ t('proof.quote') }}</p>
           <p class="social-proof__meta">{{ t('proof.meta') }}</p>
+        </div>
+      </section>
+
+      <section class="reviews" :aria-label="t('reviews.aria')">
+        <div class="reviews__card">
+          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
+          <p class="reviews__intro">{{ t('reviews.intro') }}</p>
+          <div class="reviews__actions">
+            <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
+              {{ t('reviews.ctaWa') }}
+            </button>
+            <button type="button" class="reviews__btn reviews__btn--email" @click="openEmailReview">
+              {{ t('reviews.ctaEmail') }}
+            </button>
+          </div>
+          <p class="reviews__hint">{{ t('reviews.hint') }}</p>
         </div>
       </section>
 
@@ -643,6 +673,83 @@ const minOrderDiffEuros = computed(() =>
   font-size: 0.85rem;
   font-weight: 650;
   color: var(--allexo-muted);
+}
+
+.reviews {
+  margin: 0 0 1.25rem;
+}
+
+.reviews__card {
+  padding: 1rem 1rem;
+  background: var(--allexo-surface);
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.reviews__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 850;
+  color: var(--allexo-teal);
+}
+
+.reviews__intro {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--allexo-muted);
+  line-height: 1.45;
+}
+
+.reviews__actions {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+}
+
+@media (min-width: 560px) {
+  .reviews__actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.reviews__btn {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--allexo-border);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reviews__btn--wa {
+  background: var(--allexo-teal);
+  color: #fff;
+}
+
+.reviews__btn--wa:hover {
+  background: var(--allexo-teal-light);
+}
+
+.reviews__btn--email {
+  background: transparent;
+  color: var(--allexo-teal);
+}
+
+.reviews__btn--email:hover {
+  background: var(--allexo-bg);
+}
+
+.reviews__hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--allexo-muted);
+  line-height: 1.45;
 }
 
 .sticky-total {

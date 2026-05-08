@@ -92,6 +92,19 @@ export const TRANSLATIONS = {
       quote: 'Акуратна робота, швидке виконання та чистий результат.',
       meta: 'MDF afwerking in Brugge',
     },
+    reviews: {
+      aria: 'Відгуки клієнтів',
+      title: 'Відгуки',
+      intro:
+        'Перші відгуки з’являться тут найближчим часом. Якщо вам сподобалась робота — буду вдячний за 1–2 речення.',
+      ctaWa: 'Залишити відгук у WhatsApp',
+      ctaEmail: 'Залишити відгук на Email',
+      hint:
+        'У повідомленні можна вказати ім’я/місто або написати анонімно. Також додайте, будь ласка, чи можна публікувати відгук на сайті.',
+      waTemplate:
+        'Доброго дня!\n\nХочу залишити відгук про роботу ALLEXO:\n\n[Напишіть 1–2 речення]\n\nПублікація на сайті: можна / не можна\nІм’я/місто: (або анонімно)',
+      emailSubject: 'ALLEXO · Відгук',
+    },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Мова інтерфейсу' },
     card: { selectType: 'Обрати тип', ariaPrefix: 'Обрати тип:' },
     types: {
@@ -376,6 +389,19 @@ export const TRANSLATIONS = {
       aria: 'Social proof',
       quote: 'Clean work, fast execution, and a tidy result.',
       meta: 'MDF finishing in Bruges',
+    },
+    reviews: {
+      aria: 'Customer reviews',
+      title: 'Reviews',
+      intro:
+        'The first reviews will appear here soon. If you liked the result, I’d really appreciate 1–2 sentences.',
+      ctaWa: 'Leave a WhatsApp review',
+      ctaEmail: 'Leave an email review',
+      hint:
+        'You can add your name/city or stay anonymous. Please also mention whether I may publish your review on the website.',
+      waTemplate:
+        'Hello!\n\nI’d like to leave a review about ALLEXO:\n\n[Write 1–2 sentences]\n\nPublish on website: yes / no\nName/City: (or anonymous)',
+      emailSubject: 'ALLEXO · Review',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Interface language' },
     card: { selectType: 'Select type', ariaPrefix: 'Select type:' },
@@ -663,6 +689,19 @@ export const TRANSLATIONS = {
       quote: 'Net werk, snelle uitvoering en een proper resultaat.',
       meta: 'MDF afwerking in Brugge',
     },
+    reviews: {
+      aria: 'Klantenreviews',
+      title: 'Reviews',
+      intro:
+        'De eerste reviews verschijnen hier binnenkort. Was je tevreden? Dan apprecieer ik 1–2 zinnen feedback.',
+      ctaWa: 'Review via WhatsApp',
+      ctaEmail: 'Review via e-mail',
+      hint:
+        'Je kan je naam/stad vermelden of anoniem blijven. Laat ook even weten of ik je review op de website mag plaatsen.',
+      waTemplate:
+        'Hallo!\n\nIk wil graag een review achterlaten over ALLEXO:\n\n[Schrijf 1–2 zinnen]\n\nPubliceren op de website: ja / nee\nNaam/Stad: (of anoniem)',
+      emailSubject: 'ALLEXO · Review',
+    },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Taal van de interface' },
     card: { selectType: 'Type kiezen', ariaPrefix: 'Type kiezen:' },
     types: {
@@ -948,6 +987,19 @@ export const TRANSLATIONS = {
       aria: 'Avis et confiance',
       quote: 'Travail soigné, exécution rapide et résultat propre.',
       meta: 'Finition MDF à Bruges',
+    },
+    reviews: {
+      aria: 'Avis clients',
+      title: 'Avis',
+      intro:
+        'Les premiers avis apparaîtront ici bientôt. Si le résultat vous a plu, j’apprécierais 1–2 phrases.',
+      ctaWa: 'Laisser un avis via WhatsApp',
+      ctaEmail: 'Laisser un avis par e-mail',
+      hint:
+        'Vous pouvez indiquer votre nom/ville ou rester anonyme. Merci de préciser si je peux publier l’avis sur le site.',
+      waTemplate:
+        'Bonjour !\n\nJe souhaite laisser un avis sur ALLEXO :\n\n[Écrivez 1–2 phrases]\n\nPublication sur le site : oui / non\nNom/Ville : (ou anonyme)',
+      emailSubject: 'ALLEXO · Avis',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Langue de l’interface' },
     card: { selectType: 'Choisir le type', ariaPrefix: 'Choisir le type :' },
