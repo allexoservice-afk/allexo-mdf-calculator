@@ -335,7 +335,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
           <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">
             {{ t('summary.title') }}
           </button>
-          <button type="button" class="sticky-total__btn" @click="openWhatsAppFromSticky">
+          <button type="button" class="sticky-total__btn sticky-total__btn--wa" @click="openWhatsAppFromSticky">
             {{ t('summary.whRequest') }}
           </button>
           <button type="button" class="sticky-total__btn sticky-total__btn--secondary" @click="openEmailFromSticky">
@@ -774,6 +774,10 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.sticky-total__btn--wa {
+  padding-inline: 0.75rem;
 }
 
 .sticky-total__btn--ghost {
