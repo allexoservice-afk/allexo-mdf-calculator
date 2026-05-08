@@ -361,16 +361,20 @@ const minOrderDiffEuros = computed(() =>
       <div class="sticky-total__inner content-container">
         <p class="sticky-total__sum">
           {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
+          <span class="sticky-total__exvat">({{ t('price.exVat') }})</span>
         </p>
         <div class="sticky-total__actions">
           <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">
-            {{ t('summary.title') }}
+            <span class="sticky-total__label-full">{{ t('summary.title') }}</span>
+            <span class="sticky-total__label-short">{{ t('summary.stickySummaryShort') }}</span>
           </button>
           <button type="button" class="sticky-total__btn sticky-total__btn--wa" @click="openWhatsAppFromSticky">
-            {{ t('summary.whRequest') }}
+            <span class="sticky-total__label-full">{{ t('summary.whRequest') }}</span>
+            <span class="sticky-total__label-short">{{ t('summary.stickyWhatsAppShort') }}</span>
           </button>
           <button type="button" class="sticky-total__btn sticky-total__btn--secondary" @click="openEmailFromSticky">
-            {{ t('summary.sendEmail') }}
+            <span class="sticky-total__label-full">{{ t('summary.sendEmail') }}</span>
+            <span class="sticky-total__label-short">{{ t('summary.stickyEmailShort') }}</span>
           </button>
         </div>
       </div>
@@ -777,6 +781,17 @@ const minOrderDiffEuros = computed(() =>
   color: var(--allexo-teal);
 }
 
+.sticky-total__exvat {
+  display: none;
+  margin-left: 0.35rem;
+  font-weight: 650;
+  color: var(--allexo-muted);
+}
+
+.sticky-total__label-short {
+  display: none;
+}
+
 .sticky-total__actions {
   display: flex;
   align-items: center;
@@ -835,6 +850,50 @@ const minOrderDiffEuros = computed(() =>
 
   .sticky-total__inner {
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 639px) {
+  .sticky-total__inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+  }
+
+  .sticky-total__sum {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.95rem;
+  }
+
+  .sticky-total__exvat {
+    display: inline;
+  }
+
+  .sticky-total__actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.45rem;
+    justify-content: stretch;
+  }
+
+  .sticky-total__btn {
+    width: 100%;
+    min-height: 2.55rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+
+  .sticky-total__label-full {
+    display: none;
+  }
+
+  .sticky-total__label-short {
+    display: inline;
   }
 }
 

@@ -245,6 +245,9 @@ export const TRANSLATIONS = {
       discountLabel: 'Знижка:',
       discountPolicy: 'Знижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.',
       stickyTotalAria: 'Підсумок замовлення',
+      stickySummaryShort: 'Підсумок',
+      stickyWhatsAppShort: 'WhatsApp',
+      stickyEmailShort: 'Email',
       turnkeyIncludes:
         'У ціну входить: фінальні заміри, всі матеріали, прибирання та вивіз сміття — під ключ (без покраски).',
       travelTransportTotal: 'Виїзд / транспорт:',
@@ -544,6 +547,9 @@ export const TRANSLATIONS = {
       discountLabel: 'Discount:',
       discountPolicy: 'Discounts: 3% from 1000€, 5% from 1500€, 7% from 2000€, 10% from 3000€.',
       stickyTotalAria: 'Order total',
+      stickySummaryShort: 'Summary',
+      stickyWhatsAppShort: 'WhatsApp',
+      stickyEmailShort: 'Email',
       turnkeyIncludes:
         'Price includes: final measurements, all materials, cleanup and waste disposal — turnkey (no painting).',
       travelTransportTotal: 'Travel / transport:',
@@ -844,6 +850,9 @@ export const TRANSLATIONS = {
       discountLabel: 'Korting:',
       discountPolicy: 'Kortingen: 3% vanaf 1000€, 5% vanaf 1500€, 7% vanaf 2000€, 10% vanaf 3000€.',
       stickyTotalAria: 'Totaal bestelling',
+      stickySummaryShort: 'Overzicht',
+      stickyWhatsAppShort: 'WhatsApp',
+      stickyEmailShort: 'E-mail',
       turnkeyIncludes:
         'Inbegrepen: laatste opmetingen, alle materialen, opruimen en afvoer van afval — sleutel-op-de-deur (zonder schilderwerk).',
       travelTransportTotal: 'Rit / transport:',
@@ -1144,6 +1153,9 @@ export const TRANSLATIONS = {
       discountLabel: 'Remise :',
       discountPolicy: 'Remises : 3% dès 1000€, 5% dès 1500€, 7% dès 2000€, 10% dès 3000€.',
       stickyTotalAria: 'Total de la commande',
+      stickySummaryShort: 'Résumé',
+      stickyWhatsAppShort: 'WhatsApp',
+      stickyEmailShort: 'E-mail',
       turnkeyIncludes:
         'Inclus : mesures finales, tous les matériaux, nettoyage et évacuation des déchets — clé en main (sans peinture).',
       travelTransportTotal: 'Déplacement / transport :',
