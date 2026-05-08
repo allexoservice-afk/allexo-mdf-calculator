@@ -615,7 +615,10 @@ function sizeLabel(id) {
             @keydown="focusNextFieldOnEnter"
           >
             <div class="window-block__head">
-              <h3 class="window-block__title">{{ t('form.window') }} {{ idx + 1 }}</h3>
+              <h3 class="window-block__title">
+                {{ t('form.window') }} {{ idx + 1 }}
+                <span class="window-block__sub">{{ t('form.enterWindowDims') }}</span>
+              </h3>
               <button
                 v-if="windows.length > 1"
                 type="button"
@@ -868,9 +871,6 @@ function sizeLabel(id) {
             <p v-else-if="windowPreviews[idx]?.oversized" class="window-preview-price window-preview-price--individual">
               {{ t('form.largeSizesInfo') }}
             </p>
-            <p v-else class="window-preview-price window-preview-price--placeholder">
-              {{ t('form.enterDimensions') }}
-            </p>
           </div>
 
           <button
@@ -1079,6 +1079,20 @@ function sizeLabel(id) {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--allexo-teal);
+}
+
+.window-block__sub {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--allexo-muted);
+}
+
+@media (max-width: 420px) {
+  .window-block__sub {
+    display: block;
+    margin: 0.2rem 0 0;
+  }
 }
 
 .window-preview-price {
