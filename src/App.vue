@@ -10,7 +10,6 @@ import OrderFormModal from './components/OrderFormModal.vue'
 import OrderSummary from './components/OrderSummary.vue'
 import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
 import { CONTACT_WHATSAPP_HREF } from './constants/contact.js'
-import { LOCALE_SWITCH_ORDER } from './i18n/translations.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
 import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
 import {
@@ -24,7 +23,7 @@ import { getTypeById } from './constants/calculatorTypes.js'
 import { isProUnlocked } from './constants/proUnlock.js'
 
 const { lines, addLine, removeLine, clearOrder } = useOrder()
-const { locale, setLocale, t } = useLocale()
+const { locale, t } = useLocale()
 
 /** @type {import('vue').Ref<import('./constants/calculatorTypes.js').CalculatorTypeId | null>} */
 const selectedTypeId = ref(null)
@@ -50,11 +49,6 @@ function onSubmit(payload) {
     scrollToSummary()
     flashSummary()
   }
-}
-
-/** @param {import('./i18n/translations.js').Locale} code */
-function pickLang(code) {
-  setLocale(code)
 }
 
 function scrollToSummary() {
@@ -233,21 +227,6 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
       <div class="header__inner content-container hero">
         <div class="header__row">
           <Hero />
-          <div class="header__right">
-            <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-              <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
-                <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
-                <button
-                  type="button"
-                  class="lang__btn"
-                  :class="{ 'lang__btn--active': locale === code }"
-                  @click="pickLang(code)"
-                >
-                  {{ t(`lang.${code}`) }}
-                </button>
-              </template>
-            </nav>
-          </div>
         </div>
 
         <div class="hero-corner-contacts" role="region" :aria-label="t('contacts.title')">
@@ -264,26 +243,9 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     <main class="main content-container">
       <section class="about" :aria-label="t('about.aria')">
         <h2 class="about__title">{{ t('about.title') }}</h2>
-        <div class="about__grid">
-          <div class="about__copy">
-            <p class="about__line">{{ t('about.line1') }}</p>
-            <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
-          </div>
-
-          <div class="trust" aria-label="Trust">
-            <div class="trust__card">
-              <p class="trust__kpi">{{ t('about.kpi1') }}</p>
-              <p class="trust__label">{{ t('about.kpi1Label') }}</p>
-            </div>
-            <div class="trust__card">
-              <p class="trust__kpi">{{ t('about.kpi2') }}</p>
-              <p class="trust__label">{{ t('about.kpi2Label') }}</p>
-            </div>
-            <div class="trust__card">
-              <p class="trust__kpi">{{ t('about.kpi3') }}</p>
-              <p class="trust__label">{{ t('about.kpi3Label') }}</p>
-            </div>
-          </div>
+        <div class="about__copy">
+          <p class="about__line">{{ t('about.line1') }}</p>
+          <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
         </div>
       </section>
 
@@ -439,11 +401,6 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     align-items: stretch;
     gap: 0.6rem;
   }
-
-  .header__right {
-    width: 100%;
-    align-items: flex-end;
-  }
 }
 
 @media (min-width: 640px) {
@@ -468,14 +425,6 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem 1.5rem;
-}
-
-.header__right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.35rem;
-  flex-shrink: 0;
 }
 
 .hero-corner-contacts {
@@ -513,69 +462,6 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   }
 }
 
-
-.lang {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 0.15rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-}
-
-.lang__btn {
-  margin: 0;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0.35rem 0.45rem;
-  border: none;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  opacity: 0.72;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.lang__btn:hover {
-  opacity: 0.95;
-}
-
-.lang__btn--active {
-  opacity: 1;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.lang__sep {
-  opacity: 0.45;
-  user-select: none;
-  padding: 0 0.05rem;
-}
-
-@media (max-width: 430px) {
-  .lang {
-    gap: 0.15rem 0.05rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.03em;
-  }
-
-  .lang__btn {
-    min-width: 2.35rem;
-    min-height: 2.35rem;
-    padding: 0.25rem 0.35rem;
-  }
-
-  .lang__sep {
-    display: none;
-  }
-}
 
 .main {
   flex: 1;
@@ -634,70 +520,9 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   position: relative;
 }
 
-.about__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.85rem;
-}
-
-@media (min-width: 960px) {
-  .about__grid {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-    gap: 1rem;
-    align-items: start;
-  }
-}
-
-.trust {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.trust__card {
-  padding: 0.7rem 0.75rem;
-  border-radius: var(--radius);
-  border: 1px solid rgba(15, 61, 62, 0.12);
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 10px 26px rgba(15, 61, 62, 0.08);
-}
-
-.trust__kpi {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: var(--allexo-teal);
-  line-height: 1.15;
-}
-
-.trust__label {
-  margin: 0.2rem 0 0;
-  font-size: 0.78rem;
-  font-weight: 650;
-  color: var(--allexo-muted);
-  line-height: 1.25;
-}
-
 @media (max-width: 430px) {
   .about {
     padding: 0.85rem 0.9rem;
-  }
-
-  .trust {
-    grid-template-columns: 1fr;
-  }
-
-  .trust__card {
-    padding: 0.6rem 0.7rem;
-  }
-
-  .trust__kpi {
-    font-size: 0.9rem;
-  }
-
-  .trust__label {
-    font-size: 0.76rem;
   }
 }
 

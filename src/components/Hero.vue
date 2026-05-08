@@ -2,8 +2,9 @@
 import { computed, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
+import { LOCALE_SWITCH_ORDER } from '../i18n/translations.js'
 
-const { t } = useLocale()
+const { locale, setLocale, t } = useLocale()
 
 const unlockOpen = ref(false)
 const unlockCode = ref('')
@@ -16,6 +17,11 @@ function scrollToCalculator() {
   const el = document.getElementById('calculator')
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/** @param {import('../i18n/translations.js').Locale} code */
+function pickLang(code) {
+  setLocale(code)
 }
 
 function onBrandTap() {
@@ -53,9 +59,26 @@ async function submitUnlock() {
 
 <template>
   <div class="header__text">
-    <button type="button" class="header__brand" @click="onBrandTap">
-      ALLEXO
-    </button>
+    <div class="hero-top">
+      <button type="button" class="header__brand" @click="onBrandTap">
+        ALLEXO
+      </button>
+
+      <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+        <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
+          <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
+          <button
+            type="button"
+            class="lang__btn"
+            :class="{ 'lang__btn--active': locale === code }"
+            @click="pickLang(code)"
+          >
+            {{ t(`lang.${code}`) }}
+          </button>
+        </template>
+      </nav>
+    </div>
+
     <h1 class="header__title">{{ t('hero.title') }}</h1>
     <p class="header__tag">{{ t('hero.subtitle') }}</p>
     <button type="button" class="header__cta" @click="scrollToCalculator">
@@ -108,8 +131,15 @@ async function submitUnlock() {
   min-width: 0;
 }
 
+.hero-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .header__brand {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 28px;
   font-weight: 600;
   letter-spacing: 3px;
@@ -122,8 +152,53 @@ async function submitUnlock() {
   text-align: left;
 }
 
-.header__title {
+.lang {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem 0.15rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.lang__btn {
   margin: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.45rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0.72;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lang__btn:hover {
+  opacity: 0.95;
+}
+
+.lang__btn--active {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lang__sep {
+  opacity: 0.45;
+  user-select: none;
+  padding: 0 0.05rem;
+}
+
+.header__title {
+  margin: 0.55rem 0 0;
   font-size: 1.3rem;
   font-weight: 750;
   letter-spacing: -0.02em;
@@ -135,6 +210,26 @@ async function submitUnlock() {
 }
 
 @media (max-width: 430px) {
+  .hero-top {
+    align-items: center;
+  }
+
+  .lang {
+    gap: 0.15rem 0.05rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+  }
+
+  .lang__btn {
+    min-width: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .lang__sep {
+    display: none;
+  }
+
   .header__title {
     font-size: 1.08rem;
     line-height: 1.2;
