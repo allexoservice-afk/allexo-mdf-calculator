@@ -378,6 +378,16 @@ function addWindow() {
   windows.value = [...windows.value, newWindowRow()]
 }
 
+function goPickOtherType() {
+  emit('close')
+  // Let the modal close before scrolling.
+  window.setTimeout(() => {
+    const el = document.getElementById('calculator')
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, 0)
+}
+
 /** @param {number} index */
 function removeWindow(index) {
   if (windows.value.length <= 1) return
@@ -861,7 +871,11 @@ function sizeLabel(id) {
             :class="{ 'btn-add-window--subtle': isClientMode }"
             @click="addWindow"
           >
-            {{ t('form.addWindow') }}
+            {{ t('form.addSameType') }}
+          </button>
+
+          <button type="button" class="btn-add-type" @click="goPickOtherType">
+            {{ t('form.addOtherType') }}
           </button>
 
           <div class="actions">
@@ -1095,6 +1109,27 @@ function sizeLabel(id) {
 .btn-add-window:hover {
   background: var(--allexo-accent-soft);
   border-color: var(--allexo-teal-light);
+}
+
+.btn-add-type {
+  margin-top: -0.25rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.25rem;
+  min-height: 2.25rem;
+  border: none;
+  background: transparent;
+  color: var(--allexo-teal);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-add-type:hover {
+  color: var(--allexo-teal-light);
 }
 
 .btn-add-window--subtle {
