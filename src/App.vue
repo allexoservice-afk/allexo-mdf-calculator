@@ -148,43 +148,32 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   <div class="app">
     <header class="header">
       <div class="header__inner content-container hero">
-        <div class="hero__top">
-          <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-            <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
-              <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
-              <button
-                type="button"
-                class="lang__btn"
-                :class="{ 'lang__btn--active': locale === code }"
-                @click="pickLang(code)"
-              >
-                {{ t(`lang.${code}`) }}
-              </button>
-            </template>
-          </nav>
+        <div class="header__row">
+          <Hero />
+          <div class="header__right">
+            <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+              <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
+                <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  class="lang__btn"
+                  :class="{ 'lang__btn--active': locale === code }"
+                  @click="pickLang(code)"
+                >
+                  {{ t(`lang.${code}`) }}
+                </button>
+              </template>
+            </nav>
+          </div>
         </div>
 
-        <div class="hero__layout">
-          <div class="hero__left">
-            <Hero />
-          </div>
-
-          <aside class="hero__right" :aria-label="t('contacts.title')">
-            <div class="hero__contact-card">
-              <p class="hero__contact-title">{{ t('contacts.directHint') }}</p>
-              <a class="hero__contact-link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
-                {{ t('contacts.phoneDisplay') }}
-              </a>
-              <a class="hero__contact-link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
-                {{ t('contacts.emailDisplay') }}
-              </a>
-              <p class="hero__contact-meta">{{ t('hero.meta') }}</p>
-            </div>
-
-            <div class="hero__preview" aria-hidden="true">
-              <img src="/images/works/work1-thumb.webp" alt="" width="520" height="340" loading="eager" decoding="async" />
-            </div>
-          </aside>
+        <div class="hero-corner-contacts" role="region" :aria-label="t('contacts.title')">
+          <a class="hero-corner-contacts__link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
+            {{ t('contacts.emailDisplay') }}
+          </a>
+          <a class="hero-corner-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
+            {{ t('contacts.phoneDisplay') }}
+          </a>
         </div>
       </div>
     </header>
@@ -334,24 +323,12 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .header {
   background:
-    radial-gradient(1200px 600px at 20% 20%, rgba(196, 163, 90, 0.18), transparent 55%),
-    radial-gradient(900px 520px at 80% 30%, rgba(255, 255, 255, 0.08), transparent 60%),
+    radial-gradient(900px 520px at 20% 20%, rgba(196, 163, 90, 0.12), transparent 60%),
     linear-gradient(135deg, var(--allexo-teal) 0%, #0b2f30 100%);
   color: #fff;
   padding: 0;
   position: relative;
   overflow: clip;
-}
-
-.header::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.16;
-  background-image:
-    repeating-radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 6px);
-  mix-blend-mode: overlay;
 }
 
 .header__inner {
@@ -371,100 +348,57 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   }
 }
 
-.hero__top {
+.header__row {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-  position: relative;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.header__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.hero-corner-contacts {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
   z-index: 1;
 }
 
-.hero__layout {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  align-items: start;
-}
-
-.hero__right {
-  display: grid;
-  gap: 0.85rem;
-}
-
-@media (min-width: 960px) {
-  .hero__layout {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 1.75rem;
-    align-items: center;
-  }
-
-  .hero__right {
-    justify-items: end;
-  }
-}
-
-.hero__contact-card {
-  width: 100%;
-  max-width: 28rem;
-  padding: 0.9rem 0.95rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
-}
-
-.hero__contact-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.78rem;
+.hero-corner-contacts__link {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.9rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.hero__contact-link {
-  display: inline-block;
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 0.96rem;
-  font-weight: 850;
   letter-spacing: 0.01em;
   text-decoration: underline;
-  text-underline-offset: 4px;
-  padding: 0.25rem 0;
+  text-underline-offset: 3px;
   -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
 }
 
-.hero__contact-link:hover {
+.hero-corner-contacts__link:hover {
   color: #fff;
 }
 
-.hero__contact-meta {
-  margin: 0.3rem 0 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.74);
-  line-height: 1.35;
-}
-
-.hero__preview {
-  width: 100%;
-  max-width: 28rem;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
-}
-
-.hero__preview img {
-  width: 100%;
-  height: 100%;
-  max-height: 220px;
-  display: block;
-  object-fit: cover;
-  filter: saturate(1.02) contrast(1.02);
+@media (max-width: 640px) {
+  .hero-corner-contacts {
+    position: static;
+    margin-top: 0.9rem;
+    align-items: center;
+    text-align: center;
+  }
 }
 
 

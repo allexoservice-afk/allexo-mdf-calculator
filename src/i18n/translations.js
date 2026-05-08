@@ -30,7 +30,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Готові відкоси МДФ без зайвого ремонту',
       subtitle: 'Зазвичай готові за 1–3 дні',
-      meta: 'MDF finishing · Brugge & Vlaanderen',
     },
     contacts: {
       title: 'Контакти',
@@ -298,7 +297,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finished MDF window reveals without extra renovation',
       subtitle: 'Usually ready within 1–3 days',
-      meta: 'MDF finishing · Bruges & Flanders',
     },
     contacts: {
       title: 'Contact',
@@ -565,7 +563,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Afgewerkte MDF-dagkanten zonder breekwerk',
       subtitle: 'Meestal klaar binnen 1–3 dagen',
-      meta: 'MDF afwerking · Brugge & Vlaanderen',
     },
     contacts: {
       title: 'Contact',
@@ -833,7 +830,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finitions MDF pour fenêtres sans gros travaux',
       subtitle: 'Généralement prêt en 1 à 3 jours',
-      meta: 'Finition MDF · Bruges & Flandre',
     },
     contacts: {
       title: 'Contact',
