@@ -146,7 +146,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 <template>
   <div class="app">
     <header class="header">
-      <div class="header__inner hero">
+      <div class="header__inner content-container hero">
         <div class="header__row">
           <Hero />
           <div class="header__right">
@@ -177,7 +177,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
       </div>
     </header>
 
-    <main class="main">
+    <main class="main content-container">
       <section class="about" :aria-label="t('about.aria')">
         <h2 class="about__title">{{ t('about.title') }}</h2>
         <p class="about__line">{{ t('about.line1') }}</p>
@@ -216,7 +216,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     </main>
 
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
-      <div class="sticky-total__inner">
+      <div class="sticky-total__inner content-container">
         <p class="sticky-total__sum">
           {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
         </p>
@@ -232,25 +232,27 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     </div>
 
     <footer class="footer">
-      <p class="footer__copy">{{ t('app.footer') }}</p>
-      <p class="footer__contacts">
-        <a
-          class="footer__link"
-          :href="CONTACT_PHONE_HREF"
-          :aria-label="t('contacts.phoneAria')"
-        >{{ t('contacts.phoneDisplay') }}</a>
-        <span class="footer__sep" aria-hidden="true"> · </span>
-        <a
-          class="footer__link"
-          :href="CONTACT_EMAIL_HREF"
-          :aria-label="t('contacts.emailAria')"
-        >{{ t('contacts.emailDisplay') }}</a>
-      </p>
-      <p class="footer__privacy-wrap">
-        <button type="button" class="footer__privacy" @click="privacyOpen = true">
-          {{ t('privacy.link') }}
-        </button>
-      </p>
+      <div class="footer__inner content-container">
+        <p class="footer__copy">{{ t('app.footer') }}</p>
+        <p class="footer__contacts">
+          <a
+            class="footer__link"
+            :href="CONTACT_PHONE_HREF"
+            :aria-label="t('contacts.phoneAria')"
+          >{{ t('contacts.phoneDisplay') }}</a>
+          <span class="footer__sep" aria-hidden="true"> · </span>
+          <a
+            class="footer__link"
+            :href="CONTACT_EMAIL_HREF"
+            :aria-label="t('contacts.emailAria')"
+          >{{ t('contacts.emailDisplay') }}</a>
+        </p>
+        <p class="footer__privacy-wrap">
+          <button type="button" class="footer__privacy" @click="privacyOpen = true">
+            {{ t('privacy.link') }}
+          </button>
+        </p>
+      </div>
     </footer>
 
     <OrderFormModal
@@ -265,6 +267,15 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 </template>
 
 <style scoped>
+.content-container {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+  box-sizing: border-box;
+}
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -274,12 +285,11 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 .header {
   background: linear-gradient(135deg, var(--allexo-teal) 0%, var(--allexo-teal-light) 100%);
   color: #fff;
-  padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+  padding: 0;
 }
 
 .header__inner {
-  max-width: 1100px;
-  margin: 0 auto;
+  /* inherits container sizing via .content-container */
 }
 
 .hero {
@@ -393,10 +403,8 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .main {
   flex: 1;
-  max-width: 1100px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 1.25rem max(1rem, env(safe-area-inset-left)) 2rem max(1rem, env(safe-area-inset-right));
+  padding-top: 1.25rem;
+  padding-bottom: 2rem;
 }
 
 .app:has(.sticky-total) .main {
@@ -446,7 +454,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(15, 61, 62, 0.04) 0%, rgba(15, 61, 62, 0.02) 100%);
   box-shadow: var(--shadow);
-  max-width: 40rem;
+  max-width: none;
   position: relative;
 }
 
@@ -507,8 +515,6 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .sticky-total__inner {
-  max-width: 1100px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -582,8 +588,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .footer {
-  padding: 1rem max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-bottom))
-    max(1rem, env(safe-area-inset-right));
+  padding: max(1rem, env(safe-area-inset-bottom)) 0;
   text-align: center;
   font-size: 0.8rem;
   color: var(--allexo-muted);
