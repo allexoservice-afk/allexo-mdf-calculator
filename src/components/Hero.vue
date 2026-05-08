@@ -25,7 +25,7 @@ function onBrandTap() {
     tapCount = 0
     tapTimer = null
   }, 1400)
-  if (tapCount >= 2) {
+  if (tapCount >= 3) {
     tapCount = 0
     if (tapTimer != null) window.clearTimeout(tapTimer)
     tapTimer = null
@@ -53,7 +53,7 @@ async function submitUnlock() {
 
 <template>
   <div class="header__text">
-    <button type="button" class="header__brand" @click="onBrandTap" @dblclick.prevent="openUnlock">
+    <button type="button" class="header__brand" @click="onBrandTap">
       ALLEXO
     </button>
     <h1 class="header__title">{{ t('hero.title') }}</h1>
