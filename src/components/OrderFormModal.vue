@@ -895,8 +895,8 @@ function sizeLabel(id) {
 }
 
 .modal {
-  width: min(100%, 420px);
-  max-width: calc(100vw - 1.5rem);
+  width: min(100%, 460px);
+  max-width: calc(100vw - 2rem);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -907,8 +907,8 @@ function sizeLabel(id) {
   background: var(--allexo-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 1.25rem 1.25rem 0;
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  padding: 1.35rem 1.35rem 0;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
 /* Для “Відкоси з підвіконником” прибираємо внутрішній вертикальний скрол. */
@@ -918,7 +918,8 @@ function sizeLabel(id) {
 
 @media (min-width: 640px) {
   .modal {
-    padding: 1.5rem;
+    width: min(100%, 680px);
+    padding: 1.75rem;
     padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   }
 }
@@ -1011,13 +1012,13 @@ function sizeLabel(id) {
 
 .window-block {
   min-width: 0;
-  padding: 1rem;
+  padding: 1.15rem;
   background: var(--allexo-bg);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.95rem;
   overflow-x: hidden;
 }
 
@@ -1111,13 +1112,13 @@ function sizeLabel(id) {
 .row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 /* Вузькі поля ширини/висоти — без зайвої ширини на десктопі */
 .row--dims {
-  grid-template-columns: minmax(0, 8.75rem) minmax(0, 8.75rem);
-  width: fit-content;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  width: 100%;
   max-width: 100%;
 }
 
@@ -1166,7 +1167,7 @@ function sizeLabel(id) {
 }
 
 .row--dims .field__input {
-  max-width: 8.75rem;
+  max-width: none;
 }
 
 @media (max-width: 420px) {
