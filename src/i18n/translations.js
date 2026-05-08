@@ -31,6 +31,14 @@ export const TRANSLATIONS = {
       title: 'Готові відкоси МДФ без зайвого ремонту',
       subtitle: 'Зазвичай готові за 1–3 дні',
     },
+    pro: {
+      unlockTitle: 'Pro доступ',
+      unlockHint: 'Введіть код, щоб відкрити розширені параметри.',
+      placeholder: 'Код',
+      unlock: 'Відкрити',
+      cancel: 'Скасувати',
+      err: 'Невірний код.',
+    },
     contacts: {
       title: 'Контакти',
       directHint: 'Можете також зв’язатися напряму:',
@@ -301,6 +309,14 @@ export const TRANSLATIONS = {
       title: 'Finished MDF window reveals without extra renovation',
       subtitle: 'Usually ready within 1–3 days',
     },
+    pro: {
+      unlockTitle: 'Pro access',
+      unlockHint: 'Enter the code to unlock advanced options.',
+      placeholder: 'Code',
+      unlock: 'Unlock',
+      cancel: 'Cancel',
+      err: 'Wrong code.',
+    },
     contacts: {
       title: 'Contact',
       directHint: 'You can also reach us directly:',
@@ -569,6 +585,14 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Afgewerkte MDF-dagkanten zonder breekwerk',
       subtitle: 'Meestal klaar binnen 1–3 dagen',
+    },
+    pro: {
+      unlockTitle: 'Pro-toegang',
+      unlockHint: 'Voer de code in om de uitgebreide opties te openen.',
+      placeholder: 'Code',
+      unlock: 'Ontgrendelen',
+      cancel: 'Annuleren',
+      err: 'Verkeerde code.',
     },
     contacts: {
       title: 'Contact',
@@ -839,6 +863,14 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finitions MDF pour fenêtres sans gros travaux',
       subtitle: 'Généralement prêt en 1 à 3 jours',
+    },
+    pro: {
+      unlockTitle: 'Accès Pro',
+      unlockHint: 'Entrez le code pour débloquer les options avancées.',
+      placeholder: 'Code',
+      unlock: 'Débloquer',
+      cancel: 'Annuler',
+      err: 'Code incorrect.',
     },
     contacts: {
       title: 'Contact',

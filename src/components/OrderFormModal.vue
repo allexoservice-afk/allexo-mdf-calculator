@@ -10,6 +10,7 @@ import {
   WINDOW_QUANTITIES,
 } from '../constants/sizeCategories.js'
 import { useLocale } from '../i18n/useLocale.js'
+import { isProUnlocked } from '../constants/proUnlock.js'
 import {
   quoteRollerBoxOnlyRoundedEuros,
   quoteWindowRoundedEuros,
@@ -41,8 +42,20 @@ const DEFAULTS_CLIENT = {
   rollerCategory: 'small',
 }
 
+const proUnlocked = ref(false)
 const mode = ref('client') // 'client' | 'pro'
 const isClientMode = computed(() => mode.value === 'client')
+const canUsePro = computed(() => proUnlocked.value)
+
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) return
+    proUnlocked.value = isProUnlocked()
+    if (!proUnlocked.value) mode.value = 'client'
+  },
+  { immediate: true },
+)
 
 function newWindowRow() {
   return reactive({
@@ -113,6 +126,7 @@ watch(
   () => {
     windows.value = [newWindowRow()]
     mode.value = 'client'
+    proUnlocked.value = isProUnlocked()
   },
 )
 
@@ -426,7 +440,7 @@ function sizeLabel(id) {
           <p class="modal__hint">{{ formHint }}</p>
           <p v-if="formHintRoller" class="modal__hint">{{ formHintRoller }}</p>
         </div>
-        <div class="mode-switch" role="group" :aria-label="t('form.modeLabel')">
+        <div v-if="canUsePro" class="mode-switch" role="group" :aria-label="t('form.modeLabel')">
           <button
             type="button"
             class="mode-switch__btn"
