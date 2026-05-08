@@ -57,7 +57,8 @@ export const TRANSLATIONS = {
       prevPhoto: 'Попереднє фото',
       nextPhoto: 'Наступне фото',
       lightboxPhotoHint: 'Натисніть на фото, щоб переглянути наступне',
-      ctaTitle: 'Сподобалось? Розрахуйте вартість',
+      ctaQ: 'Сподобалось?',
+      ctaSubtitle: 'Розрахуйте вартість вашого замовлення',
     },
     about: {
       aria: 'Про мене',
@@ -306,7 +307,8 @@ export const TRANSLATIONS = {
       prevPhoto: 'Previous photo',
       nextPhoto: 'Next photo',
       lightboxPhotoHint: 'Tap the photo to see the next one',
-      ctaTitle: 'Like it? Calculate the price',
+      ctaQ: 'Like it?',
+      ctaSubtitle: 'Calculate your order price',
     },
     about: {
       aria: 'About',
@@ -556,7 +558,8 @@ export const TRANSLATIONS = {
       prevPhoto: 'Vorige foto',
       nextPhoto: 'Volgende foto',
       lightboxPhotoHint: 'Tik op de foto om de volgende te zien',
-      ctaTitle: 'Bevalt het? Bereken de prijs',
+      ctaQ: 'Bevalt het?',
+      ctaSubtitle: 'Bereken de prijs van je bestelling',
     },
     about: {
       aria: 'Over mij',
@@ -806,7 +809,8 @@ export const TRANSLATIONS = {
       prevPhoto: 'Photo précédente',
       nextPhoto: 'Photo suivante',
       lightboxPhotoHint: 'Appuyez sur la photo pour voir la suivante',
-      ctaTitle: 'Ça vous plaît ? Calculez le prix',
+      ctaQ: 'Ça vous plaît ?',
+      ctaSubtitle: 'Calculez le prix de votre commande',
     },
     about: {
       aria: 'À propos',

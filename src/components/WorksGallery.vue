@@ -37,16 +37,17 @@ const lightboxIndex = ref(null)
 
 const photoCount = computed(() => visiblePairs.value.length)
 
-// CTA як “додатковий слайд” після останнього фото (завжди, якщо фото є).
-const includeCta = computed(() => photoCount.value > 0)
-const slideCount = computed(() => photoCount.value + (includeCta.value ? 1 : 0))
+// CTA як “додатковий слайд” після останнього фото.
+// Індекси: 0..photoCount-1 = фото, ctaIndex = photoCount = CTA.
+const ctaIndex = computed(() => photoCount.value)
+const slideCount = computed(() => (photoCount.value > 0 ? photoCount.value + 1 : 0))
 
 const lightboxOpen = computed(() => lightboxIndex.value != null)
 
 const onCtaSlide = computed(() => {
   if (lightboxIndex.value == null) return false
-  if (!includeCta.value) return false
-  return lightboxIndex.value === photoCount.value
+  if (photoCount.value <= 0) return false
+  return lightboxIndex.value === ctaIndex.value
 })
 
 /** Велике зображення лише коли lightbox відкритий (img у DOM тільки тоді). */
@@ -93,23 +94,16 @@ function goNext() {
   const nPhotos = photoCount.value
   const i = lightboxIndex.value
   if (i == null) return
+  if (nPhotos <= 0) return
 
-  if (includeCta.value) {
-    // з останнього фото -> CTA, з CTA -> перше фото
-    if (i === nPhotos - 1) {
-      lightboxIndex.value = nPhotos
-      return
-    }
-    if (i === nPhotos) {
-      lightboxIndex.value = 0
-      return
-    }
+  // 0..nPhotos-1 => фото; nPhotos => CTA
+  if (i < nPhotos) {
     lightboxIndex.value = i + 1
     return
   }
-
-  if (nPhotos <= 1) return
-  lightboxIndex.value = (i + 1) % nPhotos
+  if (i === ctaIndex.value) {
+    lightboxIndex.value = 0
+  }
 }
 
 /** @param {MouseEvent} e */
@@ -190,7 +184,7 @@ watch(visiblePairs, (pairs) => {
   }
   // Якщо індекс вказує на фото, якого вже немає — закриваємо.
   if (i < pairs.length) return
-  if (includeCta.value && i === pairs.length) return
+  if (pairs.length > 0 && i === pairs.length) return
   closeLightbox()
 })
 
@@ -296,7 +290,8 @@ onBeforeUnmount(() => {
             />
 
             <div v-else-if="onCtaSlide" class="lightbox__cta-slide">
-              <p class="lightbox__cta-title">{{ t('works.ctaTitle') }}</p>
+              <p class="lightbox__cta-title">{{ t('works.ctaQ') }}</p>
+              <p class="lightbox__cta-subtitle">{{ t('works.ctaSubtitle') }}</p>
               <button type="button" class="lightbox__cta-btn" @click="goToCalculatorFromCta">
                 {{ t('app.calcCta') }}
               </button>
@@ -534,6 +529,15 @@ onBeforeUnmount(() => {
   font-weight: 800;
   color: var(--allexo-text);
   line-height: 1.25;
+}
+
+.lightbox__cta-subtitle {
+  margin: 0;
+  max-width: 26rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--allexo-muted);
+  line-height: 1.3;
 }
 
 .lightbox__cta-btn {
