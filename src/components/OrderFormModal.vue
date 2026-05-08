@@ -54,7 +54,7 @@ watch(
   (open) => {
     if (!open) return
     proUnlocked.value = isProUnlocked()
-    if (!proUnlocked.value) mode.value = 'client'
+    mode.value = proUnlocked.value ? 'pro' : 'client'
     void nextTick().then(() => {
       focusFirstField()
     })
@@ -130,8 +130,8 @@ watch(
   () => props.typeId,
   () => {
     windows.value = [newWindowRow()]
-    mode.value = 'client'
     proUnlocked.value = isProUnlocked()
+    mode.value = proUnlocked.value ? 'pro' : 'client'
   },
 )
 
