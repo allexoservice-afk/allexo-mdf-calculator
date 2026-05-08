@@ -1,6 +1,5 @@
 <script setup>
 import { useLocale } from '../i18n/useLocale.js'
-import { CONTACT_PHONE_HREF, CONTACT_WHATSAPP_HREF } from '../constants/contact.js'
 
 const { t } = useLocale()
 
@@ -19,15 +18,6 @@ function scrollToCalculator() {
     <button type="button" class="header__cta" @click="scrollToCalculator">
       {{ t('app.calcCta') }}
     </button>
-
-    <div class="header__contact-cta" role="group" :aria-label="t('contacts.title')">
-      <a class="header__contact-btn header__contact-btn--ghost" :href="CONTACT_PHONE_HREF">
-        {{ t('hero.callCta') }}
-      </a>
-      <a class="header__contact-btn" :href="CONTACT_WHATSAPP_HREF" target="_blank" rel="noopener noreferrer">
-        {{ t('hero.waCta') }}
-      </a>
-    </div>
   </div>
 </template>
 
@@ -114,47 +104,4 @@ function scrollToCalculator() {
   }
 }
 
-.header__contact-cta {
-  margin-top: 0.65rem;
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.header__contact-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.85rem;
-  padding: 0.6rem 1rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-  text-decoration: none;
-  font: inherit;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.header__contact-btn--ghost {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.header__contact-btn:hover {
-  background: rgba(255, 255, 255, 0.24);
-  border-color: rgba(255, 255, 255, 0.55);
-}
-
-@media (max-width: 430px) {
-  .header__contact-cta {
-    flex-direction: column;
-  }
-
-  .header__contact-btn {
-    width: 100%;
-  }
-}
 </style>

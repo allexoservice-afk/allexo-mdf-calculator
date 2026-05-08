@@ -30,8 +30,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Готові відкоси МДФ без зайвого ремонту',
       subtitle: 'Зазвичай готові за 1–3 дні',
-      callCta: 'Подзвонити',
-      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Контакти',
@@ -285,8 +283,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finished MDF window reveals without extra renovation',
       subtitle: 'Usually ready within 1–3 days',
-      callCta: 'Call',
-      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Contact',
@@ -539,8 +535,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Afgewerkte MDF-dagkanten zonder breekwerk',
       subtitle: 'Meestal klaar binnen 1–3 dagen',
-      callCta: 'Bellen',
-      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Contact',
@@ -794,8 +788,6 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finitions MDF pour fenêtres sans gros travaux',
       subtitle: 'Généralement prêt en 1 à 3 jours',
-      callCta: 'Appeler',
-      waCta: 'WhatsApp',
     },
     contacts: {
       title: 'Contact',
