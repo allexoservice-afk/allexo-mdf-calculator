@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { getTypeById, isSimplifiedProductLine } from '../constants/calculatorTypes.js'
 import {
   isValidSizeCategory,
@@ -47,12 +47,17 @@ const mode = ref('client') // 'client' | 'pro'
 const isClientMode = computed(() => mode.value === 'client')
 const canUsePro = computed(() => proUnlocked.value)
 
+const modalEl = ref(/** @type {HTMLElement | null} */ (null))
+
 watch(
   () => props.open,
   (open) => {
     if (!open) return
     proUnlocked.value = isProUnlocked()
     if (!proUnlocked.value) mode.value = 'client'
+    void nextTick().then(() => {
+      focusFirstField()
+    })
   },
   { immediate: true },
 )
@@ -129,6 +134,50 @@ watch(
     proUnlocked.value = isProUnlocked()
   },
 )
+
+function _focusableWithin(root) {
+  if (!root) return []
+  const all = Array.from(
+    root.querySelectorAll(
+      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
+    ),
+  )
+  return all.filter((el) => {
+    const h = /** @type {HTMLElement} */ (el)
+    if (h.getAttribute('aria-hidden') === 'true') return false
+    if (h.tabIndex < 0) return false
+    // visible-ish
+    return !!(h.offsetWidth || h.offsetHeight || h.getClientRects().length)
+  })
+}
+
+function focusFirstField() {
+  const root = modalEl.value
+  if (!root) return
+  const firstBlock = root.querySelector('.window-block')
+  if (!firstBlock) return
+  const focusables = _focusableWithin(firstBlock)
+  // Prefer width input first if present.
+  const widthInput = firstBlock.querySelector('input')
+  const candidate = widthInput || focusables[0]
+  if (candidate && typeof candidate.focus === 'function') candidate.focus()
+}
+
+/** @param {KeyboardEvent} e */
+function focusNextFieldOnEnter(e) {
+  if (e.key !== 'Enter') return
+  const target = /** @type {HTMLElement | null} */ (e.target)
+  const block = target?.closest?.('.window-block')
+  if (!block) return
+  const focusables = _focusableWithin(block)
+  const i = focusables.indexOf(/** @type {any} */ (target))
+  if (i < 0) return
+  const next = focusables[i + 1]
+  if (next && typeof next.focus === 'function') {
+    e.preventDefault()
+    next.focus()
+  }
+}
 
 function parseNum(v) {
   const n = Number(String(v).replace(',', '.'))
@@ -432,7 +481,7 @@ function sizeLabel(id) {
       aria-labelledby="order-form-title"
       @click="onBackdrop"
     >
-      <div class="modal" :class="{ 'modal--no-inner-scroll': isWithSillType }" @click.stop>
+      <div ref="modalEl" class="modal" :class="{ 'modal--no-inner-scroll': isWithSillType }" @click.stop>
         <div class="modal__head">
           <h2 id="order-form-title" class="modal__title">{{ formTitle }}</h2>
           <button type="button" class="modal__close" :aria-label="t('common.close')" @click="emit('close')">
@@ -492,6 +541,7 @@ function sizeLabel(id) {
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
                   :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  @keydown="focusNextFieldOnEnter"
                 />
                 <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
                   windowErrors[idx].widthMm
@@ -522,6 +572,7 @@ function sizeLabel(id) {
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
                   :class="{ 'field__input--error': windowErrors[idx]?.heightMm }"
+                  @keydown="focusNextFieldOnEnter"
                 />
                 <span v-if="windowErrors[idx]?.heightMm" class="field__err">{{
                   windowErrors[idx].heightMm
@@ -538,6 +589,7 @@ function sizeLabel(id) {
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
                   :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  @keydown="focusNextFieldOnEnter"
                 />
                 <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
                   windowErrors[idx].widthMm
@@ -570,6 +622,7 @@ function sizeLabel(id) {
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
                   :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  @keydown="focusNextFieldOnEnter"
                 />
                 <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
                   windowErrors[idx].widthMm
@@ -616,6 +669,7 @@ function sizeLabel(id) {
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
                   :class="{ 'field__input--error': windowErrors[idx]?.heightMm }"
+                  @keydown="focusNextFieldOnEnter"
                 />
                 <span v-if="windowErrors[idx]?.heightMm" class="field__err">{{
                   windowErrors[idx].heightMm
