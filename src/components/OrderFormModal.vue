@@ -374,22 +374,19 @@ const primarySubmitLabel = computed(() => {
   return formHasAnyOversized.value ? t('form.getExactQuote') : t('form.addToOrder')
 })
 
-function addWindow() {
-  windows.value = [...windows.value, newWindowRow()]
-}
-
 /** @param {number} index */
 function removeWindow(index) {
   if (windows.value.length <= 1) return
   windows.value = windows.value.filter((_, i) => i !== index)
 }
 
-function onSubmit() {
-  if (!isValid.value || !props.typeId) return
+function buildSubmitPayload(extra = /** @type {Record<string, unknown>} */ ({})) {
+  if (!props.typeId) return null
   const ty = getTypeById(props.typeId)
-  emit('submit', {
+  return {
     typeId: props.typeId,
     uiMode: isClientMode.value ? 'client' : 'pro',
+    ...extra,
     windows: windows.value.map((formW) => {
       const widthMm = parseMm(formW.widthMm)
       if (props.typeId === 'roller_box') {
@@ -444,8 +441,29 @@ function onSubmit() {
         quantity: normalizeWindowQuantity(formW.quantity),
       }
     }),
-  })
+  }
+}
+
+function onSubmit() {
+  if (!isValid.value) return
+  const payload = buildSubmitPayload()
+  if (!payload) return
+  emit('submit', payload)
   emit('close')
+}
+
+function addWindow() {
+  // In client/public UX: treat “add another window” as “add this item and pick another type”.
+  if (!isValid.value) return
+  const payload = buildSubmitPayload({ uiIntent: 'pickType' })
+  if (!payload) return
+  emit('submit', payload)
+  emit('close')
+  window.setTimeout(() => {
+    const el = document.getElementById('calculator')
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, 0)
 }
 
 function onBackdrop(e) {

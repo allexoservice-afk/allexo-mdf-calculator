@@ -43,9 +43,9 @@ function closeForm() {
 
 /** @param {Parameters<typeof addLine>[0]} payload */
 function onSubmit(payload) {
-  const { uiMode, ...rest } = /** @type {any} */ (payload)
+  const { uiMode, uiIntent, ...rest } = /** @type {any} */ (payload)
   addLine(rest)
-  if (uiMode === 'client') {
+  if (uiMode === 'client' && uiIntent !== 'pickType') {
     scrollToSummary()
     flashSummary()
   }
