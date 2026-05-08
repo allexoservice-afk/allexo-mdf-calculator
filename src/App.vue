@@ -562,7 +562,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 780px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
