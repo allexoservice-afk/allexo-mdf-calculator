@@ -406,6 +406,9 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .app {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }

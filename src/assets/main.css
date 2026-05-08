@@ -42,6 +42,8 @@
 
 html {
   overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
 }
 
 body {
@@ -49,11 +51,15 @@ body {
   min-height: 100vh;
   overflow-x: clip;
   overscroll-behavior-x: none;
+  width: 100%;
+  max-width: 100%;
 }
 
 #app {
   min-height: 100vh;
   overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
 }
 
 button {
