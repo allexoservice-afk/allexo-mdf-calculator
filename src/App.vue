@@ -760,11 +760,9 @@ const minOrderDiffEuros = computed(() =>
   position: fixed;
   inset: auto 0 0 0;
   z-index: 40;
-  padding: 0.65rem max(1rem, env(safe-area-inset-left)) max(0.65rem, env(safe-area-inset-bottom))
-    max(1rem, env(safe-area-inset-right));
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid var(--allexo-border);
+  padding: 0.65rem 0 max(0.65rem, env(safe-area-inset-bottom)) 0;
+  background: transparent;
+  border-top: none;
 }
 
 .sticky-total__inner {
@@ -772,6 +770,13 @@ const minOrderDiffEuros = computed(() =>
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  border: 1px solid var(--allexo-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 28px rgba(15, 61, 62, 0.10);
 }
 
 .sticky-total__sum {
