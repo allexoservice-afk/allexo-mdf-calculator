@@ -433,10 +433,30 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   position: relative;
 }
 
+@media (max-width: 640px) {
+  .header__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .header__right {
+    width: 100%;
+    align-items: flex-end;
+  }
+}
+
 @media (min-width: 640px) {
   .hero {
     padding-top: 48px;
     padding-bottom: 48px;
+  }
+}
+
+@media (max-width: 430px) {
+  .hero {
+    padding-top: 28px;
+    padding-bottom: 28px;
   }
 }
 
@@ -537,6 +557,24 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   opacity: 0.45;
   user-select: none;
   padding: 0 0.05rem;
+}
+
+@media (max-width: 430px) {
+  .lang {
+    gap: 0.15rem 0.05rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+  }
+
+  .lang__btn {
+    min-width: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .lang__sep {
+    display: none;
+  }
 }
 
 .main {
@@ -648,6 +686,18 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
   .trust {
     grid-template-columns: 1fr;
+  }
+
+  .trust__card {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .trust__kpi {
+    font-size: 0.9rem;
+  }
+
+  .trust__label {
+    font-size: 0.76rem;
   }
 }
 

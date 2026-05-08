@@ -136,8 +136,8 @@ async function submitUnlock() {
 
 @media (max-width: 430px) {
   .header__title {
-    font-size: 1.14rem;
-    line-height: 1.22;
+    font-size: 1.08rem;
+    line-height: 1.2;
   }
 }
 
