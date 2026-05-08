@@ -18,6 +18,8 @@ import {
   windowsCountPhrase,
 } from '../i18n/translations.js'
 
+const _TIME_BUFFER_COEFF = 1.2
+
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
   const tid = typeof line.typeId === 'string' ? line.typeId : undefined
@@ -271,8 +273,9 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
   }
 
   parts.push('')
+  const bufferedH = totalH * _TIME_BUFFER_COEFF
   parts.push(
-    `${translate(locale, 'offer.estHours')} ${formatHoursForOffer(totalH)} ${translate(locale, 'offer.hoursSuffix')}`,
+    `${translate(locale, 'offer.estHours')} ${formatHoursForOffer(bufferedH)} ${translate(locale, 'offer.hoursSuffix')}`,
   )
   parts.push(translate(locale, 'offer.includes'))
   parts.push(translate(locale, 'offer.leadTime'))
