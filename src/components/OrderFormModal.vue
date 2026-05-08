@@ -165,7 +165,8 @@ function focusFirstField() {
 
 /** @param {KeyboardEvent} e */
 function focusNextFieldOnEnter(e) {
-  if (e.key !== 'Enter') return
+  const isEnter = e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13 || e.which === 13
+  if (!isEnter) return
   const target = /** @type {HTMLElement | null} */ (e.target)
   const block = target?.closest?.('.window-block')
   if (!block) return
@@ -515,6 +516,7 @@ function sizeLabel(id) {
             v-for="(win, idx) in windows"
             :key="win.id"
             class="window-block"
+            @keydown="focusNextFieldOnEnter"
           >
             <div class="window-block__head">
               <h3 class="window-block__title">{{ t('form.window') }} {{ idx + 1 }}</h3>
