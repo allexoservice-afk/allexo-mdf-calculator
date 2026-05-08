@@ -78,6 +78,14 @@ const lightboxStageKey = computed(() => {
   return lightboxLargeSrc.value ?? `photo-${lightboxIndex.value}`
 })
 
+// Якщо велике фото з якоїсь причини не визначилось — показуємо CTA замість "порожнього" екрану.
+const showCtaSlide = computed(() => {
+  if (onCtaSlide.value) return true
+  if (!lightboxOpen.value) return false
+  if (photoCount.value <= 0) return false
+  return !lightboxLargeSrc.value
+})
+
 // Додатковий захист: якщо індекс вийшов за межі слайдів — переводимо на CTA.
 watch([lightboxOpen, photoCount], () => {
   if (!lightboxOpen.value) return
@@ -294,7 +302,7 @@ onBeforeUnmount(() => {
         >
           <div :key="lightboxStageKey" class="lightbox__stage-inner">
             <img
-              v-if="!onCtaSlide && lightboxLargeSrc"
+              v-if="!showCtaSlide && lightboxLargeSrc"
               class="lightbox__img"
               :class="{ 'lightbox__img--no-nav': !canNavigate }"
               :src="lightboxLargeSrc"
@@ -307,7 +315,7 @@ onBeforeUnmount(() => {
               @click="onLargeImageClick"
             />
 
-            <div v-else-if="onCtaSlide" class="lightbox__cta-slide">
+            <div v-else-if="showCtaSlide" class="lightbox__cta-slide">
               <p class="lightbox__cta-title">{{ t('works.ctaQ') }}</p>
               <p class="lightbox__cta-subtitle">{{ t('works.ctaSubtitle') }}</p>
               <button type="button" class="lightbox__cta-btn" @click="goToCalculatorFromCta">
@@ -315,7 +323,7 @@ onBeforeUnmount(() => {
               </button>
             </div>
 
-            <p v-if="canNavigate && !onCtaSlide" class="lightbox__hint">
+            <p v-if="canNavigate && !showCtaSlide" class="lightbox__hint">
               {{ t('works.lightboxPhotoHint') }}
             </p>
           </div>
