@@ -62,6 +62,7 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'Про мене',
+      title: 'Про мене',
       line1: 'Понад 20 років досвіду у сфері вікон',
       line2: 'Більше 4 років роботи на бельгійському ринку (Brugge)',
     },
@@ -312,6 +313,7 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'About',
+      title: 'About',
       line1: 'Over 20 years of experience with windows',
       line2: 'Over 4 years working on the Belgian market (Bruges)',
     },
@@ -563,6 +565,7 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'Over mij',
+      title: 'Over mij',
       line1: 'Meer dan 20 jaar ervaring met ramen',
       line2: 'Meer dan 4 jaar actief op de Belgische markt (Brugge)',
     },
@@ -814,6 +817,7 @@ export const TRANSLATIONS = {
     },
     about: {
       aria: 'À propos',
+      title: 'À propos',
       line1: 'Plus de 20 ans d’expérience dans les fenêtres',
       line2: 'Plus de 4 ans d’activité sur le marché belge (Bruges)',
     },

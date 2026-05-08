@@ -179,6 +179,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
     <main class="main">
       <section class="about" :aria-label="t('about.aria')">
+        <h2 class="about__title">{{ t('about.title') }}</h2>
         <p class="about__line">{{ t('about.line1') }}</p>
         <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
       </section>
@@ -443,9 +444,31 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   padding: 1rem 1rem;
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
-  background: var(--allexo-surface);
+  background: linear-gradient(180deg, rgba(15, 61, 62, 0.04) 0%, rgba(15, 61, 62, 0.02) 100%);
   box-shadow: var(--shadow);
   max-width: 40rem;
+  position: relative;
+}
+
+.about::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--allexo-teal);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  opacity: 0.75;
+}
+
+.about__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--allexo-muted);
 }
 
 .about__line {
