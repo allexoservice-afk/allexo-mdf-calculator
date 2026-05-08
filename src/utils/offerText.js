@@ -18,7 +18,7 @@ import {
   windowsCountPhrase,
 } from '../i18n/translations.js'
 
-const _TIME_BUFFER_COEFF = 1.2
+const _TIME_BUFFER_COEFF = 1.44
 const _MIN_ORDER_EUR = 500
 
 function _discountPercentFor(eur) {

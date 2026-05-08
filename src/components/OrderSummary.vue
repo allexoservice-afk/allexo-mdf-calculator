@@ -122,7 +122,7 @@ function catLabel(id) {
   return sizeCategoryLabel(locale.value, String(id))
 }
 
-const _TIME_BUFFER_COEFF = 1.2
+const _TIME_BUFFER_COEFF = 1.44
 
 /** @param {number} h */
 function _roundUpToHalfHour(h) {
