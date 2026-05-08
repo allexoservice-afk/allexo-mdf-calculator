@@ -181,10 +181,25 @@ function focusNextFieldOnEnter(e) {
       // Try to open dropdown
       try {
         sel.focus()
-        sel.click()
+        // Modern browsers (Chromium) support this for programmatic opening.
+        if (typeof sel.showPicker === 'function') {
+          sel.showPicker()
+        } else {
+          // Fallbacks: some browsers ignore click() for <select>
+          sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }))
+          sel.click()
+        }
       } catch {
         /* ignore */
       }
+      // Safety: if user doesn't pick, don't keep it armed forever.
+      window.setTimeout(() => {
+        try {
+          if (sel.dataset.allexoEnterArmed === '1') sel.dataset.allexoEnterArmed = '0'
+        } catch {
+          /* ignore */
+        }
+      }, 2500)
       return
     }
     // If it was armed, treat Enter as "confirm & next"
