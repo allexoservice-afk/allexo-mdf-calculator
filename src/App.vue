@@ -401,7 +401,7 @@ const minOrderDiffEuros = computed(() =>
     </footer>
 
     <a
-      v-if="showWaFab"
+      v-if="showWaFab && !formOpen"
       class="wa-fab"
       :href="CONTACT_WHATSAPP_HREF"
       target="_blank"

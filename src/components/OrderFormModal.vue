@@ -934,6 +934,32 @@ function sizeLabel(id) {
   overflow-y: visible;
 }
 
+@media (max-width: 639px) {
+  .modal {
+    max-height: 90vh;
+    padding: 1rem 1rem 0;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .modal__hints {
+    margin-bottom: 0.75rem;
+  }
+
+  .mode-badge {
+    margin-bottom: 0.65rem;
+  }
+
+  .form {
+    gap: 0.75rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .window-block {
+    padding: 0.9rem;
+    gap: 0.75rem;
+  }
+}
+
 @media (min-width: 640px) {
   .modal {
     width: min(100%, 680px);
@@ -1144,7 +1170,7 @@ function sizeLabel(id) {
   grid-template-columns: minmax(0, 8.75rem);
 }
 
-@media (max-width: 420px) {
+@media (max-width: 360px) {
   .row {
     grid-template-columns: 1fr;
   }
@@ -1156,6 +1182,12 @@ function sizeLabel(id) {
 
   .row--single {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 639px) and (min-width: 390px) {
+  .row {
+    gap: 0.75rem;
   }
 }
 
