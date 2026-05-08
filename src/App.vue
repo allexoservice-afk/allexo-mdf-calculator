@@ -324,22 +324,6 @@ const minOrderDiffEuros = computed(() =>
         </div>
       </section>
 
-      <section class="reviews" :aria-label="t('reviews.aria')">
-        <div class="reviews__card">
-          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
-          <p class="reviews__intro">{{ t('reviews.intro') }}</p>
-          <div class="reviews__actions">
-            <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
-              {{ t('reviews.ctaWa') }}
-            </button>
-            <button type="button" class="reviews__btn reviews__btn--email" @click="openEmailReview">
-              {{ t('reviews.ctaEmail') }}
-            </button>
-          </div>
-          <p class="reviews__hint">{{ t('reviews.hint') }}</p>
-        </div>
-      </section>
-
       <section id="calculator" class="calc">
         <div class="grid">
           <CalculatorCard
@@ -353,6 +337,22 @@ const minOrderDiffEuros = computed(() =>
 
         <div id="summary" :class="{ 'summary-flash': summaryFlash }">
           <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
+        </div>
+      </section>
+
+      <section class="reviews" :aria-label="t('reviews.aria')">
+        <div class="reviews__card">
+          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
+          <p class="reviews__intro">{{ t('reviews.intro') }}</p>
+          <div class="reviews__actions">
+            <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
+              {{ t('reviews.ctaWa') }}
+            </button>
+            <button type="button" class="reviews__btn reviews__btn--email" @click="openEmailReview">
+              {{ t('reviews.ctaEmail') }}
+            </button>
+          </div>
+          <p class="reviews__hint">{{ t('reviews.hint') }}</p>
         </div>
       </section>
     </main>
