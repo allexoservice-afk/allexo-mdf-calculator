@@ -9,6 +9,7 @@ import CalculatorCard from './components/CalculatorCard.vue'
 import OrderFormModal from './components/OrderFormModal.vue'
 import OrderSummary from './components/OrderSummary.vue'
 import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
+import { CONTACT_WHATSAPP_HREF } from './constants/contact.js'
 import { LOCALE_SWITCH_ORDER } from './i18n/translations.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
 import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
@@ -147,32 +148,43 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   <div class="app">
     <header class="header">
       <div class="header__inner content-container hero">
-        <div class="header__row">
-          <Hero />
-          <div class="header__right">
-            <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-              <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
-                <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
-                <button
-                  type="button"
-                  class="lang__btn"
-                  :class="{ 'lang__btn--active': locale === code }"
-                  @click="pickLang(code)"
-                >
-                  {{ t(`lang.${code}`) }}
-                </button>
-              </template>
-            </nav>
-          </div>
+        <div class="hero__top">
+          <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+            <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
+              <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
+              <button
+                type="button"
+                class="lang__btn"
+                :class="{ 'lang__btn--active': locale === code }"
+                @click="pickLang(code)"
+              >
+                {{ t(`lang.${code}`) }}
+              </button>
+            </template>
+          </nav>
         </div>
 
-        <div class="hero-corner-contacts" role="region" :aria-label="t('contacts.title')">
-          <a class="hero-corner-contacts__link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
-            {{ t('contacts.emailDisplay') }}
-          </a>
-          <a class="hero-corner-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
-            {{ t('contacts.phoneDisplay') }}
-          </a>
+        <div class="hero__layout">
+          <div class="hero__left">
+            <Hero />
+          </div>
+
+          <aside class="hero__right" :aria-label="t('contacts.title')">
+            <div class="hero__contact-card">
+              <p class="hero__contact-title">{{ t('contacts.directHint') }}</p>
+              <a class="hero__contact-link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
+                {{ t('contacts.phoneDisplay') }}
+              </a>
+              <a class="hero__contact-link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
+                {{ t('contacts.emailDisplay') }}
+              </a>
+              <p class="hero__contact-meta">{{ t('hero.meta') }}</p>
+            </div>
+
+            <div class="hero__preview" aria-hidden="true">
+              <img src="/images/works/work1-thumb.webp" alt="" width="520" height="340" loading="eager" decoding="async" />
+            </div>
+          </aside>
         </div>
       </div>
     </header>
@@ -180,8 +192,27 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     <main class="main content-container">
       <section class="about" :aria-label="t('about.aria')">
         <h2 class="about__title">{{ t('about.title') }}</h2>
-        <p class="about__line">{{ t('about.line1') }}</p>
-        <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
+        <div class="about__grid">
+          <div class="about__copy">
+            <p class="about__line">{{ t('about.line1') }}</p>
+            <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
+          </div>
+
+          <div class="trust" aria-label="Trust">
+            <div class="trust__card">
+              <p class="trust__kpi">{{ t('about.kpi1') }}</p>
+              <p class="trust__label">{{ t('about.kpi1Label') }}</p>
+            </div>
+            <div class="trust__card">
+              <p class="trust__kpi">{{ t('about.kpi2') }}</p>
+              <p class="trust__label">{{ t('about.kpi2Label') }}</p>
+            </div>
+            <div class="trust__card">
+              <p class="trust__kpi">{{ t('about.kpi3') }}</p>
+              <p class="trust__label">{{ t('about.kpi3Label') }}</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <WorksGallery />
@@ -197,6 +228,14 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
           <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
         </li>
       </ul>
+
+      <section class="social-proof" :aria-label="t('proof.aria')">
+        <div class="social-proof__card">
+          <p class="social-proof__stars" aria-hidden="true">★★★★★</p>
+          <p class="social-proof__quote">{{ t('proof.quote') }}</p>
+          <p class="social-proof__meta">{{ t('proof.meta') }}</p>
+        </div>
+      </section>
 
       <section id="calculator" class="calc">
         <div class="grid">
@@ -255,6 +294,17 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
       </div>
     </footer>
 
+    <a
+      class="wa-fab"
+      :href="CONTACT_WHATSAPP_HREF"
+      target="_blank"
+      rel="noopener noreferrer"
+      :aria-label="t('fab.waAria')"
+      title="WhatsApp"
+    >
+      <span aria-hidden="true">WA</span>
+    </a>
+
     <OrderFormModal
       :open="formOpen"
       :type-id="selectedTypeId"
@@ -283,9 +333,25 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 }
 
 .header {
-  background: linear-gradient(135deg, var(--allexo-teal) 0%, var(--allexo-teal-light) 100%);
+  background:
+    radial-gradient(1200px 600px at 20% 20%, rgba(196, 163, 90, 0.18), transparent 55%),
+    radial-gradient(900px 520px at 80% 30%, rgba(255, 255, 255, 0.08), transparent 60%),
+    linear-gradient(135deg, var(--allexo-teal) 0%, #0b2f30 100%);
   color: #fff;
   padding: 0;
+  position: relative;
+  overflow: clip;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 6px);
+  mix-blend-mode: overlay;
 }
 
 .header__inner {
@@ -305,54 +371,100 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   }
 }
 
-.header__row {
+.hero__top {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem 1.5rem;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
-.header__right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.35rem;
-  flex-shrink: 0;
+.hero__layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.hero-corner-contacts {
-  position: absolute;
-  right: 28px;
-  bottom: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
+.hero__right {
+  display: grid;
+  gap: 0.85rem;
 }
 
-.hero-corner-contacts__link {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.9rem;
+@media (min-width: 960px) {
+  .hero__layout {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 1.75rem;
+    align-items: center;
+  }
+
+  .hero__right {
+    justify-items: end;
+  }
+}
+
+.hero__contact-card {
+  width: 100%;
+  max-width: 28rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+}
+
+.hero__contact-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
   font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hero__contact-link {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.96rem;
+  font-weight: 850;
   letter-spacing: 0.01em;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
+  padding: 0.25rem 0;
   -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
 }
 
-.hero-corner-contacts__link:hover {
+.hero__contact-link:hover {
   color: #fff;
 }
 
-@media (max-width: 640px) {
-  .hero-corner-contacts {
-    position: static;
-    margin-top: 0.9rem;
-    align-items: center;
-    text-align: center;
-  }
+.hero__contact-meta {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.35;
+}
+
+.hero__preview {
+  width: 100%;
+  max-width: 28rem;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+.hero__preview img {
+  width: 100%;
+  height: 100%;
+  max-height: 220px;
+  display: block;
+  object-fit: cover;
+  filter: saturate(1.02) contrast(1.02);
 }
 
 
@@ -458,9 +570,58 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
   position: relative;
 }
 
+.about__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 960px) {
+  .about__grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 1rem;
+    align-items: start;
+  }
+}
+
+.trust {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.trust__card {
+  padding: 0.7rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 61, 62, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 26px rgba(15, 61, 62, 0.08);
+}
+
+.trust__kpi {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--allexo-teal);
+  line-height: 1.15;
+}
+
+.trust__label {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--allexo-muted);
+  line-height: 1.25;
+}
+
 @media (max-width: 430px) {
   .about {
     padding: 0.85rem 0.9rem;
+  }
+
+  .trust {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -507,6 +668,41 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .calc {
   margin-top: 1.25rem;
+}
+
+.social-proof {
+  margin: 0 0 1.25rem;
+}
+
+.social-proof__card {
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(15, 61, 62, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(245, 250, 249, 0.85));
+  box-shadow: 0 12px 28px rgba(15, 61, 62, 0.08);
+}
+
+.social-proof__stars {
+  margin: 0 0 0.25rem;
+  font-size: 0.92rem;
+  letter-spacing: 0.12em;
+  color: var(--allexo-accent);
+}
+
+.social-proof__quote {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--allexo-text);
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.social-proof__meta {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--allexo-muted);
 }
 
 .sticky-total {
@@ -655,5 +851,41 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
 
 .footer__privacy:hover {
   color: var(--allexo-teal-light);
+}
+
+.wa-fab {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--sticky-offset, 0px));
+  z-index: 80;
+  width: 3.15rem;
+  height: 3.15rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+  color: #0b2f30;
+  border: 1px solid rgba(15, 61, 62, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 250, 249, 0.92));
+  box-shadow: 0 18px 44px rgba(15, 61, 62, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.14s ease, box-shadow 0.2s ease;
+}
+
+.wa-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 54px rgba(15, 61, 62, 0.22);
+}
+
+.wa-fab:active {
+  transform: translateY(0);
+}
+
+.app:has(.sticky-total) .wa-fab {
+  --sticky-offset: 4.9rem;
 }
 </style>

@@ -30,6 +30,7 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Готові відкоси МДФ без зайвого ремонту',
       subtitle: 'Зазвичай готові за 1–3 дні',
+      meta: 'MDF finishing · Brugge & Vlaanderen',
     },
     contacts: {
       title: 'Контакти',
@@ -47,6 +48,9 @@ export const TRANSLATIONS = {
         'Ім’я, телефон, email і адреса використовуються лише для обробки вашої заявки та зв’язку з вами.',
       bullet3: 'Заявки надсилаються через WhatsApp або електронну пошту.',
       bullet4: 'Ви можете звернутися до нас із проханням видалити ваші дані.',
+    },
+    fab: {
+      waAria: 'Написати в WhatsApp',
     },
     works: {
       title: 'Приклади виконаних робіт',
@@ -66,6 +70,17 @@ export const TRANSLATIONS = {
       title: 'Про мене',
       line1: 'Понад 20 років досвіду у сфері вікон',
       line2: 'Більше 4 років роботи на бельгійському ринку (Brugge)',
+      kpi1: '20+',
+      kpi1Label: 'років досвіду',
+      kpi2: '4+',
+      kpi2Label: 'роки в Бельгії',
+      kpi3: 'Brugge',
+      kpi3Label: 'Vlaanderen',
+    },
+    proof: {
+      aria: 'Відгуки та довіра',
+      quote: 'Акуратна робота, швидке виконання та чистий результат.',
+      meta: 'MDF afwerking in Brugge',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Мова інтерфейсу' },
     card: { selectType: 'Обрати тип', ariaPrefix: 'Обрати тип:' },
@@ -283,6 +298,7 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finished MDF window reveals without extra renovation',
       subtitle: 'Usually ready within 1–3 days',
+      meta: 'MDF finishing · Bruges & Flanders',
     },
     contacts: {
       title: 'Contact',
@@ -299,6 +315,9 @@ export const TRANSLATIONS = {
       bullet2: 'We use your name, phone, email, and address only to handle your request and contact you.',
       bullet3: 'Requests are sent via WhatsApp or email.',
       bullet4: 'You can ask us to delete your data.',
+    },
+    fab: {
+      waAria: 'Message on WhatsApp',
     },
     works: {
       title: 'Examples of completed work',
@@ -318,6 +337,17 @@ export const TRANSLATIONS = {
       title: 'About',
       line1: 'Over 20 years of experience with windows',
       line2: 'Over 4 years working on the Belgian market (Bruges)',
+      kpi1: '20+',
+      kpi1Label: 'years of experience',
+      kpi2: '4+',
+      kpi2Label: 'years in Belgium',
+      kpi3: 'Bruges',
+      kpi3Label: 'Flanders',
+    },
+    proof: {
+      aria: 'Social proof',
+      quote: 'Clean work, fast execution, and a tidy result.',
+      meta: 'MDF finishing in Bruges',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Interface language' },
     card: { selectType: 'Select type', ariaPrefix: 'Select type:' },
@@ -535,6 +565,7 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Afgewerkte MDF-dagkanten zonder breekwerk',
       subtitle: 'Meestal klaar binnen 1–3 dagen',
+      meta: 'MDF afwerking · Brugge & Vlaanderen',
     },
     contacts: {
       title: 'Contact',
@@ -552,6 +583,9 @@ export const TRANSLATIONS = {
         'Naam, telefoon, e-mail en adres gebruiken wij alleen om uw aanvraag te verwerken en contact met u op te nemen.',
       bullet3: 'Aanvragen worden verzonden via WhatsApp of e-mail.',
       bullet4: 'U kunt ons vragen om uw gegevens te verwijderen.',
+    },
+    fab: {
+      waAria: 'Stuur een WhatsApp-bericht',
     },
     works: {
       title: 'Voorbeelden van uitgevoerde werken',
@@ -571,6 +605,17 @@ export const TRANSLATIONS = {
       title: 'Over mij',
       line1: 'Meer dan 20 jaar ervaring met ramen',
       line2: 'Meer dan 4 jaar actief op de Belgische markt (Brugge)',
+      kpi1: '20+',
+      kpi1Label: 'jaar ervaring',
+      kpi2: '4+',
+      kpi2Label: 'jaar in België',
+      kpi3: 'Brugge',
+      kpi3Label: 'Vlaanderen',
+    },
+    proof: {
+      aria: 'Reviews en vertrouwen',
+      quote: 'Net werk, snelle uitvoering en een proper resultaat.',
+      meta: 'MDF afwerking in Brugge',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Taal van de interface' },
     card: { selectType: 'Type kiezen', ariaPrefix: 'Type kiezen:' },
@@ -788,6 +833,7 @@ export const TRANSLATIONS = {
     hero: {
       title: 'Finitions MDF pour fenêtres sans gros travaux',
       subtitle: 'Généralement prêt en 1 à 3 jours',
+      meta: 'Finition MDF · Bruges & Flandre',
     },
     contacts: {
       title: 'Contact',
@@ -805,6 +851,9 @@ export const TRANSLATIONS = {
         'Nous utilisons votre nom, téléphone, e-mail et adresse uniquement pour traiter votre demande et vous contacter.',
       bullet3: 'Les demandes sont envoyées via WhatsApp ou e-mail.',
       bullet4: 'Vous pouvez nous demander de supprimer vos données.',
+    },
+    fab: {
+      waAria: 'Envoyer un message WhatsApp',
     },
     works: {
       title: 'Exemples de réalisations',
@@ -824,6 +873,17 @@ export const TRANSLATIONS = {
       title: 'À propos',
       line1: 'Plus de 20 ans d’expérience dans les fenêtres',
       line2: 'Plus de 4 ans d’activité sur le marché belge (Bruges)',
+      kpi1: '20+',
+      kpi1Label: 'ans d’expérience',
+      kpi2: '4+',
+      kpi2Label: 'ans en Belgique',
+      kpi3: 'Bruges',
+      kpi3Label: 'Flandre',
+    },
+    proof: {
+      aria: 'Avis et confiance',
+      quote: 'Travail soigné, exécution rapide et résultat propre.',
+      meta: 'Finition MDF à Bruges',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Langue de l’interface' },
     card: { selectType: 'Choisir le type', ariaPrefix: 'Choisir le type :' },

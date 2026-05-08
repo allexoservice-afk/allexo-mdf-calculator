@@ -398,6 +398,12 @@ onBeforeUnmount(() => {
   scrollbar-color: var(--allexo-border) transparent;
 }
 
+.works__strip::after {
+  content: '';
+  width: 8px;
+  flex: 0 0 8px;
+}
+
 .works__strip::-webkit-scrollbar {
   height: 5px;
 }
@@ -415,16 +421,17 @@ onBeforeUnmount(() => {
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: 0 14px 34px rgba(15, 61, 62, 0.14);
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .works__thumb:hover {
-  transform: scale(1.03);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 44px rgba(15, 61, 62, 0.18);
 }
 
 .works__thumb:focus-visible {
@@ -436,7 +443,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 14px;
   display: block;
   pointer-events: none;
 }

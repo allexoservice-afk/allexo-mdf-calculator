@@ -38,10 +38,10 @@ function scrollToCalculator() {
 
 .header__title {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 750;
   letter-spacing: -0.02em;
-  line-height: 1.28;
+  line-height: 1.22;
   max-width: 100%;
   text-wrap: balance;
   overflow-wrap: break-word;
@@ -50,23 +50,23 @@ function scrollToCalculator() {
 
 @media (max-width: 430px) {
   .header__title {
-    font-size: 1.08rem;
-    line-height: 1.26;
+    font-size: 1.14rem;
+    line-height: 1.22;
   }
 }
 
 @media (min-width: 640px) {
   .header__title {
-    font-size: clamp(1.875rem, 2.2vw, 2rem);
-    line-height: 1.3;
+    font-size: clamp(2.05rem, 2.65vw, 2.35rem);
+    line-height: 1.18;
   }
 }
 
 .header__tag {
   margin: 8px 0 0;
-  font-size: 1.125rem;
-  line-height: 1.4;
-  opacity: 0.85;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  opacity: 0.86;
   max-width: 32rem;
   text-wrap: balance;
   overflow-wrap: break-word;
@@ -74,23 +74,38 @@ function scrollToCalculator() {
 
 .header__cta {
   margin: 14px 0 0;
-  min-height: 3rem;
-  padding: 0.75rem 1.15rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
+  min-height: 3.15rem;
+  padding: 0.78rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
   color: #fff;
   font: inherit;
-  font-weight: 700;
+  font-weight: 850;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.14s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .header__cta:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
+  border-color: rgba(255, 255, 255, 0.44);
+  transform: translateY(-1px);
+}
+
+.header__cta:active {
+  transform: translateY(0);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .header__cta:focus-visible {
