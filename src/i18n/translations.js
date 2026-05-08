@@ -228,6 +228,8 @@ export const TRANSLATIONS = {
       minOrderDiffPrefix: 'До мінімального замовлення:',
       payableTotal: 'До оплати:',
       payableWorkTotal: 'Роботи до оплати:',
+      discountLabel: 'Знижка:',
+      discountPolicy: 'Знижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.',
       stickyTotalAria: 'Підсумок замовлення',
       turnkeyIncludes:
         'У ціну входить: фінальні заміри, всі матеріали, прибирання та вивіз сміття — під ключ (без покраски).',
@@ -511,6 +513,8 @@ export const TRANSLATIONS = {
       minOrderDiffPrefix: 'Up to the minimum order:',
       payableTotal: 'Payable total:',
       payableWorkTotal: 'Payable work total:',
+      discountLabel: 'Discount:',
+      discountPolicy: 'Discounts: 3% from 1000€, 5% from 1500€, 7% from 2000€, 10% from 3000€.',
       stickyTotalAria: 'Order total',
       turnkeyIncludes:
         'Price includes: final measurements, all materials, cleanup and waste disposal — turnkey (no painting).',
@@ -795,6 +799,8 @@ export const TRANSLATIONS = {
       minOrderDiffPrefix: 'Tot het minimumbestelbedrag:',
       payableTotal: 'Te betalen:',
       payableWorkTotal: 'Werk te betalen:',
+      discountLabel: 'Korting:',
+      discountPolicy: 'Kortingen: 3% vanaf 1000€, 5% vanaf 1500€, 7% vanaf 2000€, 10% vanaf 3000€.',
       stickyTotalAria: 'Totaal bestelling',
       turnkeyIncludes:
         'Inbegrepen: laatste opmetingen, alle materialen, opruimen en afvoer van afval — sleutel-op-de-deur (zonder schilderwerk).',
@@ -1079,6 +1085,8 @@ export const TRANSLATIONS = {
       minOrderDiffPrefix: 'Jusqu’au minimum de commande :',
       payableTotal: 'À payer :',
       payableWorkTotal: 'Travaux à payer :',
+      discountLabel: 'Remise :',
+      discountPolicy: 'Remises : 3% dès 1000€, 5% dès 1500€, 7% dès 2000€, 10% dès 3000€.',
       stickyTotalAria: 'Total de la commande',
       turnkeyIncludes:
         'Inclus : mesures finales, tous les matériaux, nettoyage et évacuation des déchets — clé en main (sans peinture).',

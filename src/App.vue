@@ -135,6 +135,7 @@ function openWhatsAppFromSticky() {
     `Кількість позицій: ${count}\n` +
     `Тип робіт: ${types || '—'}\n` +
     `${minLine}\n` +
+    `\nЗнижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n` +
     `Можете уточнити деталі?`
 
   const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
@@ -168,6 +169,7 @@ function openEmailFromSticky() {
     `Кількість позицій: ${count}\n` +
     `Тип робіт: ${types || '—'}\n\n` +
     `${minLine}\n\n` +
+    `Знижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n\n` +
     `Можете уточнити деталі?`
 
   const email = String(CONTACT_EMAIL_HREF || '').replace(/^mailto:/, '')
@@ -235,9 +237,24 @@ const orderTotalEuros = computed(() =>
 const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value.length > 0)
 
 const MIN_ORDER_EUR = 500
-const payableOrderTotalEuros = computed(() =>
-  orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR ? MIN_ORDER_EUR : orderTotalEuros.value,
-)
+function discountPercentFor(eur) {
+  const v = Number(eur)
+  if (!Number.isFinite(v) || v <= 0) return 0
+  if (v >= 3000) return 10
+  if (v >= 2000) return 7
+  if (v >= 1500) return 5
+  if (v >= 1000) return 3
+  return 0
+}
+
+const payableOrderTotalEuros = computed(() => {
+  const raw = orderTotalEuros.value
+  if (!(raw > 0)) return 0
+  const base = raw < MIN_ORDER_EUR ? MIN_ORDER_EUR : raw
+  const pct = discountPercentFor(base)
+  const disc = pct > 0 ? Math.round((base * pct) / 100) : 0
+  return base - disc
+})
 const minOrderDiffEuros = computed(() =>
   orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR ? MIN_ORDER_EUR - orderTotalEuros.value : 0,
 )

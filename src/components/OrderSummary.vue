@@ -248,6 +248,22 @@ const MIN_ORDER_EUR = 500
 const minOrderApplied = computed(() => orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR)
 const payableWorkEuros = computed(() => (minOrderApplied.value ? MIN_ORDER_EUR : orderTotalEuros.value))
 
+function discountPercentFor(eur) {
+  const v = Number(eur)
+  if (!Number.isFinite(v) || v <= 0) return 0
+  if (v >= 3000) return 10
+  if (v >= 2000) return 7
+  if (v >= 1500) return 5
+  if (v >= 1000) return 3
+  return 0
+}
+
+const discountPct = computed(() => discountPercentFor(payableWorkEuros.value))
+const discountEuros = computed(() =>
+  discountPct.value > 0 ? Math.round((payableWorkEuros.value * discountPct.value) / 100) : 0,
+)
+const payableWorkAfterDiscountEuros = computed(() => payableWorkEuros.value - discountEuros.value)
+
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowBaseHours(line, win) {
   const tid = line.typeId
@@ -338,7 +354,7 @@ const offerTravelMeta = computed(() => {
   const { euros, over100 } = travelFareFromBrugge(km)
   return {
     distanceKm: km,
-    workTotalEur: payableWorkEuros.value,
+    workTotalEur: payableWorkAfterDiscountEuros.value,
     travelEur: euros,
     over100,
   }
@@ -346,7 +362,7 @@ const offerTravelMeta = computed(() => {
 
 const grandTotalEuros = computed(() => {
   const m = offerTravelMeta.value
-  if (!m) return payableWorkEuros.value
+  if (!m) return payableWorkAfterDiscountEuros.value
   if (m.over100) return m.workTotalEur
   return m.workTotalEur + m.travelEur
 })
@@ -587,8 +603,15 @@ function openContactEmailModal() {
           <p v-if="minOrderApplied" class="order-totals__min">
             {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
           </p>
+          <p v-if="discountEuros > 0" class="order-totals__min">
+            {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
+            <span class="order-totals__min-note">({{ discountPct }}%)</span>
+          </p>
           <p v-if="minOrderApplied" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
+          </p>
+          <p v-else-if="discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
           </p>
         </template>
         <template v-else>
@@ -597,6 +620,10 @@ function openContactEmailModal() {
           </p>
           <p v-if="minOrderApplied" class="order-totals__min">
             {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
+          </p>
+          <p v-if="discountEuros > 0" class="order-totals__min">
+            {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
+            <span class="order-totals__min-note">({{ discountPct }}%)</span>
           </p>
           <p v-if="minOrderApplied" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
@@ -622,6 +649,9 @@ function openContactEmailModal() {
         </p>
         <p class="order-totals__includes">
           {{ t('summary.turnkeyIncludes') }}
+        </p>
+        <p class="order-totals__discount-policy">
+          {{ t('summary.discountPolicy') }}
         </p>
       </div>
 
@@ -974,6 +1004,18 @@ function openContactEmailModal() {
   margin: 0.1rem 0 0.4rem;
   font-size: 0.9rem;
   font-weight: 650;
+  color: var(--allexo-muted);
+}
+
+.order-totals__min-note {
+  opacity: 0.75;
+  font-weight: 700;
+}
+
+.order-totals__discount-policy {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: var(--allexo-muted);
 }
 

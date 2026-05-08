@@ -19,6 +19,17 @@ import {
 } from '../i18n/translations.js'
 
 const _TIME_BUFFER_COEFF = 1.2
+const _MIN_ORDER_EUR = 500
+
+function _discountPercentFor(eur) {
+  const v = Number(eur)
+  if (!Number.isFinite(v) || v <= 0) return 0
+  if (v >= 3000) return 10
+  if (v >= 2000) return 7
+  if (v >= 1500) return 5
+  if (v >= 1000) return 3
+  return 0
+}
 
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
@@ -250,6 +261,22 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
   parts.push(`${translate(locale, 'offer.totalWindows')} ${totalWin}`)
   parts.push('')
   parts.push(`${translate(locale, 'summary.workSubtotal')} ${formatEuroExclVat(totalEur, locale)}`)
+
+  // Minimum order + discount (work subtotal only, excl. VAT)
+  if (totalEur > 0 && totalEur < _MIN_ORDER_EUR) {
+    const diff = _MIN_ORDER_EUR - totalEur
+    parts.push(`${translate(locale, 'summary.minOrderDiffPrefix')} ${formatEuroExclVat(diff, locale)}`)
+  }
+  const baseForDiscount = totalEur > 0 && totalEur < _MIN_ORDER_EUR ? _MIN_ORDER_EUR : totalEur
+  const pct = _discountPercentFor(baseForDiscount)
+  const disc = pct > 0 ? Math.round((baseForDiscount * pct) / 100) : 0
+  const payableWork = baseForDiscount - disc
+  if (disc > 0) {
+    parts.push(`${translate(locale, 'summary.discountLabel')} -${formatEuroExclVat(disc, locale)} (${pct}%)`)
+  }
+  if (payableWork > 0 && payableWork !== totalEur) {
+    parts.push(`${translate(locale, 'summary.payableTotal')} ${formatEuroExclVat(payableWork, locale)}`)
+  }
 
   if (travelMeta != null) {
     parts.push(
