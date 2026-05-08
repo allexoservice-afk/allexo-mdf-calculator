@@ -225,6 +225,9 @@ export const TRANSLATIONS = {
       travelDistanceLabel: 'Відстань від Brugge, км',
       travelDistancePlaceholder: 'Наприклад 45',
       workSubtotal: 'Разом:',
+      minOrderDiffPrefix: 'До мінімального замовлення:',
+      payableTotal: 'До оплати:',
+      payableWorkTotal: 'Роботи до оплати:',
       stickyTotalAria: 'Підсумок замовлення',
       turnkeyIncludes:
         'У ціну входить: фінальні заміри, всі матеріали, прибирання та вивіз сміття — під ключ (без покраски).',
@@ -505,6 +508,9 @@ export const TRANSLATIONS = {
       travelDistanceLabel: 'Distance from Brugge, km',
       travelDistancePlaceholder: 'e.g. 45',
       workSubtotal: 'Total:',
+      minOrderDiffPrefix: 'Up to the minimum order:',
+      payableTotal: 'Payable total:',
+      payableWorkTotal: 'Payable work total:',
       stickyTotalAria: 'Order total',
       turnkeyIncludes:
         'Price includes: final measurements, all materials, cleanup and waste disposal — turnkey (no painting).',
@@ -786,6 +792,9 @@ export const TRANSLATIONS = {
       travelDistanceLabel: 'Afstand van Brugge, km',
       travelDistancePlaceholder: 'bv. 45',
       workSubtotal: 'Totaal:',
+      minOrderDiffPrefix: 'Tot het minimumbestelbedrag:',
+      payableTotal: 'Te betalen:',
+      payableWorkTotal: 'Werk te betalen:',
       stickyTotalAria: 'Totaal bestelling',
       turnkeyIncludes:
         'Inbegrepen: laatste opmetingen, alle materialen, opruimen en afvoer van afval — sleutel-op-de-deur (zonder schilderwerk).',
@@ -1067,6 +1076,9 @@ export const TRANSLATIONS = {
       travelDistanceLabel: 'Distance depuis Bruges, km',
       travelDistancePlaceholder: 'ex. 45',
       workSubtotal: 'Total :',
+      minOrderDiffPrefix: 'Jusqu’au minimum de commande :',
+      payableTotal: 'À payer :',
+      payableWorkTotal: 'Travaux à payer :',
       stickyTotalAria: 'Total de la commande',
       turnkeyIncludes:
         'Inclus : mesures finales, tous les matériaux, nettoyage et évacuation des déchets — clé en main (sans peinture).',

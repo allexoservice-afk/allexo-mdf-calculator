@@ -110,7 +110,8 @@ onBeforeUnmount(() => {
 const CONTACT_WHATSAPP_PHONE = '32493860753'
 
 function openWhatsAppFromSticky() {
-  const total = formatEuroExclVat(orderTotalEuros.value, locale.value)
+  const totalRaw = orderTotalEuros.value
+  const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
   const count = Array.isArray(lines.value) ? lines.value.length : 0
 
   const types = Array.from(
@@ -122,12 +123,18 @@ function openWhatsAppFromSticky() {
     ),
   ).join(', ')
 
+  const minLine =
+    totalRaw > 0 && totalRaw < MIN_ORDER_EUR
+      ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
+      : ''
+
   const text =
     `Доброго дня!\n` +
     `Хочу отримати прорахунок:\n` +
     `Сума: ${total}\n` +
     `Кількість позицій: ${count}\n` +
     `Тип робіт: ${types || '—'}\n` +
+    `${minLine}\n` +
     `Можете уточнити деталі?`
 
   const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
@@ -135,7 +142,8 @@ function openWhatsAppFromSticky() {
 }
 
 function openEmailFromSticky() {
-  const total = formatEuroExclVat(orderTotalEuros.value, locale.value)
+  const totalRaw = orderTotalEuros.value
+  const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
   const count = Array.isArray(lines.value) ? lines.value.length : 0
 
   const types = Array.from(
@@ -148,12 +156,18 @@ function openEmailFromSticky() {
   ).join(', ')
 
   const subject = 'ALLEXO · Запит на прорахунок'
+  const minLine =
+    totalRaw > 0 && totalRaw < MIN_ORDER_EUR
+      ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
+      : ''
+
   const body =
     `Доброго дня!\n\n` +
     `Хочу отримати прорахунок:\n` +
     `Сума: ${total}\n` +
     `Кількість позицій: ${count}\n` +
     `Тип робіт: ${types || '—'}\n\n` +
+    `${minLine}\n\n` +
     `Можете уточнити деталі?`
 
   const email = String(CONTACT_EMAIL_HREF || '').replace(/^mailto:/, '')
@@ -219,6 +233,14 @@ const orderTotalEuros = computed(() =>
 )
 
 const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value.length > 0)
+
+const MIN_ORDER_EUR = 500
+const payableOrderTotalEuros = computed(() =>
+  orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR ? MIN_ORDER_EUR : orderTotalEuros.value,
+)
+const minOrderDiffEuros = computed(() =>
+  orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR ? MIN_ORDER_EUR - orderTotalEuros.value : 0,
+)
 </script>
 
 <template>
@@ -291,7 +313,7 @@ const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
       <div class="sticky-total__inner content-container">
         <p class="sticky-total__sum">
-          {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
+          {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
         </p>
         <div class="sticky-total__actions">
           <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">

@@ -244,6 +244,10 @@ function lineSubtotalEuros(line) {
 
 const orderTotalEuros = computed(() => props.lines.reduce((s, line) => s + lineSubtotalEuros(line), 0))
 
+const MIN_ORDER_EUR = 500
+const minOrderApplied = computed(() => orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR)
+const payableWorkEuros = computed(() => (minOrderApplied.value ? MIN_ORDER_EUR : orderTotalEuros.value))
+
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowBaseHours(line, win) {
   const tid = line.typeId
@@ -334,7 +338,7 @@ const offerTravelMeta = computed(() => {
   const { euros, over100 } = travelFareFromBrugge(km)
   return {
     distanceKm: km,
-    workTotalEur: orderTotalEuros.value,
+    workTotalEur: payableWorkEuros.value,
     travelEur: euros,
     over100,
   }
@@ -342,7 +346,7 @@ const offerTravelMeta = computed(() => {
 
 const grandTotalEuros = computed(() => {
   const m = offerTravelMeta.value
-  if (!m) return orderTotalEuros.value
+  if (!m) return payableWorkEuros.value
   if (m.over100) return m.workTotalEur
   return m.workTotalEur + m.travelEur
 })
@@ -580,10 +584,22 @@ function openContactEmailModal() {
           <p class="order-totals__line">
             {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
           </p>
+          <p v-if="minOrderApplied" class="order-totals__min">
+            {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
+          </p>
+          <p v-if="minOrderApplied" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
+          </p>
         </template>
         <template v-else>
           <p class="order-totals__line">
             {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
+          </p>
+          <p v-if="minOrderApplied" class="order-totals__min">
+            {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
+          </p>
+          <p v-if="minOrderApplied" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
           </p>
           <p class="order-totals__line order-totals__line--secondary">
             {{ t('summary.travelTransportTotal') }}
@@ -952,6 +968,13 @@ function openContactEmailModal() {
   padding-top: 0.45rem;
   border-top: 1px solid var(--allexo-border);
   font-size: 1.05rem;
+}
+
+.order-totals__min {
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--allexo-muted);
 }
 
 .order-totals__time {
