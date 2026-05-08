@@ -1,5 +1,5 @@
 <script setup>
-import { Teleport, ref } from 'vue'
+import { computed, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
 
@@ -8,6 +8,7 @@ const { t } = useLocale()
 const unlockOpen = ref(false)
 const unlockCode = ref('')
 const unlockErr = ref('')
+const isProNow = computed(() => isProUnlocked())
 let tapCount = 0
 let tapTimer = /** @type {number | null} */ (null)
 
@@ -18,7 +19,6 @@ function scrollToCalculator() {
 }
 
 function onBrandTap() {
-  if (isProUnlocked()) return
   tapCount += 1
   if (tapTimer != null) window.clearTimeout(tapTimer)
   tapTimer = window.setTimeout(() => {
@@ -29,14 +29,11 @@ function onBrandTap() {
     tapCount = 0
     if (tapTimer != null) window.clearTimeout(tapTimer)
     tapTimer = null
-    unlockErr.value = ''
-    unlockCode.value = ''
-    unlockOpen.value = true
+    openUnlock()
   }
 }
 
 function openUnlock() {
-  if (isProUnlocked()) return
   unlockErr.value = ''
   unlockCode.value = ''
   unlockOpen.value = true
@@ -49,7 +46,7 @@ async function submitUnlock() {
     unlockErr.value = t('pro.err')
     return
   }
-  setProUnlocked(true)
+  setProUnlocked(!isProUnlocked())
   unlockOpen.value = false
 }
 </script>
@@ -67,15 +64,21 @@ async function submitUnlock() {
   </div>
 
   <Teleport to="body">
-    <div v-if="unlockOpen" class="unlock-backdrop" role="dialog" aria-modal="true" :aria-label="t('pro.unlockTitle')">
+    <div
+      v-if="unlockOpen"
+      class="unlock-backdrop"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="isProNow ? t('pro.lockTitle') : t('pro.unlockTitle')"
+    >
       <div class="unlock" @click.stop>
         <div class="unlock__head">
-          <p class="unlock__title">{{ t('pro.unlockTitle') }}</p>
+          <p class="unlock__title">{{ isProNow ? t('pro.lockTitle') : t('pro.unlockTitle') }}</p>
           <button type="button" class="unlock__close" :aria-label="t('common.close')" @click="unlockOpen = false">
             ×
           </button>
         </div>
-        <p class="unlock__hint">{{ t('pro.unlockHint') }}</p>
+        <p class="unlock__hint">{{ isProNow ? t('pro.lockHint') : t('pro.unlockHint') }}</p>
         <input
           v-model="unlockCode"
           class="unlock__input"
@@ -89,7 +92,9 @@ async function submitUnlock() {
           <button type="button" class="unlock__btn unlock__btn--ghost" @click="unlockOpen = false">
             {{ t('pro.cancel') }}
           </button>
-          <button type="button" class="unlock__btn" @click="submitUnlock">{{ t('pro.unlock') }}</button>
+          <button type="button" class="unlock__btn" @click="submitUnlock">
+            {{ isProNow ? t('pro.lock') : t('pro.unlock') }}
+          </button>
         </div>
       </div>
       <div class="unlock-backdrop__bg" @click="unlockOpen = false" />

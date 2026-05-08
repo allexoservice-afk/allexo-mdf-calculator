@@ -38,6 +38,9 @@ export const TRANSLATIONS = {
       unlock: 'Відкрити',
       cancel: 'Скасувати',
       err: 'Невірний код.',
+      lockTitle: 'Вихід з Pro',
+      lockHint: 'Введіть код, щоб вимкнути Pro режим.',
+      lock: 'Вийти',
     },
     contacts: {
       title: 'Контакти',
@@ -316,6 +319,9 @@ export const TRANSLATIONS = {
       unlock: 'Unlock',
       cancel: 'Cancel',
       err: 'Wrong code.',
+      lockTitle: 'Exit Pro',
+      lockHint: 'Enter the code to disable Pro mode.',
+      lock: 'Exit',
     },
     contacts: {
       title: 'Contact',
@@ -593,6 +599,9 @@ export const TRANSLATIONS = {
       unlock: 'Ontgrendelen',
       cancel: 'Annuleren',
       err: 'Verkeerde code.',
+      lockTitle: 'Pro afsluiten',
+      lockHint: 'Voer de code in om Pro uit te schakelen.',
+      lock: 'Afsluiten',
     },
     contacts: {
       title: 'Contact',
@@ -871,6 +880,9 @@ export const TRANSLATIONS = {
       unlock: 'Débloquer',
       cancel: 'Annuler',
       err: 'Code incorrect.',
+      lockTitle: 'Quitter Pro',
+      lockHint: 'Entrez le code pour désactiver le mode Pro.',
+      lock: 'Quitter',
     },
     contacts: {
       title: 'Contact',
