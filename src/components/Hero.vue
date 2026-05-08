@@ -24,7 +24,7 @@ function onBrandTap() {
   tapTimer = window.setTimeout(() => {
     tapCount = 0
     tapTimer = null
-  }, 650)
+  }, 1400)
   if (tapCount >= 2) {
     tapCount = 0
     if (tapTimer != null) window.clearTimeout(tapTimer)
@@ -33,6 +33,13 @@ function onBrandTap() {
     unlockCode.value = ''
     unlockOpen.value = true
   }
+}
+
+function openUnlock() {
+  if (isProUnlocked()) return
+  unlockErr.value = ''
+  unlockCode.value = ''
+  unlockOpen.value = true
 }
 
 async function submitUnlock() {
@@ -49,7 +56,9 @@ async function submitUnlock() {
 
 <template>
   <div class="header__text">
-    <button type="button" class="header__brand" @click="onBrandTap">ALLEXO</button>
+    <button type="button" class="header__brand" @click="onBrandTap" @dblclick.prevent="openUnlock">
+      ALLEXO
+    </button>
     <h1 class="header__title">{{ t('hero.title') }}</h1>
     <p class="header__tag">{{ t('hero.subtitle') }}</p>
     <button type="button" class="header__cta" @click="scrollToCalculator">
@@ -104,7 +113,7 @@ async function submitUnlock() {
   padding: 0;
   border: none;
   background: transparent;
-  cursor: default;
+  cursor: pointer;
   text-align: left;
 }
 
