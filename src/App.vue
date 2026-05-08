@@ -676,7 +676,7 @@ const minOrderDiffEuros = computed(() =>
 }
 
 .reviews {
-  margin: 0 0 1.25rem;
+  margin: 1rem 0 1.25rem;
 }
 
 .reviews__card {
