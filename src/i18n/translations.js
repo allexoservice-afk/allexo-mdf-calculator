@@ -87,20 +87,15 @@ export const TRANSLATIONS = {
       kpi3: 'Brugge',
       kpi3Label: 'Vlaanderen',
     },
-    proof: {
-      aria: 'Відгуки та довіра',
-      quote: 'Акуратна робота, швидке виконання та чистий результат.',
-      meta: 'MDF afwerking in Brugge',
-    },
     reviews: {
       aria: 'Відгуки клієнтів',
       title: 'Відгуки',
       ctaWa: 'Залишити відгук у WhatsApp',
       ctaEmail: 'Залишити відгук на Email',
-      hint:
-        'У повідомленні можна вказати ім’я/місто або написати анонімно. Обов’язково додайте “можна / не можна” для публікації на сайті. Не вказуйте адресу чи телефон — це приватна інформація.',
+      ctaWaShort: 'WhatsApp',
+      ctaEmailShort: 'Email',
       waTemplate:
-        'Доброго дня!\n\nХочу залишити відгук про роботу ALLEXO:\n\n[Напишіть 1–2 речення]\n\nПублікація на сайті: можна / не можна\nІм’я/місто: (або анонімно)',
+        'Хочу залишити відгук про роботу ALLEXO:\n\n[Напишіть 1–2 речення]\n\nПублікація на сайті: можна / не можна\nІм’я/місто: або анонімно\n\nБудь ласка, не вказуйте адресу чи телефон.',
       emailSubject: 'ALLEXO · Відгук',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Мова інтерфейсу' },
@@ -387,20 +382,15 @@ export const TRANSLATIONS = {
       kpi3: 'Bruges',
       kpi3Label: 'Flanders',
     },
-    proof: {
-      aria: 'Social proof',
-      quote: 'Clean work, fast execution, and a tidy result.',
-      meta: 'MDF finishing in Bruges',
-    },
     reviews: {
       aria: 'Customer reviews',
       title: 'Reviews',
       ctaWa: 'Leave a WhatsApp review',
       ctaEmail: 'Leave an email review',
-      hint:
-        'You can add your name/city or stay anonymous. Please specify “yes / no” for publishing on the website. Don’t include your address or phone number (private information).',
+      ctaWaShort: 'WhatsApp',
+      ctaEmailShort: 'Email',
       waTemplate:
-        'Hello!\n\nI’d like to leave a review about ALLEXO:\n\n[Write 1–2 sentences]\n\nPublish on website: yes / no\nName/City: (or anonymous)',
+        'I’d like to leave a review about ALLEXO:\n\n[Write 1–2 sentences]\n\nPublish on the website: yes / no\nName/City: or anonymous\n\nPlease don’t include your address or phone number.',
       emailSubject: 'ALLEXO · Review',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Interface language' },
@@ -688,20 +678,15 @@ export const TRANSLATIONS = {
       kpi3: 'Brugge',
       kpi3Label: 'Vlaanderen',
     },
-    proof: {
-      aria: 'Reviews en vertrouwen',
-      quote: 'Net werk, snelle uitvoering en een proper resultaat.',
-      meta: 'MDF afwerking in Brugge',
-    },
     reviews: {
       aria: 'Klantenreviews',
       title: 'Reviews',
       ctaWa: 'Review via WhatsApp',
       ctaEmail: 'Review via e-mail',
-      hint:
-        'Je kan je naam/stad vermelden of anoniem blijven. Vermeld zeker “ja / nee” voor publicatie op de website. Zet geen adres of telefoonnummer in je bericht (privégegevens).',
+      ctaWaShort: 'WhatsApp',
+      ctaEmailShort: 'E-mail',
       waTemplate:
-        'Hallo!\n\nIk wil graag een review achterlaten over ALLEXO:\n\n[Schrijf 1–2 zinnen]\n\nPubliceren op de website: ja / nee\nNaam/Stad: (of anoniem)',
+        'Ik wil graag een review achterlaten over ALLEXO:\n\n[Schrijf 1–2 zinnen]\n\nPubliceren op de website: ja / nee\nNaam/Stad: of anoniem\n\nGelieve geen adres of telefoonnummer te vermelden.',
       emailSubject: 'ALLEXO · Review',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Taal van de interface' },
@@ -989,20 +974,15 @@ export const TRANSLATIONS = {
       kpi3: 'Bruges',
       kpi3Label: 'Flandre',
     },
-    proof: {
-      aria: 'Avis et confiance',
-      quote: 'Travail soigné, exécution rapide et résultat propre.',
-      meta: 'Finition MDF à Bruges',
-    },
     reviews: {
       aria: 'Avis clients',
       title: 'Avis',
       ctaWa: 'Laisser un avis via WhatsApp',
       ctaEmail: 'Laisser un avis par e-mail',
-      hint:
-        'Vous pouvez indiquer votre nom/ville ou rester anonyme. Merci de préciser “oui / non” pour la publication sur le site. N’indiquez pas d’adresse ni de numéro de téléphone (données privées).',
+      ctaWaShort: 'WhatsApp',
+      ctaEmailShort: 'E-mail',
       waTemplate:
-        'Bonjour !\n\nJe souhaite laisser un avis sur ALLEXO :\n\n[Écrivez 1–2 phrases]\n\nPublication sur le site : oui / non\nNom/Ville : (ou anonyme)',
+        'Je souhaite laisser un avis sur ALLEXO :\n\n[Écrivez 1–2 phrases]\n\nPublication sur le site : oui / non\nNom/Ville : ou anonyme\n\nMerci de ne pas indiquer d’adresse ni de numéro de téléphone.',
       emailSubject: 'ALLEXO · Avis',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Langue de l’interface' },

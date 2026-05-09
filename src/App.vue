@@ -325,14 +325,25 @@ const minOrderDiffEuros = computed(() =>
             </li>
           </ul>
           <div class="reviews__actions">
-            <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
-              {{ t('reviews.ctaWa') }}
+            <button
+              type="button"
+              class="reviews__btn reviews__btn--wa"
+              :aria-label="t('reviews.ctaWa')"
+              @click="openWhatsAppReview"
+            >
+              <span class="reviews__btn-label reviews__btn-label--full">{{ t('reviews.ctaWa') }}</span>
+              <span class="reviews__btn-label reviews__btn-label--short">{{ t('reviews.ctaWaShort') }}</span>
             </button>
-            <button type="button" class="reviews__btn reviews__btn--email" @click="openEmailReview">
-              {{ t('reviews.ctaEmail') }}
+            <button
+              type="button"
+              class="reviews__btn reviews__btn--email"
+              :aria-label="t('reviews.ctaEmail')"
+              @click="openEmailReview"
+            >
+              <span class="reviews__btn-label reviews__btn-label--full">{{ t('reviews.ctaEmail') }}</span>
+              <span class="reviews__btn-label reviews__btn-label--short">{{ t('reviews.ctaEmailShort') }}</span>
             </button>
           </div>
-          <p class="reviews__hint">{{ t('reviews.hint') }}</p>
         </div>
       </section>
 
@@ -347,14 +358,6 @@ const minOrderDiffEuros = computed(() =>
           <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
         </li>
       </ul>
-
-      <section class="social-proof" :aria-label="t('proof.aria')">
-        <div class="social-proof__card">
-          <p class="social-proof__stars" aria-hidden="true">★★★★★</p>
-          <p class="social-proof__quote">{{ t('proof.quote') }}</p>
-          <p class="social-proof__meta">{{ t('proof.meta') }}</p>
-        </div>
-      </section>
 
       <section id="calculator" class="calc">
         <div class="grid">
@@ -660,41 +663,6 @@ const minOrderDiffEuros = computed(() =>
   margin-top: 1.25rem;
 }
 
-.social-proof {
-  margin: 0 0 1.25rem;
-}
-
-.social-proof__card {
-  padding: 0.9rem 1rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(15, 61, 62, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(245, 250, 249, 0.85));
-  box-shadow: 0 12px 28px rgba(15, 61, 62, 0.08);
-}
-
-.social-proof__stars {
-  margin: 0 0 0.25rem;
-  font-size: 0.92rem;
-  letter-spacing: 0.12em;
-  color: var(--allexo-accent);
-}
-
-.social-proof__quote {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--allexo-text);
-  line-height: 1.35;
-  text-wrap: balance;
-}
-
-.social-proof__meta {
-  margin: 0.3rem 0 0;
-  font-size: 0.85rem;
-  font-weight: 650;
-  color: var(--allexo-muted);
-}
-
 .reviews {
   margin: 0.5rem 0 1.35rem;
 }
@@ -756,15 +724,19 @@ const minOrderDiffEuros = computed(() =>
 
 .reviews__actions {
   margin-top: 0.85rem;
+  margin-bottom: 0.15rem;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.55rem;
 }
 
-@media (min-width: 560px) {
-  .reviews__actions {
-    grid-template-columns: 1fr 1fr;
-  }
+.reviews__btn-label {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.reviews__btn-label--short {
+  display: none;
 }
 
 .reviews__btn {
@@ -776,6 +748,31 @@ const minOrderDiffEuros = computed(() =>
   font-weight: 800;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .reviews__actions {
+    gap: 0.4rem;
+  }
+
+  .reviews__btn {
+    min-height: 2.28rem;
+    padding: 0.42rem 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 750;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+  }
+
+  .reviews__btn-label--full {
+    display: none;
+  }
+
+  .reviews__btn-label--short {
+    display: block;
+  }
 }
 
 .reviews__btn--wa {
@@ -794,14 +791,6 @@ const minOrderDiffEuros = computed(() =>
 
 .reviews__btn--email:hover {
   background: var(--allexo-bg);
-}
-
-.reviews__hint {
-  margin: 0.65rem 0 0;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--allexo-muted);
-  line-height: 1.45;
 }
 
 .sticky-total {
