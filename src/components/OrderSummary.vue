@@ -97,6 +97,21 @@ function windowDimsLabel(line, win) {
   return `${w}×${h} ${t('common.mm')}`
 }
 
+/** Повні розміри для клієнтського підсумку (без Pro-розбивки). */
+function windowDimsLabelPublic(line, win) {
+  if (line.typeId === 'roller_box') {
+    const w = Math.round(Number(win.widthMm))
+    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
+    return `${w}×${hb} ${t('common.mm')}`
+  }
+  if (line.typeId === 'windowsill') {
+    const w = Math.round(Number(win.widthMm))
+    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
+    return `${w}×${d} ${t('common.mm')}`
+  }
+  return windowDimsLabel(line, win)
+}
+
 const proActive = ref(false)
 function syncProActive() {
   proActive.value = isProUnlocked()
@@ -116,6 +131,29 @@ onBeforeUnmount(() => {
 })
 
 const isPublicMode = computed(() => !proActive.value)
+
+/** Сума quantity по всіх вікнах (для орієнтовного терміну в public). */
+const publicTotalWindowUnits = computed(() =>
+  props.lines.reduce(
+    (sum, line) => sum + windowsForLine(line).reduce((s, w) => s + windowQty(w), 0),
+    0,
+  ),
+)
+
+const PUBLIC_WINDOWS_PER_WORKDAY = 5
+
+const publicLeadTimeDaysApprox = computed(() => {
+  const n = publicTotalWindowUnits.value
+  if (n <= 0) return 1
+  return Math.max(1, Math.ceil(n / PUBLIC_WINDOWS_PER_WORKDAY))
+})
+
+const publicLeadTimeNoteDisplay = computed(() =>
+  translate(locale.value, 'summary.publicLeadTimeNote').replace(
+    /\{d\}/g,
+    String(publicLeadTimeDaysApprox.value),
+  ),
+)
 
 /** @param {string | undefined} id */
 function catLabel(id) {
@@ -468,7 +506,12 @@ function openContactEmailModal() {
               class="window-entry"
             >
               <h4 v-if="!isPublicMode" class="window-entry__title">{{ windowEntryHeading(line, win) }}</h4>
-              <p v-else class="window-entry__title window-entry__title--public">{{ windowDimsLabel(line, win) }}</p>
+              <p v-else class="window-entry__title window-entry__title--public">
+                {{ windowDimsLabelPublic(line, win) }}
+                <span class="window-entry__qty">
+                  · {{ windowQty(win) }} {{ t('summary.pcs') }}
+                </span>
+              </p>
 
               <dl v-if="!isPublicMode && isSimplifiedProductLine(line.typeId)" class="dims">
                 <div class="dims__row">
@@ -541,31 +584,30 @@ function openContactEmailModal() {
                     <dd>{{ formatEuroExclVat(windowsillAddonPriceEuros(line, win), locale) }}</dd>
                   </div>
                 </dl>
-                <dl v-else class="dims dims--price dims--price-public">
-                  <div class="dims__row">
-                    <dt>{{ t('summary.dtQuantity') }}</dt>
-                    <dd>{{ windowQty(win) }}</dd>
-                  </div>
-                  <div class="dims__row">
-                    <dt>{{ t('summary.dtLineTotal') }}</dt>
-                    <dd>{{ formatEuroExclVat(windowPriceEuros(line, win) * windowQty(win), locale) }}</dd>
-                  </div>
-                </dl>
+                <p v-else class="window-entry__price-public">
+                  <span class="window-entry__price-label">{{ t('summary.publicWindowPriceLabel') }}</span>
+                  <span class="window-entry__price-value">{{
+                    formatEuroExclVat(windowPriceEuros(line, win) * windowQty(win), locale)
+                  }}</span>
+                </p>
               </template>
-              <p v-else class="window-price">
+              <p v-else-if="!isPublicMode" class="window-price">
                 {{ t('summary.priceLabel') }} {{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}
               </p>
 
-              <div class="window-time" v-if="windowBufferedHoursTotal(line, win) > 0">
+              <div
+                v-if="!isPublicMode && windowBufferedHoursTotal(line, win) > 0"
+                class="window-time"
+              >
                 <p class="window-time__main">
                   {{ t('summary.windowTimeLabel') }} {{ formatHoursDisplay(windowBufferedHoursTotal(line, win)) }}
                   {{ t('summary.hoursUnit') }}
                 </p>
-                <p v-if="!isPublicMode" class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
+                <p class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
               </div>
             </div>
 
-            <p class="line-subtotal">
+            <p v-if="!isPublicMode" class="line-subtotal">
               {{ t('summary.lineSubtotal') }} {{ formatEuroExclVat(lineSubtotalEuros(line), locale) }}
             </p>
           </div>
@@ -580,7 +622,7 @@ function openContactEmailModal() {
         </li>
       </ul>
 
-      <div class="travel-block">
+      <div v-if="!isPublicMode" class="travel-block">
         <h3 class="travel-block__title">{{ t('summary.travelBlockTitle') }}</h3>
         <label class="travel-block__field">
           <span class="travel-block__label">{{ t('summary.travelDistanceLabel') }}</span>
@@ -596,6 +638,12 @@ function openContactEmailModal() {
       </div>
 
       <div class="order-totals">
+        <p
+          v-if="publicTotalWindowUnits > 0"
+          class="order-totals__line order-totals__line--secondary"
+        >
+          {{ t('offer.totalWindows') }} {{ publicTotalWindowUnits }}
+        </p>
         <template v-if="!offerTravelMeta">
           <p class="order-totals__line">
             {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
@@ -607,11 +655,20 @@ function openContactEmailModal() {
             {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
             <span class="order-totals__min-note">({{ discountPct }}%)</span>
           </p>
-          <p v-if="minOrderApplied" class="order-totals__line order-totals__line--grand">
+          <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
           </p>
-          <p v-else-if="discountEuros > 0" class="order-totals__line order-totals__line--grand">
+          <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-if="isPublicMode" class="order-totals__payable-includes">
+            {{ t('summary.publicPayableIncludes') }}
           </p>
         </template>
         <template v-else>
@@ -625,8 +682,17 @@ function openContactEmailModal() {
             {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
             <span class="order-totals__min-note">({{ discountPct }}%)</span>
           </p>
-          <p v-if="minOrderApplied" class="order-totals__line order-totals__line--grand">
+          <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
+          </p>
+          <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
           </p>
           <p class="order-totals__line order-totals__line--secondary">
             {{ t('summary.travelTransportTotal') }}
@@ -637,21 +703,29 @@ function openContactEmailModal() {
           <p class="order-totals__line order-totals__line--grand">
             {{ t('summary.grandTotal') }} {{ formatEuroExclVat(grandTotalEuros, locale) }}
           </p>
+          <p v-if="isPublicMode" class="order-totals__payable-includes">
+            {{ t('summary.publicPayableIncludes') }}
+          </p>
         </template>
-        <p class="order-totals__time">
-          {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
-        </p>
-        <p class="order-totals__days">
-          {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
-        </p>
-        <p class="order-totals__fast">
-          {{ t('summary.fastExecutionNoDismantle') }}
-        </p>
-        <p class="order-totals__includes">
-          {{ t('summary.turnkeyIncludes') }}
-        </p>
-        <p class="order-totals__discount-policy">
-          {{ t('summary.discountPolicy') }}
+        <template v-if="!isPublicMode">
+          <p class="order-totals__time">
+            {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
+          </p>
+          <p class="order-totals__days">
+            {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
+          </p>
+          <p class="order-totals__fast">
+            {{ t('summary.fastExecutionNoDismantle') }}
+          </p>
+          <p class="order-totals__includes">
+            {{ t('summary.turnkeyIncludes') }}
+          </p>
+          <p class="order-totals__discount-policy">
+            {{ t('summary.discountPolicy') }}
+          </p>
+        </template>
+        <p v-else class="order-totals__public-lead">
+          {{ publicLeadTimeNoteDisplay }}
         </p>
       </div>
 
@@ -827,8 +901,31 @@ function openContactEmailModal() {
   letter-spacing: -0.01em;
 }
 
-.dims--price-public .dims__row dd {
-  font-weight: 750;
+.window-entry__qty {
+  font-weight: 600;
+  color: var(--allexo-muted);
+}
+
+.window-entry__price-public {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  margin: 0.4rem 0 0;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--allexo-border);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.window-entry__price-label {
+  font-weight: 650;
+  color: var(--allexo-muted);
+}
+
+.window-entry__price-value {
+  font-weight: 800;
+  color: var(--allexo-teal);
 }
 
 .dims {
@@ -992,6 +1089,28 @@ function openContactEmailModal() {
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--allexo-muted);
+}
+
+.order-totals__public-lead {
+  margin: 0.45rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--allexo-muted);
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.order-totals__payable-includes {
+  margin: 0.5rem 0 0;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.84rem;
+  font-weight: 550;
+  color: var(--allexo-muted);
+  line-height: 1.45;
+  text-wrap: balance;
+  background: rgba(15, 61, 62, 0.04);
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 61, 62, 0.08);
 }
 
 .order-totals__time {

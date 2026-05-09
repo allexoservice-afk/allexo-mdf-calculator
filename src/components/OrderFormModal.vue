@@ -155,11 +155,10 @@ watch(
     if (isOpen) {
       root.style.overflow = 'hidden'
       body.style.overflow = 'hidden'
-      body.style.touchAction = 'none'
+      // Avoid touch-action: none — it breaks native <select> picker anchoring on mobile WebKit/Blink.
     } else {
       root.style.overflow = ''
       body.style.overflow = ''
-      body.style.touchAction = ''
     }
   },
   { immediate: true },
@@ -928,10 +927,15 @@ function sizeLabel(id) {
   box-sizing: border-box;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .backdrop {
-    overflow: hidden;
-    overscroll-behavior: none;
+    /* Scroll on backdrop (not overflow:hidden) so native selects anchor to the viewport correctly. */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    align-items: flex-start;
+    justify-content: center;
     padding: max(0.5rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
       max(0.5rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
   }
@@ -984,10 +988,21 @@ function sizeLabel(id) {
   flex-shrink: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .modal {
     width: 92vw;
     max-width: 92vw;
+    /* Don’t clip native select popovers; inner .modal__scroll still scrolls the form. */
+    overflow-x: hidden;
+    overflow-y: visible;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .modal.modal--no-inner-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal__scroll {
@@ -1046,6 +1061,14 @@ function sizeLabel(id) {
     max-width: none;
   }
 
+  /* Native <select> list position: anchor to full field width; avoid clipping quirks. */
+  select.field__input {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .row,
   .row--dims {
     grid-template-columns: 1fr;
@@ -1073,7 +1096,7 @@ function sizeLabel(id) {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .modal {
     width: min(100%, 680px);
     max-width: calc(100vw - 2rem);

@@ -249,6 +249,11 @@ export const TRANSLATIONS = {
       travelDiscussedShort: 'обговорюється окремо',
       travelDiscussedLine: 'Виїзд обговорюється окремо',
       grandTotal: 'Загальна сума:',
+      publicLeadTimeNote:
+        'Орієнтовний термін: близько {d} роб. дн. Точний графік погоджуємо після заміру.',
+      publicWindowPriceLabel: 'Вартість',
+      publicPayableIncludes:
+        'У ціну входять усі матеріали, робота, фінальні заміри та вивезення сміття.',
     },
     offer: {
       header: 'ALLEXO – MDF обробка вікон',
@@ -544,6 +549,11 @@ export const TRANSLATIONS = {
       travelDiscussedShort: 'discussed separately',
       travelDiscussedLine: 'Travel to be discussed separately',
       grandTotal: 'Grand total:',
+      publicLeadTimeNote:
+        'Typical timing: about {d} business day(s). Final schedule after the site visit.',
+      publicWindowPriceLabel: 'Price',
+      publicPayableIncludes:
+        'The price includes all materials, labour, final measurements, and waste removal.',
     },
     offer: {
       header: 'ALLEXO – MDF window finishing',
@@ -840,6 +850,11 @@ export const TRANSLATIONS = {
       travelDiscussedShort: 'apart te bespreken',
       travelDiscussedLine: 'Rit apart te bespreken',
       grandTotal: 'Totaal:',
+      publicLeadTimeNote:
+        'Indicatieve timing: circa {d} werkdag(en). Definitieve planning na opmeting.',
+      publicWindowPriceLabel: 'Prijs',
+      publicPayableIncludes:
+        'Inbegrepen: alle materialen, arbeid, laatste opmetingen en afvoer van afval.',
     },
     offer: {
       header: 'ALLEXO – MDF afwerking van ramen',
@@ -1136,6 +1151,11 @@ export const TRANSLATIONS = {
       travelDiscussedShort: 'à discuter séparément',
       travelDiscussedLine: 'Déplacement à discuter séparément',
       grandTotal: 'Total général :',
+      publicLeadTimeNote:
+        'Délai indicatif : environ {d} jour(s) ouvré(s). Planning définitif après visite.',
+      publicWindowPriceLabel: 'Prix',
+      publicPayableIncludes:
+        'Inclus : tous les matériaux, la main-d’œuvre, les mesures finales et l’évacuation des déchets.',
     },
     offer: {
       header: 'ALLEXO – Finition MDF des fenêtres',
