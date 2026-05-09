@@ -95,8 +95,6 @@ export const TRANSLATIONS = {
     reviews: {
       aria: 'Відгуки клієнтів',
       title: 'Відгуки',
-      intro:
-        'Нижче — опубліковані відгуки клієнтів. Якщо вам сподобалась робота — буду вдячний за ваш відгук (WhatsApp або email).',
       ctaWa: 'Залишити відгук у WhatsApp',
       ctaEmail: 'Залишити відгук на Email',
       hint:
@@ -397,8 +395,6 @@ export const TRANSLATIONS = {
     reviews: {
       aria: 'Customer reviews',
       title: 'Reviews',
-      intro:
-        'Below are published customer reviews. If you liked the result, I’d appreciate your feedback too (WhatsApp or email).',
       ctaWa: 'Leave a WhatsApp review',
       ctaEmail: 'Leave an email review',
       hint:
@@ -700,8 +696,6 @@ export const TRANSLATIONS = {
     reviews: {
       aria: 'Klantenreviews',
       title: 'Reviews',
-      intro:
-        'Hieronder staan gepubliceerde klantenreviews. Tevreden over het resultaat? Laat gerust ook jouw feedback achter (WhatsApp of e-mail).',
       ctaWa: 'Review via WhatsApp',
       ctaEmail: 'Review via e-mail',
       hint:
@@ -1003,8 +997,6 @@ export const TRANSLATIONS = {
     reviews: {
       aria: 'Avis clients',
       title: 'Avis',
-      intro:
-        'Ci-dessous, des avis clients publiés. Si le résultat vous a plu, laissez aussi votre avis (WhatsApp ou e-mail).',
       ctaWa: 'Laisser un avis via WhatsApp',
       ctaEmail: 'Laisser un avis par e-mail',
       hint:

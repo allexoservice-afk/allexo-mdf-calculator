@@ -312,6 +312,30 @@ const minOrderDiffEuros = computed(() =>
 
       <WorksGallery />
 
+      <section class="reviews" :aria-label="t('reviews.aria')">
+        <div class="reviews__card">
+          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
+          <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
+            <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
+              <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
+              <blockquote class="reviews__item-quote">
+                {{ reviewQuoteText(rev) }}
+              </blockquote>
+              <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
+            </li>
+          </ul>
+          <div class="reviews__actions">
+            <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
+              {{ t('reviews.ctaWa') }}
+            </button>
+            <button type="button" class="reviews__btn reviews__btn--email" @click="openEmailReview">
+              {{ t('reviews.ctaEmail') }}
+            </button>
+          </div>
+          <p class="reviews__hint">{{ t('reviews.hint') }}</p>
+        </div>
+      </section>
+
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
           <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
@@ -345,31 +369,6 @@ const minOrderDiffEuros = computed(() =>
 
         <div id="summary" :class="{ 'summary-flash': summaryFlash }">
           <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
-        </div>
-      </section>
-
-      <section class="reviews" :aria-label="t('reviews.aria')">
-        <div class="reviews__card">
-          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
-          <p class="reviews__intro">{{ t('reviews.intro') }}</p>
-          <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
-            <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
-              <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
-              <blockquote class="reviews__item-quote">
-                {{ reviewQuoteText(rev) }}
-              </blockquote>
-              <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
-            </li>
-          </ul>
-          <div class="reviews__actions">
-            <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
-              {{ t('reviews.ctaWa') }}
-            </button>
-            <button type="button" class="reviews__btn reviews__btn--email" @click="openEmailReview">
-              {{ t('reviews.ctaEmail') }}
-            </button>
-          </div>
-          <p class="reviews__hint">{{ t('reviews.hint') }}</p>
         </div>
       </section>
     </main>
@@ -697,7 +696,7 @@ const minOrderDiffEuros = computed(() =>
 }
 
 .reviews {
-  margin: 1rem 0 1.25rem;
+  margin: 0.5rem 0 1.35rem;
 }
 
 .reviews__card {
@@ -713,14 +712,6 @@ const minOrderDiffEuros = computed(() =>
   font-size: 1rem;
   font-weight: 850;
   color: var(--allexo-teal);
-}
-
-.reviews__intro {
-  margin: 0.45rem 0 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--allexo-muted);
-  line-height: 1.45;
 }
 
 .reviews__list {

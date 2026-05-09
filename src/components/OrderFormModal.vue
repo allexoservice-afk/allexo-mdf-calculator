@@ -591,29 +591,35 @@ function sizeLabel(id) {
       aria-labelledby="order-form-title"
       @click="onBackdrop"
     >
-      <div ref="modalEl" class="modal" :class="{ 'modal--no-inner-scroll': isWithSillType }" @click.stop>
-        <div class="modal__head">
-          <h2 id="order-form-title" class="modal__title">{{ formTitle }}</h2>
-          <button type="button" class="modal__close" :aria-label="t('common.close')" @click="emit('close')">
-            ×
-          </button>
-        </div>
-        <div class="modal__hints">
-          <p class="modal__hint">{{ formHint }}</p>
-          <p v-if="formHintRoller" class="modal__hint">{{ formHintRoller }}</p>
-        </div>
-        <div class="mode-badge" aria-label="Mode">
-          <span class="mode-badge__pill" :class="{ 'mode-badge__pill--pro': isProMode }">
-            {{ isProMode ? t('form.modePro') : t('form.modeClient') }}
-          </span>
-        </div>
-        <form class="form" @submit.prevent="onSubmit">
-          <div
-            v-for="(win, idx) in windows"
-            :key="win.id"
-            class="window-block"
-            @keydown="focusNextFieldOnEnter"
-          >
+      <div
+        ref="modalEl"
+        class="modal"
+        :class="{ 'modal--no-inner-scroll': isWithSillType }"
+        @click.stop
+      >
+        <div class="modal__scroll">
+          <div class="modal__head">
+            <h2 id="order-form-title" class="modal__title">{{ formTitle }}</h2>
+            <button type="button" class="modal__close" :aria-label="t('common.close')" @click="emit('close')">
+              ×
+            </button>
+          </div>
+          <div class="modal__hints">
+            <p class="modal__hint">{{ formHint }}</p>
+            <p v-if="formHintRoller" class="modal__hint">{{ formHintRoller }}</p>
+          </div>
+          <div class="mode-badge" aria-label="Mode">
+            <span class="mode-badge__pill" :class="{ 'mode-badge__pill--pro': isProMode }">
+              {{ isProMode ? t('form.modePro') : t('form.modeClient') }}
+            </span>
+          </div>
+          <form id="allexo-order-modal-form" class="form" @submit.prevent="onSubmit">
+            <div
+              v-for="(win, idx) in windows"
+              :key="win.id"
+              class="window-block"
+              @keydown="focusNextFieldOnEnter"
+            >
             <div class="window-block__head">
               <h3 class="window-block__title">
                 {{ t('form.window') }} {{ idx + 1 }}
@@ -871,22 +877,32 @@ function sizeLabel(id) {
             <p v-else-if="windowPreviews[idx]?.oversized" class="window-preview-price window-preview-price--individual">
               {{ t('form.largeSizesInfo') }}
             </p>
-          </div>
+            </div>
 
-          <button
-            type="button"
-            class="btn-add-window"
-            :class="{ 'btn-add-window--subtle': isClientMode }"
-            @click="addWindow"
-          >
-            {{ t('form.addWindow') }}
-          </button>
+            <button
+              type="button"
+              class="btn-add-window"
+              :class="{ 'btn-add-window--subtle': isClientMode }"
+              @click="addWindow"
+            >
+              {{ t('form.addWindow') }}
+            </button>
+          </form>
+        </div>
 
+        <div class="modal__footer">
           <div class="actions">
             <button type="button" class="btn btn--ghost" @click="emit('close')">{{ t('form.cancel') }}</button>
-            <button type="submit" class="btn btn--primary" :disabled="!isValid">{{ primarySubmitLabel }}</button>
+            <button
+              type="submit"
+              class="btn btn--primary"
+              form="allexo-order-modal-form"
+              :disabled="!isValid"
+            >
+              {{ primarySubmitLabel }}
+            </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </Teleport>
@@ -912,59 +928,163 @@ function sizeLabel(id) {
   box-sizing: border-box;
 }
 
+@media (max-width: 767px) {
+  .backdrop {
+    overflow: hidden;
+    overscroll-behavior: none;
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+      max(0.5rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  }
+}
+
 .modal {
   width: min(100%, 460px);
   max-width: calc(100vw - 2rem);
-  max-height: 90vh;
+  max-height: min(90vh, 90dvh);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   box-sizing: border-box;
   background: var(--allexo-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 1.35rem 1.35rem 0;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
-/* Для “Відкоси з підвіконником” прибираємо внутрішній вертикальний скрол. */
-.modal--no-inner-scroll {
-  overflow-y: visible;
+.modal__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 1.35rem 1.35rem 0.65rem;
 }
 
-@media (max-width: 639px) {
+.modal__footer {
+  flex-shrink: 0;
+  background: var(--allexo-surface);
+  padding: 0.65rem 1.35rem max(0.75rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--allexo-border);
+}
+
+/* Для “Відкоси з підвіконником”: один зовнішній скрол замість вкладеного. */
+.modal.modal--no-inner-scroll {
+  overflow-y: auto;
+  max-height: min(90vh, 90dvh);
+}
+
+.modal.modal--no-inner-scroll .modal__scroll {
+  flex: 0 1 auto;
+  overflow: visible;
+  min-height: 0;
+}
+
+.modal.modal--no-inner-scroll .modal__footer {
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
   .modal {
-    max-height: 90vh;
-    padding: 1rem 1rem 0;
-    padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+    width: 92vw;
+    max-width: 92vw;
+  }
+
+  .modal__scroll {
+    padding: 0.85rem 0.85rem 0.45rem;
+  }
+
+  .modal__footer {
+    padding: 0.55rem 0.85rem max(0.65rem, env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 24px rgba(28, 36, 36, 0.07);
   }
 
   .modal__hints {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .modal__hint {
+    font-size: 0.8125rem;
+    line-height: 1.4;
   }
 
   .mode-badge {
-    margin-bottom: 0.65rem;
+    margin-bottom: 0.55rem;
   }
 
   .form {
     gap: 0.75rem;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.15rem;
   }
 
   .window-block {
-    padding: 0.9rem;
-    gap: 0.75rem;
+    padding: 0.85rem;
+    gap: 0.8rem;
+  }
+
+  .modal__close {
+    width: 2.35rem;
+    height: 2.35rem;
+    font-size: 1.28rem;
+  }
+
+  .field {
+    gap: 0.3rem;
+  }
+
+  .field__label {
+    font-size: 0.74rem;
+  }
+
+  .field__input {
+    min-height: 2.45rem;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.98rem;
+  }
+
+  .field--compact {
+    max-width: none;
+  }
+
+  .row,
+  .row--dims {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  .row--single {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-add-window {
+    min-height: 2.5rem;
+    padding: 0.62rem 1rem;
+    font-size: 1rem;
+    margin-top: 0.15rem;
+  }
+
+  .actions {
+    margin-top: 0;
+    padding: 0;
+    position: static;
+    background: transparent;
+    border-top: none;
+    box-shadow: none;
   }
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .modal {
     width: min(100%, 680px);
-    padding: 1.75rem;
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 2rem);
+  }
+
+  .modal__scroll {
+    padding: 1.75rem 1.75rem 1rem;
+  }
+
+  .modal__footer {
+    padding: 0.75rem 1.75rem max(1rem, env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1051,7 +1171,7 @@ function sizeLabel(id) {
   min-width: 0;
   overflow-x: hidden;
   overflow-y: visible;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 .window-block {
@@ -1184,27 +1304,6 @@ function sizeLabel(id) {
   grid-template-columns: minmax(0, 8.75rem);
 }
 
-@media (max-width: 360px) {
-  .row {
-    grid-template-columns: 1fr;
-  }
-
-  .row--dims {
-    width: auto;
-    grid-template-columns: 1fr;
-  }
-
-  .row--single {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 639px) and (min-width: 390px) {
-  .row {
-    gap: 0.75rem;
-  }
-}
-
 .field {
   display: flex;
   flex-direction: column;
@@ -1294,14 +1393,7 @@ select.field__input {
   flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: auto;
-  padding-top: 0.75rem;
-  padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--allexo-surface) 12%);
-  border-top: 1px solid var(--allexo-border);
+  align-items: center;
 }
 
 .btn {

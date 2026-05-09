@@ -1,7 +1,11 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { normalizeStoredWindow } from '../constants/sizeCategories.js'
+import { isProUnlocked } from '../constants/proUnlock.js'
 
-const STORAGE_KEY = 'allexo-mdf-order'
+/** @deprecated Legacy: was used for all users; public sessions no longer read/write this. */
+const LEGACY_ORDER_KEY = 'allexo-mdf-order'
+/** Pro-only persistence (never loaded in public / client mode). */
+const PRO_ORDER_KEY = 'allexo-mdf-order-pro'
 
 /**
  * @typedef {import('../constants/calculatorTypes.js').CalculatorTypeId} CalculatorTypeId
@@ -84,9 +88,8 @@ function migrateLine(line) {
   return null
 }
 
-function loadFromStorage() {
+function parseOrderLines(raw) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
@@ -96,24 +99,75 @@ function loadFromStorage() {
   }
 }
 
-function saveToStorage(items) {
+function loadProOrderFromStorage() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    let raw = localStorage.getItem(PRO_ORDER_KEY)
+    if (!raw) {
+      raw = localStorage.getItem(LEGACY_ORDER_KEY)
+      if (raw) {
+        localStorage.setItem(PRO_ORDER_KEY, raw)
+        localStorage.removeItem(LEGACY_ORDER_KEY)
+      }
+    }
+    return parseOrderLines(raw)
+  } catch {
+    return []
+  }
+}
+
+function saveProOrderToStorage(items) {
+  try {
+    localStorage.setItem(PRO_ORDER_KEY, JSON.stringify(items))
   } catch {
     /* ignore quota / private mode */
   }
 }
 
+function stripLegacyPublicOrderKey() {
+  try {
+    localStorage.removeItem(LEGACY_ORDER_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+function applyOrderPersistenceMode(linesRef) {
+  if (isProUnlocked()) {
+    linesRef.value = loadProOrderFromStorage()
+  } else {
+    stripLegacyPublicOrderKey()
+    linesRef.value = []
+  }
+}
+
 export function useOrder() {
-  const lines = ref(/** @type {OrderLine[]} */ (loadFromStorage()))
+  const lines = ref(/** @type {OrderLine[]} */ ([]))
+
+  applyOrderPersistenceMode(lines)
 
   watch(
     lines,
     (v) => {
-      saveToStorage(v)
+      if (isProUnlocked()) saveProOrderToStorage(v)
     },
     { deep: true },
   )
+
+  function onProChange() {
+    applyOrderPersistenceMode(lines)
+  }
+
+  onMounted(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('allexo-pro-change', onProChange)
+    }
+  })
+
+  onBeforeUnmount(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('allexo-pro-change', onProChange)
+    }
+  })
 
   /**
    * @param {Omit<OrderLine, 'key'>} payload
