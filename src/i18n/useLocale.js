@@ -1,21 +1,8 @@
 import { ref } from 'vue'
 import { DEFAULT_LOCALE, isSupportedLocale, translate } from './translations.js'
 
+/** User-chosen UI language; if missing, default is Dutch (not browser locale). */
 const STORAGE_KEY = 'allexo-mdf-locale'
-
-/** @returns {import('./translations.js').Locale | null} */
-function guessLocaleFromNavigator() {
-  if (typeof navigator === 'undefined') return null
-  const candidates = [navigator.language, ...(navigator.languages ?? [])].filter(Boolean)
-  for (const raw of candidates) {
-    const base = String(raw).toLowerCase().split('-')[0]
-    if (base === 'nl') return 'nl'
-    if (base === 'fr') return 'fr'
-    if (base === 'en') return 'en'
-    if (base === 'uk' || base === 'ua') return 'uk'
-  }
-  return null
-}
 
 function readStoredLocale() {
   try {
@@ -24,7 +11,7 @@ function readStoredLocale() {
   } catch {
     /* ignore */
   }
-  return guessLocaleFromNavigator() ?? DEFAULT_LOCALE
+  return DEFAULT_LOCALE
 }
 
 const locale = ref(/** @type {import('./translations.js').Locale} */ (readStoredLocale()))
