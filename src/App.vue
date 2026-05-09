@@ -21,9 +21,17 @@ import { formatEuroExclVat } from './utils/priceDisplay.js'
 import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './utils/windowDimensions.js'
 import { getTypeById } from './constants/calculatorTypes.js'
 import { isProUnlocked } from './constants/proUnlock.js'
+import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 
 const { lines, addLine, removeLine, clearOrder } = useOrder()
 const { locale, t } = useLocale()
+
+/** @param {(typeof PUBLISHED_REVIEWS)[number]} review */
+function reviewQuoteText(review) {
+  const loc = locale.value
+  const txt = review.text
+  return txt[loc] ?? txt.uk ?? ''
+}
 
 /** @type {import('vue').Ref<import('./constants/calculatorTypes.js').CalculatorTypeId | null>} */
 const selectedTypeId = ref(null)
@@ -344,6 +352,15 @@ const minOrderDiffEuros = computed(() =>
         <div class="reviews__card">
           <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
           <p class="reviews__intro">{{ t('reviews.intro') }}</p>
+          <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
+            <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
+              <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
+              <blockquote class="reviews__item-quote">
+                {{ reviewQuoteText(rev) }}
+              </blockquote>
+              <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
+            </li>
+          </ul>
           <div class="reviews__actions">
             <button type="button" class="reviews__btn reviews__btn--wa" @click="openWhatsAppReview">
               {{ t('reviews.ctaWa') }}
@@ -704,6 +721,46 @@ const minOrderDiffEuros = computed(() =>
   font-weight: 500;
   color: var(--allexo-muted);
   line-height: 1.45;
+}
+
+.reviews__list {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.reviews__item {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius);
+  background: var(--allexo-bg);
+}
+
+.reviews__item-stars {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--allexo-accent);
+}
+
+.reviews__item-quote {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--allexo-text);
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.reviews__item-meta {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--allexo-muted);
 }
 
 .reviews__actions {
