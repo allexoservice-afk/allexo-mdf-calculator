@@ -11,6 +11,7 @@ import {
 } from '../pricing/windowQuote.js'
 import { formatEuroExclVat } from './priceDisplay.js'
 import { lineWindowEligibleForAutoQuote, orderHasOversizedWindows, windowEligibleForAutoQuote } from './windowDimensions.js'
+import { isProUnlocked } from '../constants/proUnlock.js'
 import {
   sizeCategoryLabel,
   translate,
@@ -118,6 +119,7 @@ function formatHoursForOffer(h) {
 export function buildAllexoOfferText(lines, locale, travelMeta) {
   if (!Array.isArray(lines) || !lines.length) return ''
 
+  const proPricing = isProUnlocked()
   const parts = []
   parts.push(translate(locale, 'offer.header'))
   parts.push('')
@@ -171,7 +173,14 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
           if (dMm != null) {
             parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
           }
-          parts.push(`- ${translate(locale, 'offer.sillPriceLine')} ${formatEuroExclVat(quoteWindowsillAddonRoundedEuros(Number(win.widthMm), win.windowsillDepthMm), locale)}`)
+          if (proPricing) {
+            parts.push(
+              `- ${translate(locale, 'offer.sillPriceLine')} ${formatEuroExclVat(
+                quoteWindowsillAddonRoundedEuros(Number(win.widthMm), win.windowsillDepthMm),
+                locale,
+              )}`,
+            )
+          }
         }
         parts.push(
           `- ${translate(locale, 'offer.roller')} ${t.hasRoller ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`,
@@ -185,11 +194,15 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
             ? lineWindowEligibleForAutoQuote('windowsill', win)
             : windowEligibleForAutoQuote(Number(win.widthMm), Number(win.heightMm))
       if (canPrice && unitEur > 0) {
-        parts.push(`- ${translate(locale, 'offer.pricePerUnit')} ${formatEuroExclVat(unitEur, locale)}`)
-        parts.push(`- ${translate(locale, 'offer.quantity')} ${qty}`)
-        parts.push(
-          `- ${translate(locale, 'offer.lineTotal')} ${formatEuroExclVat(unitEur * qty, locale)}`,
-        )
+        if (proPricing) {
+          parts.push(`- ${translate(locale, 'offer.pricePerUnit')} ${formatEuroExclVat(unitEur, locale)}`)
+          parts.push(`- ${translate(locale, 'offer.quantity')} ${qty}`)
+          parts.push(
+            `- ${translate(locale, 'offer.lineTotal')} ${formatEuroExclVat(unitEur * qty, locale)}`,
+          )
+        } else {
+          parts.push(`- ${translate(locale, 'offer.priceOnRequestShort')}`)
+        }
       } else {
         parts.push(`- ${translate(locale, 'offer.price')} ${translate(locale, 'offer.individualPriceShort')}`)
       }
@@ -259,44 +272,56 @@ export function buildAllexoOfferText(lines, locale, travelMeta) {
   }, 0)
 
   parts.push(`${translate(locale, 'offer.totalWindows')} ${totalWin}`)
-  parts.push('')
-  parts.push(`${translate(locale, 'summary.workSubtotal')} ${formatEuroExclVat(totalEur, locale)}`)
 
-  // Minimum order + discount (work subtotal only, excl. VAT)
-  if (totalEur > 0 && totalEur < _MIN_ORDER_EUR) {
-    const diff = _MIN_ORDER_EUR - totalEur
-    parts.push(`${translate(locale, 'summary.minOrderDiffPrefix')} ${formatEuroExclVat(diff, locale)}`)
-  }
-  const baseForDiscount = totalEur > 0 && totalEur < _MIN_ORDER_EUR ? _MIN_ORDER_EUR : totalEur
-  const pct = _discountPercentFor(baseForDiscount)
-  const disc = pct > 0 ? Math.round((baseForDiscount * pct) / 100) : 0
-  const payableWork = baseForDiscount - disc
-  if (disc > 0) {
-    parts.push(`${translate(locale, 'summary.discountLabel')} -${formatEuroExclVat(disc, locale)} (${pct}%)`)
-  }
-  if (payableWork > 0 && payableWork !== totalEur) {
-    parts.push(`${translate(locale, 'summary.payableTotal')} ${formatEuroExclVat(payableWork, locale)}`)
-  }
+  if (proPricing) {
+    parts.push('')
+    parts.push(`${translate(locale, 'summary.workSubtotal')} ${formatEuroExclVat(totalEur, locale)}`)
 
-  if (travelMeta != null) {
-    parts.push(
-      `${translate(locale, 'offer.distanceFromBrugge')} ${travelMeta.distanceKm} ${translate(locale, 'offer.km')}`,
-    )
-    if (travelMeta.over100) {
-      parts.push(
-        `${translate(locale, 'summary.travelTransportTotal')} ${translate(locale, 'summary.travelDiscussedShort')}`,
-      )
-    } else if (travelMeta.travelEur === 0) {
-      parts.push(
-        `${translate(locale, 'summary.travelTransportTotal')} ${translate(locale, 'summary.travelFree')}`,
-      )
-    } else {
-      parts.push(
-        `${translate(locale, 'summary.travelTransportTotal')} ${formatEuroExclVat(travelMeta.travelEur, locale)}`,
-      )
+    // Minimum order + discount (work subtotal only, excl. VAT)
+    if (totalEur > 0 && totalEur < _MIN_ORDER_EUR) {
+      const diff = _MIN_ORDER_EUR - totalEur
+      parts.push(`${translate(locale, 'summary.minOrderDiffPrefix')} ${formatEuroExclVat(diff, locale)}`)
     }
-    const grandEur = travelMeta.over100 ? travelMeta.workTotalEur : travelMeta.workTotalEur + travelMeta.travelEur
-    parts.push(`${translate(locale, 'summary.grandTotal')} ${formatEuroExclVat(grandEur, locale)}`)
+    const baseForDiscount = totalEur > 0 && totalEur < _MIN_ORDER_EUR ? _MIN_ORDER_EUR : totalEur
+    const pct = _discountPercentFor(baseForDiscount)
+    const disc = pct > 0 ? Math.round((baseForDiscount * pct) / 100) : 0
+    const payableWork = baseForDiscount - disc
+    if (disc > 0) {
+      parts.push(`${translate(locale, 'summary.discountLabel')} -${formatEuroExclVat(disc, locale)} (${pct}%)`)
+    }
+    if (payableWork > 0 && payableWork !== totalEur) {
+      parts.push(`${translate(locale, 'summary.payableTotal')} ${formatEuroExclVat(payableWork, locale)}`)
+    }
+
+    if (travelMeta != null) {
+      parts.push(
+        `${translate(locale, 'offer.distanceFromBrugge')} ${travelMeta.distanceKm} ${translate(locale, 'offer.km')}`,
+      )
+      if (travelMeta.over100) {
+        parts.push(
+          `${translate(locale, 'summary.travelTransportTotal')} ${translate(locale, 'summary.travelDiscussedShort')}`,
+        )
+      } else if (travelMeta.travelEur === 0) {
+        parts.push(
+          `${translate(locale, 'summary.travelTransportTotal')} ${translate(locale, 'summary.travelFree')}`,
+        )
+      } else {
+        parts.push(
+          `${translate(locale, 'summary.travelTransportTotal')} ${formatEuroExclVat(travelMeta.travelEur, locale)}`,
+        )
+      }
+      const grandEur = travelMeta.over100 ? travelMeta.workTotalEur : travelMeta.workTotalEur + travelMeta.travelEur
+      parts.push(`${translate(locale, 'summary.grandTotal')} ${formatEuroExclVat(grandEur, locale)}`)
+    }
+  } else {
+    parts.push('')
+    parts.push(translate(locale, 'offer.publicOfferFooter'))
+    if (travelMeta != null) {
+      parts.push(
+        `${translate(locale, 'offer.distanceFromBrugge')} ${travelMeta.distanceKm} ${translate(locale, 'offer.km')}`,
+      )
+      parts.push(translate(locale, 'offer.publicTravelNote'))
+    }
   }
 
   parts.push('')

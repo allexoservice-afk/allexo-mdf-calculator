@@ -119,10 +119,7 @@ const CONTACT_WHATSAPP_PHONE = '32493860753'
 const CONTACT_EMAIL = 'allexo.service@gmail.com'
 
 function openWhatsAppFromSticky() {
-  const totalRaw = orderTotalEuros.value
-  const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
   const count = Array.isArray(lines.value) ? lines.value.length : 0
-
   const types = Array.from(
     new Set(
       (lines.value ?? [])
@@ -132,30 +129,35 @@ function openWhatsAppFromSticky() {
     ),
   ).join(', ')
 
-  const minLine =
-    totalRaw > 0 && totalRaw < MIN_ORDER_EUR
-      ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
-      : ''
-
-  const text =
-    `Доброго дня!\n` +
-    `Хочу отримати прорахунок:\n` +
-    `Сума: ${total}\n` +
-    `Кількість позицій: ${count}\n` +
-    `Тип робіт: ${types || '—'}\n` +
-    `${minLine}\n` +
-    `\nЗнижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n` +
-    `Можете уточнити деталі?`
+  let text
+  if (proActive.value) {
+    const totalRaw = orderTotalEuros.value
+    const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
+    const minLine =
+      totalRaw > 0 && totalRaw < MIN_ORDER_EUR
+        ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
+        : ''
+    text =
+      `Доброго дня!\n` +
+      `Хочу отримати прорахунок:\n` +
+      `Сума: ${total}\n` +
+      `Кількість позицій: ${count}\n` +
+      `Тип робіт: ${types || '—'}\n` +
+      `${minLine}\n` +
+      `\nЗнижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n` +
+      `Можете уточнити деталі?`
+  } else {
+    text = t('lead.requestNoPriceBody')
+      .replace('{count}', String(count))
+      .replace('{types}', types || '—')
+  }
 
   const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 function openEmailFromSticky() {
-  const totalRaw = orderTotalEuros.value
-  const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
   const count = Array.isArray(lines.value) ? lines.value.length : 0
-
   const types = Array.from(
     new Set(
       (lines.value ?? [])
@@ -165,21 +167,30 @@ function openEmailFromSticky() {
     ),
   ).join(', ')
 
-  const subject = 'ALLEXO · Запит на прорахунок'
-  const minLine =
-    totalRaw > 0 && totalRaw < MIN_ORDER_EUR
-      ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
-      : ''
+  const subject = t('lead.mailSubject')
 
-  const body =
-    `Доброго дня!\n\n` +
-    `Хочу отримати прорахунок:\n` +
-    `Сума: ${total}\n` +
-    `Кількість позицій: ${count}\n` +
-    `Тип робіт: ${types || '—'}\n\n` +
-    `${minLine}\n\n` +
-    `Знижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n\n` +
-    `Можете уточнити деталі?`
+  let body
+  if (proActive.value) {
+    const totalRaw = orderTotalEuros.value
+    const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
+    const minLine =
+      totalRaw > 0 && totalRaw < MIN_ORDER_EUR
+        ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
+        : ''
+    body =
+      `Доброго дня!\n\n` +
+      `Хочу отримати прорахунок:\n` +
+      `Сума: ${total}\n` +
+      `Кількість позицій: ${count}\n` +
+      `Тип робіт: ${types || '—'}\n\n` +
+      `${minLine}\n\n` +
+      `Знижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n\n` +
+      `Можете уточнити деталі?`
+  } else {
+    body = t('lead.requestNoPriceBody')
+      .replace('{count}', String(count))
+      .replace('{types}', types || '—')
+  }
 
   const email = String(CONTACT_EMAIL_HREF || '').replace(/^mailto:/, '')
   const url = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
@@ -379,8 +390,13 @@ const minOrderDiffEuros = computed(() =>
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
       <div class="sticky-total__inner content-container">
         <p class="sticky-total__sum">
-          {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
-          <span class="sticky-total__exvat">({{ t('price.exVat') }})</span>
+          <template v-if="proActive">
+            {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
+            <span class="sticky-total__exvat">({{ t('price.exVat') }})</span>
+          </template>
+          <template v-else>
+            {{ t('summary.stickyPublicLine') }}
+          </template>
         </p>
         <div class="sticky-total__actions">
           <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">

@@ -33,7 +33,7 @@ const _INSULATION = /** @type {Record<SizeCategoryId, number>} */ ({
   custom: 90,
 })
 
-const _WINDOWSILL_WIDTH_ADDON_MM = 150
+const _WINDOWSILL_WIDTH_ADDON_MM = 300
 const _WINDOWSILL_BASE_COEFF = 1.3
 
 const _DEPTH_HOURS = /** @type {Record<SizeCategoryId, number>} */ ({
@@ -73,7 +73,7 @@ function _windowsillExtraPerMeter(windowsillDepthMm) {
 
 /**
  * Ціна підвіконника (окремо), € без ПДВ, округлення вгору до 5€.
- * - ширина = widthMm + 15 см (для підвіконника разом з вікном)
+ * - ширина = widthMm + 30 см (для підвіконника разом з вікном)
  * - коефіцієнт завжди 1.5
  * - глибина додає +5 €/м за кожні +5 см (від 15 см)
  * @param {number} windowWidthMm

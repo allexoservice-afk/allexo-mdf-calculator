@@ -254,6 +254,10 @@ export const TRANSLATIONS = {
       publicWindowPriceLabel: 'Вартість',
       publicPayableIncludes:
         'У ціну входять усі матеріали, робота, фінальні заміри та вивезення сміття.',
+      publicWindowPriceHidden: 'Орієнтовну вартість повідомимо після огляду.',
+      publicNoPriceTotals:
+        'Автоматичний розрахунок суми для відвідувачів вимкнено. Підсумок надішлемо після заміру — тут лише склад замовлення (типи та розміри).',
+      stickyPublicLine: 'Замовлення зібрано. Суму узгодимо після прорахунку.',
     },
     offer: {
       header: 'ALLEXO – MDF обробка вікон',
@@ -287,6 +291,10 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Глибина підвіконника: {n} мм',
       sillWidthLine: 'Ширина підвіконника: {n} мм',
       sillPriceLine: 'Ціна підвіконника:',
+      priceOnRequestShort: 'Вартість — після огляду / окремим прорахунком.',
+      publicOfferFooter:
+        'Підсумкові суми, мінімальне замовлення та знижки вказуються після офіційного прорахунку.',
+      publicTravelNote: 'Виїзд / транспорт — суми та умови за домовленістю (у публічному режимі не показуються).',
     },
     lead: {
       titleWa: 'Заявка в WhatsApp',
@@ -311,6 +319,8 @@ export const TRANSLATIONS = {
       notSpecified: 'не вказано',
       contactMe: 'Прошу зв’язатися зі мною.',
       mailSubject: 'Заявка на MDF обробку вікон',
+      requestNoPriceBody:
+        'Доброго дня!\n\nХочу отримати прорахунок за заявкою з калькулятора:\nКількість позицій: {count}\nТип робіт: {types}\n\nТочну вартість прошу надіслати після заміру на об\'єкті.\n\nЧи можете підказати наступні кроки?',
       gdprConsent:
         'Надсилаючи цю форму, ви погоджуєтесь, що ми використаємо ваші дані лише для зв’язку щодо вашої заявки.',
     },
@@ -554,6 +564,10 @@ export const TRANSLATIONS = {
       publicWindowPriceLabel: 'Price',
       publicPayableIncludes:
         'The price includes all materials, labour, final measurements, and waste removal.',
+      publicWindowPriceHidden: 'We will share an indicative price after the site visit.',
+      publicNoPriceTotals:
+        'Automatic totals are hidden for visitors. We will send the full quote after measurement — here you only see the order composition (types and dimensions).',
+      stickyPublicLine: 'Order saved. The amount will be agreed after we prepare the quote.',
     },
     offer: {
       header: 'ALLEXO – MDF window finishing',
@@ -587,6 +601,11 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Windowsill depth: {n} mm',
       sillWidthLine: 'Windowsill width: {n} mm',
       sillPriceLine: 'Windowsill price:',
+      priceOnRequestShort: 'Price — after visit / separate quote.',
+      publicOfferFooter:
+        'Final totals, minimum order and discounts are provided in the official quote.',
+      publicTravelNote:
+        'Travel / transport — amounts and terms by agreement (not shown in public mode).',
     },
     lead: {
       titleWa: 'WhatsApp request',
@@ -611,6 +630,8 @@ export const TRANSLATIONS = {
       notSpecified: 'not specified',
       contactMe: 'Please contact me.',
       mailSubject: 'Request: MDF window finishing',
+      requestNoPriceBody:
+        'Hello!\n\nI would like a quote for my calculator order:\nLine items: {count}\nWork types: {types}\n\nPlease send the detailed price after an on-site measurement.\n\nCould you let me know the next steps?',
       gdprConsent:
         'By submitting this form, you agree that we use your data only to contact you about your request.',
     },
@@ -855,6 +876,10 @@ export const TRANSLATIONS = {
       publicWindowPriceLabel: 'Prijs',
       publicPayableIncludes:
         'Inbegrepen: alle materialen, arbeid, laatste opmetingen en afvoer van afval.',
+      publicWindowPriceHidden: 'We geven een indicatieve prijs na de opmeting ter plaatse.',
+      publicNoPriceTotals:
+        'Automatische totalen zijn verborgen voor bezoekers. We sturen het volledige voorstel na opmeting — hier ziet u enkel de samenstelling (types en afmetingen).',
+      stickyPublicLine: 'Bestelling verzameld. Het bedrag stemmen we af na de offerte.',
     },
     offer: {
       header: 'ALLEXO – MDF afwerking van ramen',
@@ -888,6 +913,11 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Diepte vensterbank: {n} mm',
       sillWidthLine: 'Breedte vensterbank: {n} mm',
       sillPriceLine: 'Prijs vensterbank:',
+      priceOnRequestShort: 'Prijs — na bezoek / aparte offerte.',
+      publicOfferFooter:
+        'Eindtotalen, minimumbestelling en kortingen worden vermeld in de officiële offerte.',
+      publicTravelNote:
+        'Rit / transport — bedragen en voorwaarden in overleg (niet zichtbaar in de publieke modus).',
     },
     lead: {
       titleWa: 'WhatsApp-aanvraag',
@@ -912,6 +942,8 @@ export const TRANSLATIONS = {
       notSpecified: 'niet opgegeven',
       contactMe: 'Graag contact met mij opnemen.',
       mailSubject: 'Aanvraag: MDF afwerking ramen',
+      requestNoPriceBody:
+        'Dag!\n\nIk wil graag een prijs voor mijn bestelling uit de calculator:\nAantal regels: {count}\nSoorten werk: {types}\n\nKunt u de gedetailleerde prijs na opmeting ter plaatse sturen?\n\nWat zijn de volgende stappen?',
       gdprConsent:
         'Door dit formulier te verzenden, gaat u akkoord dat wij uw gegevens gebruiken om contact met u op te nemen over uw aanvraag.',
     },
@@ -1156,6 +1188,10 @@ export const TRANSLATIONS = {
       publicWindowPriceLabel: 'Prix',
       publicPayableIncludes:
         'Inclus : tous les matériaux, la main-d’œuvre, les mesures finales et l’évacuation des déchets.',
+      publicWindowPriceHidden: 'Nous communiquerons une estimation après visite sur place.',
+      publicNoPriceTotals:
+        'Les totaux automatiques sont masqués pour les visiteurs. Nous enverrons le devis détaillé après mesure — ici vous voyez seulement la composition (types et dimensions).',
+      stickyPublicLine: 'Commande enregistrée. Le montant sera confirmé après notre devis.',
     },
     offer: {
       header: 'ALLEXO – Finition MDF des fenêtres',
@@ -1189,6 +1225,11 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Profondeur de l’appui : {n} mm',
       sillWidthLine: 'Largeur de l’appui : {n} mm',
       sillPriceLine: 'Prix de l’appui :',
+      priceOnRequestShort: 'Prix — après visite / devis séparé.',
+      publicOfferFooter:
+        'Les totaux finaux, le minimum de commande et les remises figurent dans le devis officiel.',
+      publicTravelNote:
+        'Déplacement / transport — montants et conditions à convenir (non affichés en mode public).',
     },
     lead: {
       titleWa: 'Demande WhatsApp',
@@ -1214,6 +1255,8 @@ export const TRANSLATIONS = {
       notSpecified: 'non indiqué',
       contactMe: 'Merci de me recontacter.',
       mailSubject: 'Demande : finition MDF fenêtres',
+      requestNoPriceBody:
+        'Bonjour !\n\nJe souhaite un devis pour ma commande issue du calculateur :\nNombre de lignes : {count}\nTypes de travaux : {types}\n\nMerci d’envoyer le prix détaillé après mesure sur place.\n\nPouvez-vous m’indiquer la suite ?',
       gdprConsent:
         'En envoyant ce formulaire, vous acceptez que nous utilisions vos données pour vous contacter au sujet de votre demande.',
     },

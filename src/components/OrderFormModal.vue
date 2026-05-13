@@ -863,7 +863,7 @@ function sizeLabel(id) {
               }}</span>
             </label>
 
-            <p v-if="windowPreviews[idx]?.showPreview" class="window-preview-price">
+            <p v-if="!isClientMode && windowPreviews[idx]?.showPreview" class="window-preview-price">
               <template v-if="windowPreviews[idx].qty > 1">
                 {{ t('form.pricePerUnit') }} {{ formatEuroExclVat(windowPreviews[idx].unitEuros, locale) }} ·
                 {{ t('form.quantityLabel') }} {{ windowPreviews[idx].qty }} ·
