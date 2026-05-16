@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "pnpm run build && wrangler pages dev dist --port 8788",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy:pages": "vite build && wrangler pages deploy dist --project-name=allexo-mdf-calculator",
+    "deploy:pages": "vite build && wrangler pages deploy dist --project-name=allexo-mdf-calculator-v2",
+    "secret:resend": "wrangler pages secret put RESEND_API_KEY --project-name=allexo-mdf-calculator-v2",
     "optimize:work-images": "node scripts/generate-work-images.mjs",
     "generate:work-images": "node scripts/generate-work-images.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
     "vue": "^3.5.13"
   },
   "devDependencies": {

@@ -115,11 +115,12 @@ function formatHoursForOffer(h) {
  * @param {unknown[]} lines
  * @param {import('../i18n/translations.js').Locale} locale
  * @param {OfferTravelMeta | null} [travelMeta]
+ * @param {{ forceClientProposalPricing?: boolean }} [options] Якщо true — показувати суми в рядках і підсумки (лист клієнту після заявки), незалежно від Pro.
  */
-export function buildAllexoOfferText(lines, locale, travelMeta) {
+export function buildAllexoOfferText(lines, locale, travelMeta, options) {
   if (!Array.isArray(lines) || !lines.length) return ''
 
-  const proPricing = isProUnlocked()
+  const proPricing = options?.forceClientProposalPricing === true || isProUnlocked()
   const parts = []
   parts.push(translate(locale, 'offer.header'))
   parts.push('')

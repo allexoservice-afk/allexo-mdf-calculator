@@ -8,7 +8,7 @@ import WorksGallery from './components/WorksGallery.vue'
 import CalculatorCard from './components/CalculatorCard.vue'
 import OrderFormModal from './components/OrderFormModal.vue'
 import OrderSummary from './components/OrderSummary.vue'
-import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
+import { CONTACT_EMAIL, CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
 import { CONTACT_WHATSAPP_HREF } from './constants/contact.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
 import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
@@ -116,7 +116,6 @@ onBeforeUnmount(() => {
 })
 
 const CONTACT_WHATSAPP_PHONE = '32493860753'
-const CONTACT_EMAIL = 'allexo.service@gmail.com'
 
 function openWhatsAppFromSticky() {
   const count = Array.isArray(lines.value) ? lines.value.length : 0

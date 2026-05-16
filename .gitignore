@@ -6,7 +6,8 @@ dist
 .DS_Store
 *.local
 .env
-.env.*
+.env.local
 
 # Wrangler (локальний деплой Cloudflare Pages)
 .wrangler/
+.dev.vars

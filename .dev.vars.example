@@ -1,0 +1,9 @@
+# Скопіюйте в .dev.vars (не комітити!) для локального `pnpm dev:api`
+# Ключ: https://resend.com/api-keys
+
+RESEND_API_KEY=re_xxxxxxxx
+# Поки домен allexo.be не підтверджений у Resend — тестовий відправник:
+# RESEND_FROM_EMAIL=onboarding@resend.dev
+RESEND_FROM_EMAIL=ALLEXO <info@allexo.be>
+OWNER_EMAIL=info@allexo.be
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173

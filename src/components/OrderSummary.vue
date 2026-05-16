@@ -16,6 +16,7 @@ import {
 import { buildAllexoOfferText } from '../utils/offerText.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
 import WhatsAppRequestModal from './WhatsAppRequestModal.vue'
+import GetQuoteLeadPanel from './GetQuoteLeadPanel.vue'
 import { formatEuroExclVat } from '../utils/priceDisplay.js'
 import {
   lineWindowEligibleForAutoQuote,
@@ -626,7 +627,21 @@ function openContactEmailModal() {
         </li>
       </ul>
 
-      <div v-if="!isPublicMode" class="travel-block">
+      <GetQuoteLeadPanel
+        v-if="isPublicMode"
+        :lines="lines"
+        :windows-count="publicTotalWindowUnits"
+        :estimated-total-eur="payableWorkAfterDiscountEuros"
+        :discount-euros="discountEuros"
+        :discount-percent="discountPct"
+        :order-subtotal-eur="orderTotalEuros"
+        :travel-meta="offerTravelMeta"
+        :invalid-dims="orderHasInvalidWindowDimensions(lines)"
+        :lead-time-note="publicLeadTimeNoteDisplay"
+      />
+
+      <template v-if="!isPublicMode">
+      <div class="travel-block">
         <h3 class="travel-block__title">{{ t('summary.travelBlockTitle') }}</h3>
         <label class="travel-block__field">
           <span class="travel-block__label">{{ t('summary.travelDistanceLabel') }}</span>
@@ -648,87 +663,77 @@ function openContactEmailModal() {
         >
           {{ t('offer.totalWindows') }} {{ publicTotalWindowUnits }}
         </p>
-        <template v-if="!isPublicMode">
-          <template v-if="!offerTravelMeta">
-            <p class="order-totals__line">
-              {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
-            </p>
-            <p v-if="minOrderApplied" class="order-totals__min">
-              {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
-            </p>
-            <p v-if="discountEuros > 0" class="order-totals__min">
-              {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
-              <span class="order-totals__min-note">({{ discountPct }}%)</span>
-            </p>
-            <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
-            </p>
-            <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-            </p>
-            <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-            </p>
-            <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-            </p>
-          </template>
-          <template v-else>
-            <p class="order-totals__line">
-              {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
-            </p>
-            <p v-if="minOrderApplied" class="order-totals__min">
-              {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
-            </p>
-            <p v-if="discountEuros > 0" class="order-totals__min">
-              {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
-              <span class="order-totals__min-note">({{ discountPct }}%)</span>
-            </p>
-            <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
-            </p>
-            <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-            </p>
-            <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-            </p>
-            <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
-              {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-            </p>
-            <p class="order-totals__line order-totals__line--secondary">
-              {{ t('summary.travelTransportTotal') }}
-              <template v-if="offerTravelMeta.over100">{{ t('summary.travelDiscussedShort') }}</template>
-              <template v-else-if="offerTravelMeta.travelEur === 0">{{ t('summary.travelFree') }}</template>
-              <template v-else>{{ formatEuroExclVat(offerTravelMeta.travelEur, locale) }}</template>
-            </p>
-            <p class="order-totals__line order-totals__line--grand">
-              {{ t('summary.grandTotal') }} {{ formatEuroExclVat(grandTotalEuros, locale) }}
-            </p>
-          </template>
+        <template v-if="!offerTravelMeta">
+          <p class="order-totals__line">
+            {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
+          </p>
+          <p v-if="minOrderApplied" class="order-totals__min">
+            {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
+          </p>
+          <p v-if="discountEuros > 0" class="order-totals__min">
+            {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
+            <span class="order-totals__min-note">({{ discountPct }}%)</span>
+          </p>
+          <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
+          </p>
+          <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
         </template>
-        <p v-else class="order-totals__line order-totals__public-no-price">
-          {{ t('summary.publicNoPriceTotals') }}
+        <template v-else>
+          <p class="order-totals__line">
+            {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
+          </p>
+          <p v-if="minOrderApplied" class="order-totals__min">
+            {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
+          </p>
+          <p v-if="discountEuros > 0" class="order-totals__min">
+            {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
+            <span class="order-totals__min-note">({{ discountPct }}%)</span>
+          </p>
+          <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
+          </p>
+          <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
+            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
+          </p>
+          <p class="order-totals__line order-totals__line--secondary">
+            {{ t('summary.travelTransportTotal') }}
+            <template v-if="offerTravelMeta.over100">{{ t('summary.travelDiscussedShort') }}</template>
+            <template v-else-if="offerTravelMeta.travelEur === 0">{{ t('summary.travelFree') }}</template>
+            <template v-else>{{ formatEuroExclVat(offerTravelMeta.travelEur, locale) }}</template>
+          </p>
+          <p class="order-totals__line order-totals__line--grand">
+            {{ t('summary.grandTotal') }} {{ formatEuroExclVat(grandTotalEuros, locale) }}
+          </p>
+        </template>
+        <p class="order-totals__time">
+          {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
         </p>
-        <template v-if="!isPublicMode">
-          <p class="order-totals__time">
-            {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
-          </p>
-          <p class="order-totals__days">
-            {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
-          </p>
-          <p class="order-totals__fast">
-            {{ t('summary.fastExecutionNoDismantle') }}
-          </p>
-          <p class="order-totals__includes">
-            {{ t('summary.turnkeyIncludes') }}
-          </p>
-          <p class="order-totals__discount-policy">
-            {{ t('summary.discountPolicy') }}
-          </p>
-        </template>
-        <p v-else class="order-totals__public-lead">
-          {{ publicLeadTimeNoteDisplay }}
+        <p class="order-totals__days">
+          {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
+        </p>
+        <p class="order-totals__fast">
+          {{ t('summary.fastExecutionNoDismantle') }}
+        </p>
+        <p class="order-totals__includes">
+          {{ t('summary.turnkeyIncludes') }}
+        </p>
+        <p class="order-totals__discount-policy">
+          {{ t('summary.discountPolicy') }}
         </p>
       </div>
 
@@ -768,6 +773,7 @@ function openContactEmailModal() {
           </p>
         </div>
       </div>
+      </template>
     </template>
   </section>
 

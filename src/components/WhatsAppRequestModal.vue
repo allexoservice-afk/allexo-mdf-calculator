@@ -3,9 +3,9 @@ import { computed, ref, watch } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { buildAllexoOfferText } from '../utils/offerText.js'
 import { orderHasInvalidWindowDimensions } from '../utils/windowDimensions.js'
+import { CONTACT_EMAIL } from '../constants/contact.js'
 
 const WHATSAPP_PHONE = '32493860753'
-const MAIL_TO = 'allexo.service@gmail.com'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -102,7 +102,7 @@ function onSubmit() {
     return
   }
   if (props.channel === 'email') {
-    const mailto = `mailto:${MAIL_TO}?subject=${encodeURIComponent(t('lead.mailSubject'))}&body=${encodeURIComponent(text)}`
+    const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t('lead.mailSubject'))}&body=${encodeURIComponent(text)}`
     window.open(mailto, '_blank', 'noopener,noreferrer')
   } else {
     const url = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
