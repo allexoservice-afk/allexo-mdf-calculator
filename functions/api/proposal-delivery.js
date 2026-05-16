@@ -1,12 +1,6 @@
 /**
- * Cloudflare Pages Function — POST /api/proposal-delivery
- *
- * Secrets (Settings → Environment variables):
- * - RESEND_API_KEY — https://resend.com (лист клієнту та власнику)
- * - RESEND_FROM_EMAIL — підтверджений відправник (напр. onboarding@resend.dev для тесту)
- * - OWNER_EMAIL — куди слати копію заявки (за замовч. info@allexo.be)
- * - TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER — опційно для SMS на номер телефону
- * - ALLOWED_ORIGINS — через кому, напр. https://allexo.be,https://www.allexo.be (якщо порожньо — перевірка Origin вимкнена)
+ * Cloudflare Pages Function — /api/proposal-delivery
+ * Усі змінні (включно з секретами) — лише з context.env (Production у Dashboard).
  */
 
 /** @param {string} input */
@@ -28,15 +22,16 @@ function normalizeToE164(input) {
 }
 
 /**
- * @param {Record<string, string | undefined>} env
+ * @param {Record<string, string | undefined>} env — context.env
  * @param {{ to: string, subject: string, text: string, replyTo?: string }} mail
  */
 async function sendResendEmail(env, mail) {
-  const key = env.RESEND_API_KEY
-  if (!key) {
+  const resendApiKey = env.RESEND_API_KEY
+  if (!resendApiKey || !String(resendApiKey).trim()) {
     throw new Error('RESEND_API_KEY not configured')
   }
   const from = String(env.RESEND_FROM_EMAIL || 'ALLEXO <info@allexo.be>').trim()
+
   /** @type {Record<string, unknown>} */
   const payload = {
     from,
@@ -49,7 +44,7 @@ async function sendResendEmail(env, mail) {
   const resendRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${String(resendApiKey).trim()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
@@ -67,49 +62,52 @@ async function sendResendEmail(env, mail) {
   }
 }
 
+/**
+ * Безпечна діагностика (без значення ключа).
+ * @param {Record<string, string | undefined>} env — context.env
+ */
+function buildDebugResponse(env) {
+  return {
+    ok: true,
+    resend_configured: Boolean(env.RESEND_API_KEY && String(env.RESEND_API_KEY).trim()),
+    from: String(env.RESEND_FROM_EMAIL || 'ALLEXO <info@allexo.be>'),
+    owner: String(env.OWNER_EMAIL || 'info@allexo.be'),
+  }
+}
+
 /** @param {string} origin */
 function corsHeaders(origin) {
   const o = origin && origin !== 'null' ? origin : '*'
   return {
     'Access-Control-Allow-Origin': o,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   }
-}
-
-/** Діагностика: GET /api/proposal-delivery → чи є RESEND_API_KEY (без значення). */
-export async function onRequestGet(ctx) {
-  const { env } = ctx
-  const origin = ctx.request.headers.get('Origin') || '*'
-  const headers = { ...corsHeaders(origin), 'Content-Type': 'application/json' }
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      resend_configured: Boolean(env.RESEND_API_KEY),
-      from: String(env.RESEND_FROM_EMAIL || 'ALLEXO <info@allexo.be>'),
-      owner: String(env.OWNER_EMAIL || 'info@allexo.be'),
-    }),
-    { status: 200, headers },
-  )
-}
-
-/** @param {{ request: Request }} ctx */
-export async function onRequestOptions(ctx) {
-  const origin = ctx.request.headers.get('Origin') || '*'
-  return new Response(null, { status: 204, headers: corsHeaders(origin) })
 }
 
 /**
  * @param {{
  *   request: Request
  *   env: Record<string, string | undefined>
- * }} ctx
+ * }} context
  */
-export async function onRequestPost(ctx) {
-  const { request, env } = ctx
+export async function onRequest(context) {
+  const { request, env } = context
   const origin = request.headers.get('Origin') || '*'
   const headers = { ...corsHeaders(origin), 'Content-Type': 'application/json' }
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders(origin) })
+  }
+
+  if (request.method === 'GET') {
+    return new Response(JSON.stringify(buildDebugResponse(env)), { status: 200, headers })
+  }
+
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ ok: false, error: 'Method not allowed' }), { status: 405, headers })
+  }
 
   const allowed = String(env.ALLOWED_ORIGINS || '')
     .split(',')
@@ -147,7 +145,7 @@ export async function onRequestPost(ctx) {
     const ownerPlain = String(body.owner_plain || '').trim()
     const ownerSubject = String(body.owner_subject || 'ALLEXO — new quote request')
 
-    if (!env.RESEND_API_KEY) {
+    if (!env.RESEND_API_KEY || !String(env.RESEND_API_KEY).trim()) {
       return new Response(JSON.stringify({ ok: false, error: 'RESEND_API_KEY not configured' }), {
         status: 503,
         headers,
@@ -204,8 +202,11 @@ export async function onRequestPost(ctx) {
     if (!to) {
       return new Response(JSON.stringify({ ok: false, error: 'Missing to_email' }), { status: 400, headers })
     }
-    if (!env.RESEND_API_KEY) {
-      return new Response(JSON.stringify({ ok: false, error: 'RESEND_API_KEY not configured' }), { status: 503, headers })
+    if (!env.RESEND_API_KEY || !String(env.RESEND_API_KEY).trim()) {
+      return new Response(JSON.stringify({ ok: false, error: 'RESEND_API_KEY not configured' }), {
+        status: 503,
+        headers,
+      })
     }
     try {
       await sendResendEmail(env, { to, subject, text: proposalPlain })

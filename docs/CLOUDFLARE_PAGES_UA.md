@@ -143,6 +143,15 @@ pnpm run preview
 
 ### 2. Змінні в Cloudflare Pages
 
+**Workers & Pages** → проєкт **`allexo-mdf-calculator-v2`** → **Settings** → **Variables and Secrets** → вкладка **Production** (не Preview):
+
+Якщо `https://allexo.be/api/proposal-delivery` показує `"resend_configured":false` при наявному секреті в таблиці:
+
+1. Видаліть `RESEND_API_KEY` (Secret) і додайте знову на вкладці **Production**.
+2. Або **Bindings** → **Add** → прив’яжіть секрет до Functions.
+3. **Deployments** → **Retry deployment** (обов’язково).
+4. Альтернатива: `pnpm run deploy:pages` з комп’ютера після `pnpm run secret:resend`.
+
 **Workers & Pages** → проєкт **`allexo-mdf-calculator-v2`** → **Settings** → **Environment variables** → **Production** (і Preview, якщо треба):
 
 | Змінна | Тип | Приклад |
