@@ -36,24 +36,34 @@ async function sendResendEmail(env, mail) {
   if (!key) {
     throw new Error('RESEND_API_KEY not configured')
   }
-  const from = String(env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim()
+  const from = String(env.RESEND_FROM_EMAIL || 'ALLEXO <info@allexo.be>').trim()
+  /** @type {Record<string, unknown>} */
+  const payload = {
+    from,
+    to: [mail.to],
+    subject: mail.subject,
+    text: mail.text,
+  }
+  if (mail.replyTo) payload.reply_to = mail.replyTo
+
   const resendRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${key}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      from,
-      to: [mail.to],
-      subject: mail.subject,
-      text: mail.text,
-      reply_to: mail.replyTo || undefined,
-    }),
+    body: JSON.stringify(payload),
   })
   const rrText = await resendRes.text()
   if (!resendRes.ok) {
-    throw new Error(rrText || String(resendRes.status))
+    let detail = rrText
+    try {
+      const j = JSON.parse(rrText)
+      if (j && typeof j.message === 'string') detail = j.message
+    } catch {
+      /* keep raw */
+    }
+    throw new Error(detail || String(resendRes.status))
   }
 }
 
@@ -66,6 +76,22 @@ function corsHeaders(origin) {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   }
+}
+
+/** Діагностика: GET /api/proposal-delivery → чи є RESEND_API_KEY (без значення). */
+export async function onRequestGet(ctx) {
+  const { env } = ctx
+  const origin = ctx.request.headers.get('Origin') || '*'
+  const headers = { ...corsHeaders(origin), 'Content-Type': 'application/json' }
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      resend_configured: Boolean(env.RESEND_API_KEY),
+      from: String(env.RESEND_FROM_EMAIL || 'ALLEXO <info@allexo.be>'),
+      owner: String(env.OWNER_EMAIL || 'info@allexo.be'),
+    }),
+    { status: 200, headers },
+  )
 }
 
 /** @param {{ request: Request }} ctx */
@@ -89,10 +115,16 @@ export async function onRequestPost(ctx) {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
-  if (allowed.length) {
-    const ok = allowed.some((a) => origin === a || origin.startsWith(a))
+  if (allowed.length && origin && origin !== 'null') {
+    const ok = allowed.some((a) => {
+      if (!a) return false
+      return origin === a || origin.startsWith(`${a}/`)
+    })
     if (!ok) {
-      return new Response(JSON.stringify({ ok: false, error: 'Origin not allowed' }), { status: 403, headers })
+      return new Response(
+        JSON.stringify({ ok: false, error: `Origin not allowed: ${origin}` }),
+        { status: 403, headers },
+      )
     }
   }
 

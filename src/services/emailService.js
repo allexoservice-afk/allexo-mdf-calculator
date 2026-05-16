@@ -200,7 +200,7 @@ export async function sendLeadEmails(leadData) {
   const locale = /** @type {import('../i18n/translations.js').Locale} */ (
     typeof leadData.language === 'string' ? leadData.language : 'uk'
   )
-  const clientSubject = translate(locale, 'email.emailSubject')
+  const clientSubject = translate(locale, 'proposal.emailSubject')
   const ownerSubject = `ALLEXO — заявка з сайту (${shared.client_name || 'client'})`
 
   let clientSent = false
@@ -223,8 +223,10 @@ export async function sendLeadEmails(leadData) {
       if (server.clientSent) clientSent = true
       if (server.ownerSent) ownerSent = true
     } catch (e) {
-      console.error('[sendLeadEmails] Resend', e)
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('[sendLeadEmails] Resend', msg)
       code = 'email_send_failed'
+      /** @type {any} */ (leadData)._lastMailError = msg
     }
   } else {
     code = 'email_not_configured'
@@ -264,10 +266,12 @@ export async function sendLeadEmails(leadData) {
   }
 
   if (!clientSent && !ownerSent) {
+    const detail =
+      typeof leadData._lastMailError === 'string' ? leadData._lastMailError : 'Client and owner emails were not sent'
     return {
       ok: false,
       code: code || 'email_send_failed',
-      error: 'Client and owner emails were not sent',
+      error: detail,
       clientSent,
       ownerSent,
     }

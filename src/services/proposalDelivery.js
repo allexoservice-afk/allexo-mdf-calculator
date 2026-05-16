@@ -107,9 +107,17 @@ export async function deliverLeadEmails(payload) {
     throw new Error(msg)
   }
 
-  return {
-    ok: true,
-    clientSent: Boolean(body.clientSent),
-    ownerSent: Boolean(body.ownerSent),
+  const clientSent = Boolean(body.clientSent)
+  const ownerSent = Boolean(body.ownerSent)
+  if (!clientSent && !ownerSent) {
+    const hint =
+      typeof body.error === 'string'
+        ? body.error
+        : text && text.trim().startsWith('<')
+          ? 'API повернув HTML замість JSON — перевірте, чи задеплоєно functions/api на Cloudflare'
+          : 'Resend не надіслав листи (clientSent/ownerSent = false)'
+    throw new Error(hint)
   }
+
+  return { ok: true, clientSent, ownerSent }
 }
