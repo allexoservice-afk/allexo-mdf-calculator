@@ -6,6 +6,7 @@ import {
   collectOwnerLineItems,
   computeBufferedWorkHours,
 } from './proposalLineItems.js'
+import { quoteReferenceFromLead } from './quoteReference.js'
 
 const TEAL = '#0f3d3e'
 const GOLD = '#c4a35a'
@@ -43,14 +44,24 @@ ${inner}
 </html>`
 }
 
-function clientHeader() {
+/**
+ * @param {import('../i18n/translations.js').Locale} locale
+ * @param {string} quoteRef
+ */
+function clientHeader(locale, quoteRef) {
+  const refLine = quoteRef
+    ? `<p style="margin:12px 0 0;font-size:14px;color:${MUTED};">${esc(translate(locale, 'emailHtml.quoteReferenceLabel'))}: <strong style="color:${TEAL};font-weight:700;">${esc(quoteRef)}</strong></p>`
+    : ''
   return `<tr><td style="padding:28px 24px 16px;text-align:center;border-bottom:2px solid ${GOLD};">
 <p style="margin:0;font-size:28px;font-weight:800;letter-spacing:0.14em;color:${TEAL};">ALLEXO</p>
+${refLine}
 </td></tr>`
 }
 
 function ownerHeader() {
-  return clientHeader()
+  return `<tr><td style="padding:28px 24px 12px;text-align:center;border-bottom:2px solid ${GOLD};">
+<p style="margin:0;font-size:28px;font-weight:800;letter-spacing:0.14em;color:${TEAL};">ALLEXO</p>
+</td></tr>`
 }
 
 /**
@@ -109,6 +120,43 @@ function localeToHtmlLang(locale) {
   return locale === 'uk' ? 'uk' : locale
 }
 
+/** @param {number} amount */
+function formatEuroAmount(amount) {
+  const n = Math.round(Number(amount) || 0)
+  return `${n}€`
+}
+
+/**
+ * @param {import('../i18n/translations.js').Locale} locale
+ * @param {number} totalHours
+ */
+function clientWorkTimeText(locale, totalHours) {
+  if (!Number.isFinite(totalHours) || totalHours <= 0) {
+    return translate(locale, 'emailHtml.workTimeDay1')
+  }
+  if (totalHours <= 8) return translate(locale, 'emailHtml.workTimeDay1')
+  if (totalHours <= 16) return translate(locale, 'emailHtml.workTimeDays1_2')
+  return translate(locale, 'emailHtml.workTimeDaysSeveral')
+}
+
+/**
+ * @param {import('../i18n/translations.js').Locale} locale
+ * @param {number} amount
+ */
+function clientGrandTotalHtml(locale, amount) {
+  const euro = formatEuroAmount(amount)
+  const vat = translate(locale, 'price.exVat')
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;border-top:2px solid ${GOLD};">
+<tr><td align="center" style="padding:26px 16px 8px;">
+<p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.grandTotalLabel'))}</p>
+<p style="margin:0;font-size:40px;font-weight:800;line-height:1.05;color:${TEAL};">${esc(euro)}</p>
+<p style="margin:10px 0 0;font-size:14px;color:${MUTED};">(${esc(vat)})</p>
+<p style="margin:22px 0 0;font-size:15px;line-height:1.5;color:#1c2424;max-width:420px;margin-left:auto;margin-right:auto;">${esc(translate(locale, 'emailHtml.ctaReply'))}</p>
+</td></tr>
+</table>`
+}
+
 /**
  * @param {Record<string, unknown>} leadData
  */
@@ -117,33 +165,29 @@ export function buildClientEmailHtml(leadData) {
     typeof leadData.language === 'string' ? leadData.language : 'uk'
   )
   const name = String(leadData.name || '').trim() || translate(locale, 'proposal.clientFallbackName')
+  const quoteRef = quoteReferenceFromLead(leadData)
   const lines = linesFromLead(leadData)
   const items = collectClientLineItems(lines, locale)
-  const total = formatEuroExclVat(Number(leadData.total_price) || 0, locale)
+  const totalAmount = Number(leadData.total_price) || 0
   const hours = computeBufferedWorkHours(lines)
-  const hoursStr = Number.isFinite(hours) && hours > 0 ? String(hours) : '—'
+  const workTimeText = clientWorkTimeText(locale, hours)
 
   const cards = items.length
     ? items.map((item) => clientItemCardHtml(locale, item)).join('')
     : `<p style="margin:0;color:${MUTED};font-size:15px;">${esc(translate(locale, 'emailHtml.noLineItems'))}</p>`
 
-  const body = `${clientHeader()}
+  const body = `${clientHeader(locale, quoteRef)}
 <tr><td style="padding:24px 24px 8px;">
 <p style="margin:0 0 12px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientGreeting').replace('{name}', name))}</p>
 <p style="margin:0 0 8px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientThanks'))}</p>
 <p style="margin:0 0 22px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientIntro'))}</p>
 <p style="margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.yourOrder'))}</p>
 ${cards}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 0;border-top:2px solid ${GOLD};">
-<tr><td style="padding:18px 0 6px;">
-<p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.grandTotalLabel'))}</p>
-<p style="margin:0;font-size:28px;font-weight:800;color:${TEAL};">${esc(total)}</p>
-</td></tr>
-</table>
-<p style="margin:18px 0 4px;font-size:15px;"><span style="color:${MUTED};">${esc(translate(locale, 'emailHtml.estHoursLabel'))}</span> <strong>${esc(hoursStr)} ${esc(translate(locale, 'emailHtml.hoursUnit'))}</strong></p>
-<p style="margin:0 0 20px;font-size:15px;"><span style="color:${MUTED};">${esc(translate(locale, 'emailHtml.deadlineLabel'))}</span> ${esc(translate(locale, 'emailHtml.deadlineNote'))}</p>
-<p style="margin:0 0 6px;font-size:14px;color:${MUTED};">${esc(translate(locale, 'emailHtml.preliminaryNote'))}</p>
-<p style="margin:0 0 24px;font-size:14px;color:${MUTED};">${esc(translate(locale, 'emailHtml.finalPriceNote'))}</p>
+${clientGrandTotalHtml(locale, totalAmount)}
+<p style="margin:20px 0 8px;font-size:15px;text-align:center;color:#1c2424;">${esc(workTimeText)}</p>
+<p style="margin:0 0 20px;font-size:15px;text-align:center;color:#1c2424;">${esc(translate(locale, 'emailHtml.planningNote'))}</p>
+<p style="margin:0 0 6px;font-size:14px;color:${MUTED};text-align:center;">${esc(translate(locale, 'emailHtml.preliminaryNote'))}</p>
+<p style="margin:0 0 24px;font-size:14px;color:${MUTED};text-align:center;">${esc(translate(locale, 'emailHtml.finalPriceNote'))}</p>
 </td></tr>
 <tr><td style="padding:18px 24px 26px;background:${BG};border-top:1px solid ${BORDER};text-align:center;">
 <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:${TEAL};">ALLEXO</p>
@@ -189,12 +233,18 @@ export function buildOwnerEmailHtml(leadData) {
   const dash = '—'
   const city = String(leadData.city || '').trim() || dash
   const comment = String(leadData.comment || '').trim() || dash
+  const quoteRef = quoteReferenceFromLead(leadData)
+  const refBlock = quoteRef
+    ? `<p style="margin:0 0 6px;font-size:14px;color:${MUTED};">Номер заявки:</p>
+<p style="margin:0 0 22px;font-size:22px;font-weight:800;color:${TEAL};letter-spacing:0.04em;">${esc(quoteRef)}</p>`
+    : ''
 
   const orderBlocks = items.length ? items.map((item) => ownerItemBlockHtml(item)).join('') : `<p style="margin:0;color:${MUTED};">${dash}</p>`
 
   const body = `${ownerHeader()}
 <tr><td style="padding:24px;">
-<h1 style="margin:0 0 22px;font-size:19px;font-weight:800;color:${TEAL};">Нова заявка з сайту ALLEXO</h1>
+<h1 style="margin:0 0 16px;font-size:19px;font-weight:800;color:${TEAL};">Нова заявка з сайту ALLEXO</h1>
+${refBlock}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;font-size:15px;">
 <tr><td style="padding:4px 0;width:110px;color:${MUTED};vertical-align:top;">Ім'я</td><td style="padding:4px 0;"><strong>${esc(leadData.name)}</strong></td></tr>
 <tr><td style="padding:4px 0;color:${MUTED};vertical-align:top;">Телефон</td><td style="padding:4px 0;"><a href="tel:${esc(String(leadData.phone || ''))}" style="color:${TEAL};">${esc(leadData.phone)}</a></td></tr>
@@ -225,11 +275,13 @@ export function buildClientEmailPlain(leadData) {
     typeof leadData.language === 'string' ? leadData.language : 'uk'
   )
   const name = String(leadData.name || '').trim() || translate(locale, 'proposal.clientFallbackName')
+  const quoteRef = quoteReferenceFromLead(leadData)
   const lines = linesFromLead(leadData)
   const items = collectClientLineItems(lines, locale)
-  const total = formatEuroExclVat(Number(leadData.total_price) || 0, locale)
+  const totalAmount = Number(leadData.total_price) || 0
   const hours = computeBufferedWorkHours(lines)
-  const hoursStr = Number.isFinite(hours) && hours > 0 ? String(hours) : '—'
+  const workTimeText = clientWorkTimeText(locale, hours)
+  const vat = translate(locale, 'price.exVat')
 
   const itemBlocks = items.flatMap((item) => {
     const cost =
@@ -247,7 +299,9 @@ export function buildClientEmailPlain(leadData) {
 
   return [
     'ALLEXO',
-    '',
+    ...(quoteRef
+      ? [`${translate(locale, 'emailHtml.quoteReferenceLabel')}: ${quoteRef}`, '']
+      : []),
     translate(locale, 'emailHtml.clientGreeting').replace('{name}', name),
     translate(locale, 'emailHtml.clientThanks'),
     translate(locale, 'emailHtml.clientIntro'),
@@ -256,11 +310,14 @@ export function buildClientEmailPlain(leadData) {
     '',
     ...itemBlocks,
     '---',
-    translate(locale, 'emailHtml.grandTotalLabel'),
-    total,
-    '---',
-    `${translate(locale, 'emailHtml.estHoursLabel')} ${hoursStr} ${translate(locale, 'emailHtml.hoursUnit')}`,
-    `${translate(locale, 'emailHtml.deadlineLabel')} ${translate(locale, 'emailHtml.deadlineNote')}`,
+    translate(locale, 'emailHtml.grandTotalLabel').toUpperCase(),
+    formatEuroAmount(totalAmount),
+    `(${vat})`,
+    '',
+    translate(locale, 'emailHtml.ctaReply'),
+    '',
+    workTimeText,
+    translate(locale, 'emailHtml.planningNote'),
     '',
     translate(locale, 'emailHtml.preliminaryNote'),
     translate(locale, 'emailHtml.finalPriceNote'),
@@ -300,9 +357,11 @@ export function buildOwnerEmailPlain(leadData) {
     ]
   })
 
+  const quoteRef = quoteReferenceFromLead(leadData)
+
   return [
     'Нова заявка з сайту ALLEXO',
-    '',
+    ...(quoteRef ? ['', 'Номер заявки:', quoteRef, ''] : ['']),
     `Ім'я: ${leadData.name}`,
     `Телефон: ${leadData.phone}`,
     `Email: ${leadData.email}`,

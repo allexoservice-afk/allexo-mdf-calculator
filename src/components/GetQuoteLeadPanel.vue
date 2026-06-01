@@ -3,8 +3,10 @@ import { computed, reactive, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isLeadSaveRlsError, saveLead } from '../services/leads.js'
 import { sendLeadEmails } from '../services/emailService.js'
+import { allocateQuoteReference } from '../utils/quoteReference.js'
 import { buildCalculationData } from '../utils/buildCalculationData.js'
 import { CONTACT_EMAIL, CONTACT_EMAIL_HREF } from '../constants/contact.js'
+import PrivacyPolicyModal from './PrivacyPolicyModal.vue'
 
 const props = defineProps({
   lines: { type: Array, required: true },
@@ -38,6 +40,7 @@ const showOptional = ref(false)
 
 const formError = ref('')
 const submitting = ref(false)
+const privacyOpen = ref(false)
 /** @type {import('vue').Ref<'full' | 'saved_only' | 'email_not_configured' | 'email_failed'>} */
 const successKind = ref('full')
 
@@ -151,6 +154,7 @@ async function onSubmit() {
   submitting.value = true
   try {
     const lead = buildLeadPayload()
+    lead.quote_reference = await allocateQuoteReference()
     const [saved, mail] = await Promise.all([saveLead(lead), sendLeadEmails(lead)])
 
     if (!saved.ok) {
@@ -261,6 +265,13 @@ async function onSubmit() {
         </label>
       </div>
 
+      <p class="gq__gdpr">
+        {{ t('getQuote.gdprConsentPrefix') }}
+        <button type="button" class="gq__gdpr-link" @click="privacyOpen = true">
+          {{ t('privacy.link') }}
+        </button>{{ t('getQuote.gdprConsentSuffix') }}
+      </p>
+
       <button
         type="button"
         class="gq__submit"
@@ -293,6 +304,8 @@ async function onSubmit() {
         </button>
       </div>
     </template>
+
+    <PrivacyPolicyModal :open="privacyOpen" @close="privacyOpen = false" />
   </div>
 </template>
 
@@ -415,10 +428,35 @@ async function onSubmit() {
   resize: vertical;
 }
 
+.gq__gdpr {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--allexo-muted);
+}
+
+.gq__gdpr-link {
+  display: inline;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: 650;
+  color: var(--allexo-teal);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.gq__gdpr-link:hover {
+  color: var(--allexo-teal-light);
+}
+
 .gq__submit {
   width: 100%;
   min-height: 3.25rem;
-  margin-top: 0.25rem;
+  margin-top: 0;
   font-size: 1.05rem;
   font-weight: 800;
   color: #fff;

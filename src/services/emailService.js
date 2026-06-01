@@ -102,6 +102,7 @@ function buildSharedParams(leadData) {
     owner_email_body: buildOwnerEmailPlain(leadData),
     owner_email_html: buildOwnerEmailHtml(leadData),
     reply_to: String(leadData.email || '').trim(),
+    quote_reference: String(leadData.quote_reference || '').trim(),
   }
 }
 

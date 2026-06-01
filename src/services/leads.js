@@ -9,6 +9,7 @@ const CORE_LEAD_COLUMNS = new Set([
   'discount',
   'windows_count',
   'calculation_details',
+  'quote_reference',
   'created_at',
 ])
 
@@ -60,6 +61,9 @@ function buildCalculationDetails(data) {
   if (d.positions_count != null) {
     meta.positions_count = Math.max(0, Math.round(Number(d.positions_count) || 0))
   }
+  if (d.quote_reference != null && String(d.quote_reference).trim()) {
+    meta.quote_reference = String(d.quote_reference).trim()
+  }
 
   return { ...fromPayload, meta }
 }
@@ -84,6 +88,9 @@ function toLeadInsertRow(data) {
     calculation_details,
     created_at: typeof d.created_at === 'string' ? d.created_at : new Date().toISOString(),
   }
+
+  const quoteRef = String(d.quote_reference ?? '').trim()
+  if (quoteRef) row.quote_reference = quoteRef
 
   // city, comment, positions_count — лише в calculation_details.meta (без окремих колонок у БД)
 

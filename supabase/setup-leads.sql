@@ -9,6 +9,7 @@ alter table public.leads add column if not exists positions_count integer;
 alter table public.leads add column if not exists calculation_details jsonb;
 alter table public.leads add column if not exists discount numeric default 0;
 alter table public.leads add column if not exists windows_count integer default 0;
+alter table public.leads add column if not exists quote_reference text;
 
 -- Дозволити заявки з сайту (anon key)
 alter table public.leads enable row level security;
