@@ -15,8 +15,8 @@ import {
 } from '../pricing/windowQuote.js'
 import { buildAllexoOfferText } from '../utils/offerText.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
-import WhatsAppRequestModal from './WhatsAppRequestModal.vue'
-import GetQuoteLeadPanel from './GetQuoteLeadPanel.vue'
+import EmailRequestModal from './EmailRequestModal.vue'
+import GetQuoteLeadModal from './GetQuoteLeadModal.vue'
 import { formatEuroExclVat } from '../utils/priceDisplay.js'
 import {
   lineWindowEligibleForAutoQuote,
@@ -29,9 +29,10 @@ import { isProUnlocked } from '../constants/proUnlock.js'
 
 const props = defineProps({
   lines: { type: Array, required: true },
+  quoteOpen: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['remove', 'clear'])
+const emit = defineEmits(['remove', 'clear', 'update:quoteOpen'])
 
 const { locale, t } = useLocale()
 
@@ -442,40 +443,6 @@ async function copyProposal() {
   showSummaryNotice(t('summary.copied'))
 }
 
-/** Номер у міжнародному форматі без + (для https://wa.me/…) */
-const CONTACT_WHATSAPP_PHONE = '32493860753'
-
-function openWhatsAppDirect() {
-  const count = Array.isArray(props.lines) ? props.lines.length : 0
-  const types = Array.from(
-    new Set(
-      (props.lines ?? [])
-        .map((l) => String(l?.typeId ?? ''))
-        .filter(Boolean)
-        .map((id) => t(`types.${id}.title`)),
-    ),
-  ).join(', ')
-
-  let text
-  if (proActive.value) {
-    const total = formatEuroExclVat(orderTotalEuros.value, locale.value)
-    text =
-      `Доброго дня!\n` +
-      `Хочу отримати прорахунок:\n` +
-      `Сума: ${total}\n` +
-      `Кількість позицій: ${count}\n` +
-      `Тип робіт: ${types || '—'}\n` +
-      `Можете уточнити деталі?`
-  } else {
-    text = t('lead.requestNoPriceBody')
-      .replace('{count}', String(count))
-      .replace('{types}', types || '—')
-  }
-
-  const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
-  window.open(url, '_blank', 'noopener,noreferrer')
-}
-
 function openContactEmailModal() {
   emailRequestModalOpen.value = true
 }
@@ -627,18 +594,11 @@ function openContactEmailModal() {
         </li>
       </ul>
 
-      <GetQuoteLeadPanel
-        v-if="isPublicMode"
-        :lines="lines"
-        :windows-count="publicTotalWindowUnits"
-        :estimated-total-eur="payableWorkAfterDiscountEuros"
-        :discount-euros="discountEuros"
-        :discount-percent="discountPct"
-        :order-subtotal-eur="orderTotalEuros"
-        :travel-meta="offerTravelMeta"
-        :invalid-dims="orderHasInvalidWindowDimensions(lines)"
-        :lead-time-note="publicLeadTimeNoteDisplay"
-      />
+      <div v-if="isPublicMode" class="summary__quote-cta-wrap">
+        <button type="button" class="summary__quote-cta" @click="emit('update:quoteOpen', true)">
+          {{ t('getQuote.title') }}
+        </button>
+      </div>
 
       <template v-if="!isPublicMode">
       <div class="travel-block">
@@ -740,19 +700,6 @@ function openContactEmailModal() {
       <div class="contact-section" aria-labelledby="contact-heading">
         <h3 id="contact-heading" class="contact-section__title">{{ t('summary.contact') }}</h3>
         <div class="contact-section__actions">
-          <div class="contact-wa-block">
-            <button
-              id="contact-whatsapp-request"
-              type="button"
-              class="contact-btn contact-btn--whatsapp"
-              @click="openWhatsAppDirect"
-            >
-              {{ t('summary.whRequest') }}
-            </button>
-            <p class="contact-wa-hint">
-              {{ t('summary.whHint') }}
-            </p>
-          </div>
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
           </button>
@@ -777,12 +724,26 @@ function openContactEmailModal() {
     </template>
   </section>
 
-  <WhatsAppRequestModal
-    channel="email"
+  <EmailRequestModal
     :open="emailRequestModalOpen"
     :lines="lines"
     :travel-meta="offerTravelMeta"
     @close="emailRequestModalOpen = false"
+  />
+
+  <GetQuoteLeadModal
+    v-if="isPublicMode"
+    :open="quoteOpen"
+    :lines="lines"
+    :windows-count="publicTotalWindowUnits"
+    :estimated-total-eur="payableWorkAfterDiscountEuros"
+    :discount-euros="discountEuros"
+    :discount-percent="discountPct"
+    :order-subtotal-eur="orderTotalEuros"
+    :travel-meta="offerTravelMeta"
+    :invalid-dims="orderHasInvalidWindowDimensions(lines)"
+    :lead-time-note="publicLeadTimeNoteDisplay"
+    @close="emit('update:quoteOpen', false)"
   />
 </template>
 
@@ -1229,20 +1190,6 @@ function openContactEmailModal() {
   font-weight: 600;
 }
 
-.contact-wa-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.contact-wa-hint {
-  margin: 0.4rem 0 0;
-  padding: 0 0.15rem;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--allexo-muted);
-}
-
 .contact-btn {
   width: 100%;
   padding: 0.95rem 1.25rem;
@@ -1254,22 +1201,6 @@ function openContactEmailModal() {
   cursor: pointer;
   border: 2px solid transparent;
   box-shadow: var(--shadow);
-}
-
-.contact-btn--whatsapp {
-  padding: 1.15rem 1.4rem;
-  min-height: 3.35rem;
-  font-size: 1.12rem;
-  line-height: 1.35;
-  color: #fff;
-  background: #25d366;
-  border-color: #1ebe57;
-  box-shadow: var(--shadow-md);
-}
-
-.contact-btn--whatsapp:hover {
-  background: #20bd5a;
-  border-color: #1aa34d;
 }
 
 .contact-btn--email {
@@ -1284,6 +1215,29 @@ function openContactEmailModal() {
   border-color: #547896;
 }
 
+
+.summary__quote-cta-wrap {
+  margin-top: 1.25rem;
+}
+
+.summary__quote-cta {
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-family: inherit;
+  color: #fff;
+  background: var(--allexo-teal);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.summary__quote-cta:hover {
+  background: var(--allexo-teal-light);
+}
 
 .line__remove {
   flex-shrink: 0;

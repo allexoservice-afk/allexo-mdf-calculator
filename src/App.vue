@@ -9,7 +9,6 @@ import CalculatorCard from './components/CalculatorCard.vue'
 import OrderFormModal from './components/OrderFormModal.vue'
 import OrderSummary from './components/OrderSummary.vue'
 import { CONTACT_EMAIL, CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
-import { CONTACT_WHATSAPP_HREF } from './constants/contact.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
 import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
 import {
@@ -37,6 +36,7 @@ function reviewQuoteText(review) {
 const selectedTypeId = ref(null)
 const formOpen = ref(false)
 const privacyOpen = ref(false)
+const quoteLeadOpen = ref(false)
 
 /** @param {import('./constants/calculatorTypes.js').CalculatorTypeId} id */
 function openForm(id) {
@@ -59,6 +59,11 @@ function onSubmit(payload) {
   }
 }
 
+function openQuoteLeadModal() {
+  if (!Array.isArray(lines.value) || lines.value.length === 0) return
+  quoteLeadOpen.value = true
+}
+
 function scrollToSummary() {
   const el = document.getElementById('summary')
   if (!el) return
@@ -76,9 +81,6 @@ function flashSummary() {
   }, 1200)
 }
 
-const showWaFab = ref(false)
-let _io = /** @type {IntersectionObserver | null} */ (null)
-
 const proActive = ref(false)
 function syncProActive() {
   proActive.value = isProUnlocked()
@@ -89,71 +91,15 @@ onMounted(() => {
   if (typeof window !== 'undefined') {
     window.addEventListener('allexo-pro-change', syncProActive)
   }
-
-  const el = document.getElementById('calculator') || document.getElementById('summary')
-  if (!el || typeof IntersectionObserver === 'undefined') {
-    showWaFab.value = true
-    return
-  }
-  _io = new IntersectionObserver(
-    (entries) => {
-      const e = entries[0]
-      showWaFab.value = !!e?.isIntersecting
-    },
-    { root: null, threshold: 0.15 },
-  )
-  _io.observe(el)
 })
 
 onBeforeUnmount(() => {
-  if (_io) _io.disconnect()
-  _io = null
   if (typeof window !== 'undefined') {
     window.removeEventListener('allexo-pro-change', syncProActive)
   }
   if (_flashTimer != null) window.clearTimeout(_flashTimer)
   _flashTimer = null
 })
-
-const CONTACT_WHATSAPP_PHONE = '32493860753'
-
-function openWhatsAppFromSticky() {
-  const count = Array.isArray(lines.value) ? lines.value.length : 0
-  const types = Array.from(
-    new Set(
-      (lines.value ?? [])
-        .map((l) => String(l?.typeId ?? ''))
-        .filter(Boolean)
-        .map((id) => t(`types.${id}.title`)),
-    ),
-  ).join(', ')
-
-  let text
-  if (proActive.value) {
-    const totalRaw = orderTotalEuros.value
-    const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
-    const minLine =
-      totalRaw > 0 && totalRaw < MIN_ORDER_EUR
-        ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
-        : ''
-    text =
-      `Доброго дня!\n` +
-      `Хочу отримати прорахунок:\n` +
-      `Сума: ${total}\n` +
-      `Кількість позицій: ${count}\n` +
-      `Тип робіт: ${types || '—'}\n` +
-      `${minLine}\n` +
-      `\nЗнижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n` +
-      `Можете уточнити деталі?`
-  } else {
-    text = t('lead.requestNoPriceBody')
-      .replace('{count}', String(count))
-      .replace('{types}', types || '—')
-  }
-
-  const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
-  window.open(url, '_blank', 'noopener,noreferrer')
-}
 
 function openEmailFromSticky() {
   const count = Array.isArray(lines.value) ? lines.value.length : 0
@@ -193,19 +139,6 @@ function openEmailFromSticky() {
 
   const email = String(CONTACT_EMAIL_HREF || '').replace(/^mailto:/, '')
   const url = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  window.location.href = url
-}
-
-function openWhatsAppReview() {
-  const text = t('reviews.waTemplate')
-  const url = `https://wa.me/${CONTACT_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
-  window.open(url, '_blank', 'noopener,noreferrer')
-}
-
-function openEmailReview() {
-  const subject = t('reviews.emailSubject')
-  const body = t('reviews.waTemplate')
-  const url = `mailto:${encodeURIComponent(CONTACT_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   window.location.href = url
 }
 
@@ -334,26 +267,6 @@ const minOrderDiffEuros = computed(() =>
               <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
             </li>
           </ul>
-          <div class="reviews__actions">
-            <button
-              type="button"
-              class="reviews__btn reviews__btn--wa"
-              :aria-label="t('reviews.ctaWa')"
-              @click="openWhatsAppReview"
-            >
-              <span class="reviews__btn-label reviews__btn-label--full">{{ t('reviews.ctaWa') }}</span>
-              <span class="reviews__btn-label reviews__btn-label--short">{{ t('reviews.ctaWaShort') }}</span>
-            </button>
-            <button
-              type="button"
-              class="reviews__btn reviews__btn--email"
-              :aria-label="t('reviews.ctaEmail')"
-              @click="openEmailReview"
-            >
-              <span class="reviews__btn-label reviews__btn-label--full">{{ t('reviews.ctaEmail') }}</span>
-              <span class="reviews__btn-label reviews__btn-label--short">{{ t('reviews.ctaEmailShort') }}</span>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -381,7 +294,12 @@ const minOrderDiffEuros = computed(() =>
         </div>
 
         <div id="summary" :class="{ 'summary-flash': summaryFlash }">
-          <OrderSummary :lines="lines" @remove="removeLine" @clear="clearOrder" />
+          <OrderSummary
+            v-model:quote-open="quoteLeadOpen"
+            :lines="lines"
+            @remove="removeLine"
+            @clear="clearOrder"
+          />
         </div>
       </section>
     </main>
@@ -398,17 +316,27 @@ const minOrderDiffEuros = computed(() =>
           </template>
         </p>
         <div class="sticky-total__actions">
-          <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">
-            <span class="sticky-total__label-full">{{ t('summary.title') }}</span>
-            <span class="sticky-total__label-short">{{ t('summary.stickySummaryShort') }}</span>
-          </button>
-          <button type="button" class="sticky-total__btn sticky-total__btn--wa" @click="openWhatsAppFromSticky">
-            <span class="sticky-total__label-full">{{ t('summary.whRequest') }}</span>
-            <span class="sticky-total__label-short">{{ t('summary.stickyWhatsAppShort') }}</span>
-          </button>
-          <button type="button" class="sticky-total__btn sticky-total__btn--secondary" @click="openEmailFromSticky">
-            <span class="sticky-total__label-full">{{ t('summary.sendEmail') }}</span>
-            <span class="sticky-total__label-short">{{ t('summary.stickyEmailShort') }}</span>
+          <template v-if="proActive">
+            <button type="button" class="sticky-total__btn sticky-total__btn--ghost" @click="scrollToSummary">
+              <span class="sticky-total__label-full">{{ t('summary.title') }}</span>
+              <span class="sticky-total__label-short">{{ t('summary.stickySummaryShort') }}</span>
+            </button>
+            <button
+              type="button"
+              class="sticky-total__btn sticky-total__btn--secondary"
+              @click="openEmailFromSticky"
+            >
+              <span class="sticky-total__label-full">{{ t('summary.sendEmail') }}</span>
+              <span class="sticky-total__label-short">{{ t('summary.stickyEmailShort') }}</span>
+            </button>
+          </template>
+          <button
+            v-else
+            type="button"
+            class="sticky-total__btn sticky-total__btn--primary"
+            @click="openQuoteLeadModal"
+          >
+            {{ t('getQuote.title') }}
           </button>
         </div>
       </div>
@@ -437,18 +365,6 @@ const minOrderDiffEuros = computed(() =>
         </p>
       </div>
     </footer>
-
-    <a
-      v-if="showWaFab && !formOpen"
-      class="wa-fab"
-      :href="CONTACT_WHATSAPP_HREF"
-      target="_blank"
-      rel="noopener noreferrer"
-      :aria-label="t('fab.waAria')"
-      title="WhatsApp"
-    >
-      <span aria-hidden="true" class="wa-fab__label">WhatsApp</span>
-    </a>
 
     <div v-if="proActive" class="pro-indicator" aria-hidden="true">PRO</div>
 
@@ -737,77 +653,6 @@ const minOrderDiffEuros = computed(() =>
   color: var(--allexo-muted);
 }
 
-.reviews__actions {
-  margin-top: 0.85rem;
-  margin-bottom: 0.15rem;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.55rem;
-}
-
-.reviews__btn-label {
-  display: block;
-  overflow-wrap: anywhere;
-}
-
-.reviews__btn-label--short {
-  display: none;
-}
-
-.reviews__btn {
-  min-height: 2.75rem;
-  padding: 0.65rem 0.95rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--allexo-border);
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  box-sizing: border-box;
-  min-width: 0;
-}
-
-@media (max-width: 767px) {
-  .reviews__actions {
-    gap: 0.4rem;
-  }
-
-  .reviews__btn {
-    min-height: 2.28rem;
-    padding: 0.42rem 0.45rem;
-    font-size: 0.78rem;
-    font-weight: 750;
-    line-height: 1.2;
-    letter-spacing: 0.01em;
-  }
-
-  .reviews__btn-label--full {
-    display: none;
-  }
-
-  .reviews__btn-label--short {
-    display: block;
-  }
-}
-
-.reviews__btn--wa {
-  background: var(--allexo-teal);
-  color: #fff;
-}
-
-.reviews__btn--wa:hover {
-  background: var(--allexo-teal-light);
-}
-
-.reviews__btn--email {
-  background: transparent;
-  color: var(--allexo-teal);
-}
-
-.reviews__btn--email:hover {
-  background: var(--allexo-bg);
-}
-
 .sticky-total {
   position: fixed;
   inset: auto 0 0 0;
@@ -872,8 +717,13 @@ const minOrderDiffEuros = computed(() =>
   -webkit-tap-highlight-color: transparent;
 }
 
-.sticky-total__btn--wa {
-  padding-inline: 0.75rem;
+.sticky-total__btn--primary {
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+
+.sticky-total__btn--primary:hover {
+  background: var(--allexo-teal-light);
 }
 
 .sticky-total__btn--ghost {
@@ -1034,49 +884,6 @@ const minOrderDiffEuros = computed(() =>
 
 .footer__privacy:hover {
   color: var(--allexo-teal-light);
-}
-
-.wa-fab {
-  position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--sticky-offset, 0px));
-  z-index: 80;
-  width: auto;
-  height: 3.15rem;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  font-weight: 950;
-  letter-spacing: -0.03em;
-  color: #0b2f30;
-  border: 1px solid rgba(15, 61, 62, 0.14);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 250, 249, 0.92));
-  box-shadow: 0 18px 44px rgba(15, 61, 62, 0.18);
-  backdrop-filter: blur(10px);
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.14s ease, box-shadow 0.2s ease;
-  padding: 0 0.95rem;
-}
-
-.wa-fab:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 22px 54px rgba(15, 61, 62, 0.22);
-}
-
-.wa-fab:active {
-  transform: translateY(0);
-}
-
-.wa-fab__label {
-  font-size: 0.82rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-}
-
-.app:has(.sticky-total) .wa-fab {
-  --sticky-offset: 4.9rem;
 }
 
 .summary-flash {

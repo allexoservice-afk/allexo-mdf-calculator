@@ -23,7 +23,7 @@ function normalizeToE164(input) {
 
 /**
  * @param {Record<string, string | undefined>} env — context.env
- * @param {{ to: string, subject: string, text: string, replyTo?: string }} mail
+ * @param {{ to: string, subject: string, text: string, html?: string, replyTo?: string }} mail
  */
 async function sendResendEmail(env, mail) {
   const resendApiKey = env.RESEND_API_KEY
@@ -39,6 +39,7 @@ async function sendResendEmail(env, mail) {
     subject: mail.subject,
     text: mail.text,
   }
+  if (mail.html && String(mail.html).trim()) payload.html = mail.html
   if (mail.replyTo) payload.reply_to = mail.replyTo
 
   const resendRes = await fetch('https://api.resend.com/emails', {
@@ -67,11 +68,16 @@ async function sendResendEmail(env, mail) {
  * @param {Record<string, string | undefined>} env — context.env
  */
 function buildDebugResponse(env) {
+  const hasKey = Object.prototype.hasOwnProperty.call(env, 'RESEND_API_KEY')
+  const keyOk = Boolean(env.RESEND_API_KEY && String(env.RESEND_API_KEY).trim())
   return {
     ok: true,
-    resend_configured: Boolean(env.RESEND_API_KEY && String(env.RESEND_API_KEY).trim()),
+    resend_configured: keyOk,
     from: String(env.RESEND_FROM_EMAIL || 'ALLEXO <info@allexo.be>'),
     owner: String(env.OWNER_EMAIL || 'info@allexo.be'),
+    // без значення ключа — лише чи є змінна в context.env
+    env_has_resend_key: hasKey,
+    resend_key_nonempty: keyOk,
   }
 }
 
@@ -140,9 +146,11 @@ export async function onRequest(context) {
   if (body.mode === 'lead') {
     const clientTo = String(body.to_email || '').trim()
     const clientPlain = String(body.client_plain || body.proposal_plain || '').trim()
+    const clientHtml = String(body.client_html || '').trim()
     const clientSubject = String(body.subject || 'ALLEXO proposal')
     const ownerTo = String(body.owner_email || env.OWNER_EMAIL || 'info@allexo.be').trim()
     const ownerPlain = String(body.owner_plain || '').trim()
+    const ownerHtml = String(body.owner_html || '').trim()
     const ownerSubject = String(body.owner_subject || 'ALLEXO — new quote request')
 
     if (!env.RESEND_API_KEY || !String(env.RESEND_API_KEY).trim()) {
@@ -162,6 +170,7 @@ export async function onRequest(context) {
           to: clientTo,
           subject: clientSubject,
           text: clientPlain,
+          html: clientHtml || undefined,
           replyTo: String(body.reply_to || '').trim() || undefined,
         })
         clientSent = true
@@ -176,6 +185,7 @@ export async function onRequest(context) {
           to: ownerTo,
           subject: ownerSubject,
           text: ownerPlain,
+          html: ownerHtml || undefined,
           replyTo: clientTo || undefined,
         })
         ownerSent = true

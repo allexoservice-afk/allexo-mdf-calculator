@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
-import { saveLead } from '../services/leads.js'
+import { isLeadSaveRlsError, saveLead } from '../services/leads.js'
 import { sendLeadEmails } from '../services/emailService.js'
 import { buildCalculationData } from '../utils/buildCalculationData.js'
 import { CONTACT_EMAIL, CONTACT_EMAIL_HREF } from '../constants/contact.js'
@@ -15,10 +15,16 @@ const props = defineProps({
   orderSubtotalEur: { type: Number, required: true },
   travelMeta: { type: Object, default: null },
   invalidDims: { type: Boolean, default: false },
-  leadTimeNote: { type: String, required: true },
+  leadTimeNote: { type: String, default: '' },
+  /** `inline` — у підсумку; `modal` — у діалогові */
+  layout: { type: String, default: 'inline' },
 })
 
+const emit = defineEmits(['close'])
+
 const { locale, t } = useLocale()
+
+const isModal = computed(() => props.layout === 'modal')
 
 /** @type {import('vue').Ref<'form' | 'success'>} */
 const step = ref('form')
@@ -27,9 +33,8 @@ const name = ref('')
 const phone = ref('')
 const email = ref('')
 const city = ref('')
-/** @type {import('vue').Ref<'whatsapp' | 'email' | 'phone'>} */
-const preferredContactMethod = ref('email')
 const comment = ref('')
+const showOptional = ref(false)
 
 const formError = ref('')
 const submitting = ref(false)
@@ -41,12 +46,6 @@ const fieldErrors = reactive({
   phone: '',
   email: '',
 })
-
-const contactOptions = computed(() => [
-  { value: 'whatsapp', label: t('getQuote.contactWhatsapp') },
-  { value: 'email', label: t('getQuote.contactEmail') },
-  { value: 'phone', label: t('getQuote.contactPhone') },
-])
 
 function clearFieldErrors() {
   fieldErrors.name = ''
@@ -60,8 +59,8 @@ function resetFormFields() {
   phone.value = ''
   email.value = ''
   city.value = ''
-  preferredContactMethod.value = 'email'
   comment.value = ''
+  showOptional.value = false
   clearFieldErrors()
 }
 
@@ -99,7 +98,6 @@ function validateForm() {
     ok = false
   }
 
-  if (!ok) formError.value = t('getQuote.errRequired')
   return ok
 }
 
@@ -130,7 +128,7 @@ function buildLeadPayload() {
     phone: phone.value.trim(),
     email: email.value.trim(),
     city: city.value.trim() || null,
-    preferred_contact_method: preferredContactMethod.value,
+    preferred_contact_method: 'email',
     comment: comment.value.trim() || null,
     language: locale.value,
     total_price: Number(props.estimatedTotalEur) || 0,
@@ -153,13 +151,24 @@ async function onSubmit() {
   submitting.value = true
   try {
     const lead = buildLeadPayload()
-    const saved = await saveLead(lead)
+    const [saved, mail] = await Promise.all([saveLead(lead), sendLeadEmails(lead)])
+
     if (!saved.ok) {
-      formError.value = saved.error || t('getQuote.errSubmit')
+      console.warn('[GetQuoteLeadPanel] saveLead:', saved.error, saved.code)
+      if (mail.ok && mail.clientSent) {
+        successKind.value = 'saved_only'
+        resetFormFields()
+        step.value = 'success'
+        return
+      }
+      formError.value = isLeadSaveRlsError(saved)
+        ? t('getQuote.errSupabaseRls')
+        : saved.code === 'env_missing'
+          ? t('getQuote.errSupabaseEnv')
+          : saved.error || t('getQuote.errSubmit')
       return
     }
 
-    const mail = await sendLeadEmails(lead)
     if (mail.ok && mail.clientSent) {
       successKind.value = 'full'
     } else if (mail.code === 'email_not_configured') {
@@ -182,10 +191,10 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="gq" :aria-label="t('getQuote.title')">
+  <div class="gq" :class="{ 'gq--modal': isModal }" :aria-label="t('getQuote.title')">
     <template v-if="step === 'form'">
       <h3 class="gq__title">{{ t('getQuote.title') }}</h3>
-      <p class="gq__subtitle">{{ t('getQuote.subtitle') }}</p>
+      <p v-if="!isModal" class="gq__subtitle">{{ t('getQuote.subtitle') }}</p>
 
       <p v-if="formError" class="gq__err" role="alert">{{ formError }}</p>
 
@@ -202,52 +211,55 @@ async function onSubmit() {
         <span v-if="fieldErrors.name" class="gq__field-err" role="alert">{{ fieldErrors.name }}</span>
       </label>
 
-      <label class="gq__field">
-        <span class="gq__label">{{ t('getQuote.phone') }} *</span>
-        <input
-          v-model="phone"
-          type="tel"
-          autocomplete="tel"
-          class="gq__input"
-          inputmode="tel"
-          :class="{ 'gq__input--error': fieldErrors.phone }"
-          @input="fieldErrors.phone = ''"
-        />
-        <span v-if="fieldErrors.phone" class="gq__field-err" role="alert">{{ fieldErrors.phone }}</span>
-      </label>
+      <div class="gq__row">
+        <label class="gq__field">
+          <span class="gq__label">{{ t('getQuote.phone') }} *</span>
+          <input
+            v-model="phone"
+            type="tel"
+            autocomplete="tel"
+            class="gq__input"
+            inputmode="tel"
+            :class="{ 'gq__input--error': fieldErrors.phone }"
+            @input="fieldErrors.phone = ''"
+          />
+          <span v-if="fieldErrors.phone" class="gq__field-err" role="alert">{{ fieldErrors.phone }}</span>
+        </label>
 
-      <label class="gq__field">
-        <span class="gq__label">{{ t('getQuote.email') }} *</span>
-        <input
-          v-model="email"
-          type="email"
-          autocomplete="email"
-          class="gq__input"
-          inputmode="email"
-          :class="{ 'gq__input--error': fieldErrors.email }"
-          @input="fieldErrors.email = ''"
-        />
-        <span v-if="fieldErrors.email" class="gq__field-err" role="alert">{{ fieldErrors.email }}</span>
-      </label>
+        <label class="gq__field">
+          <span class="gq__label">{{ t('getQuote.email') }} *</span>
+          <input
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            class="gq__input"
+            inputmode="email"
+            :class="{ 'gq__input--error': fieldErrors.email }"
+            @input="fieldErrors.email = ''"
+          />
+          <span v-if="fieldErrors.email" class="gq__field-err" role="alert">{{ fieldErrors.email }}</span>
+        </label>
+      </div>
 
-      <label class="gq__field">
-        <span class="gq__label">{{ t('getQuote.city') }}</span>
-        <input v-model="city" type="text" autocomplete="address-level2" class="gq__input" />
-      </label>
+      <button
+        v-if="!isModal && !showOptional"
+        type="button"
+        class="gq__optional-toggle"
+        @click="showOptional = true"
+      >
+        {{ t('getQuote.optionalToggle') }}
+      </button>
 
-      <label class="gq__field">
-        <span class="gq__label">{{ t('getQuote.preferredContactMethod') }}</span>
-        <select v-model="preferredContactMethod" class="gq__input gq__select">
-          <option v-for="opt in contactOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-      </label>
-
-      <label class="gq__field">
-        <span class="gq__label">{{ t('getQuote.comment') }}</span>
-        <textarea v-model="comment" class="gq__input gq__textarea" rows="3" />
-      </label>
+      <div v-else-if="!isModal && showOptional" class="gq__optional">
+        <label class="gq__field">
+          <span class="gq__label">{{ t('getQuote.city') }}</span>
+          <input v-model="city" type="text" autocomplete="address-level2" class="gq__input" />
+        </label>
+        <label class="gq__field gq__field--last">
+          <span class="gq__label">{{ t('getQuote.comment') }}</span>
+          <textarea v-model="comment" class="gq__input gq__textarea" rows="2" />
+        </label>
+      </div>
 
       <button
         type="button"
@@ -276,8 +288,10 @@ async function onSubmit() {
         <p class="gq__success-contact">
           <a :href="CONTACT_EMAIL_HREF">{{ CONTACT_EMAIL }}</a>
         </p>
+        <button v-if="isModal" type="button" class="gq__close-btn" @click="emit('close')">
+          {{ t('getQuote.closeModal') }}
+        </button>
       </div>
-      <p class="gq__lead">{{ leadTimeNote }}</p>
     </template>
   </div>
 </template>
@@ -292,8 +306,16 @@ async function onSubmit() {
   box-sizing: border-box;
 }
 
+.gq--modal {
+  margin-top: 0;
+  padding: 0.25rem 2rem 0 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
 @media (min-width: 480px) {
-  .gq {
+  .gq:not(.gq--modal) {
     padding: 1.5rem 1.35rem;
   }
 }
@@ -307,10 +329,48 @@ async function onSubmit() {
 }
 
 .gq__subtitle {
-  margin: 0 0 1.1rem;
-  font-size: 0.95rem;
-  line-height: 1.45;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
   color: var(--allexo-muted);
+}
+
+.gq__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+@media (min-width: 520px) {
+  .gq:not(.gq--modal) .gq__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 0.75rem;
+  }
+}
+
+.gq__optional-toggle {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--allexo-teal);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gq__optional-toggle:hover {
+  color: var(--allexo-teal-light);
+}
+
+.gq__optional {
+  margin-bottom: 0.25rem;
+}
+
+.gq__field--last {
+  margin-bottom: 0.65rem;
 }
 
 .gq__field {
@@ -350,12 +410,8 @@ async function onSubmit() {
   color: #b42318;
 }
 
-.gq__select {
-  appearance: auto;
-}
-
 .gq__textarea {
-  min-height: 4.5rem;
+  min-height: 3.25rem;
   resize: vertical;
 }
 
@@ -420,10 +476,22 @@ async function onSubmit() {
   color: var(--allexo-text);
 }
 
-.gq__lead {
-  margin: 1rem 0 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--allexo-muted);
+.gq__close-btn {
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  background: var(--allexo-teal);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
 }
+
+.gq__close-btn:hover {
+  background: var(--allexo-teal-light);
+}
+
 </style>

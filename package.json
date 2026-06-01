@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "deploy:pages": "vite build && wrangler pages deploy dist --project-name=allexo-mdf-calculator-v2",
     "secret:resend": "wrangler pages secret put RESEND_API_KEY --project-name=allexo-mdf-calculator-v2",
+    "secrets:list": "wrangler pages secret list --project-name=allexo-mdf-calculator-v2",
+    "test:supabase": "node scripts/test-supabase-lead.mjs",
     "optimize:work-images": "node scripts/generate-work-images.mjs",
     "generate:work-images": "node scripts/generate-work-images.mjs"
   },

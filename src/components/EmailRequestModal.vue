@@ -1,33 +1,19 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { buildAllexoOfferText } from '../utils/offerText.js'
 import { orderHasInvalidWindowDimensions } from '../utils/windowDimensions.js'
 import { CONTACT_EMAIL } from '../constants/contact.js'
 
-const WHATSAPP_PHONE = '32493860753'
-
 const props = defineProps({
   open: { type: Boolean, default: false },
   lines: { type: Array, required: true },
-  /** Distance/travel for offer appendix; null = omit (same shape as in OrderSummary). */
   travelMeta: { type: Object, default: null },
-  /** @type {'whatsapp' | 'email'} */
-  channel: {
-    type: String,
-    default: 'whatsapp',
-    validator: (v) => v === 'whatsapp' || v === 'email',
-  },
 })
 
 const emit = defineEmits(['close'])
 
 const { locale, t } = useLocale()
-
-const isEmail = computed(() => props.channel === 'email')
-const titleId = computed(() => (isEmail.value ? 'lead-email-title' : 'lead-wa-title'))
-const modalTitle = computed(() => (isEmail.value ? t('lead.titleEmail') : t('lead.titleWa')))
-const modalLead = computed(() => (isEmail.value ? t('lead.leadEmail') : t('lead.leadWa')))
 
 const name = ref('')
 const phone = ref('')
@@ -48,7 +34,7 @@ watch(
   },
 )
 
-function buildWhatsMessage() {
+function buildMailBody() {
   const offerText = buildAllexoOfferText(props.lines, locale.value, props.travelMeta)
   if (!offerText) return ''
   const n = name.value.trim()
@@ -92,7 +78,7 @@ function onSubmit() {
     formError.value = t('lead.errRequired')
     return
   }
-  const text = buildWhatsMessage()
+  const text = buildMailBody()
   if (!text) {
     formError.value = t('lead.errNoLines')
     return
@@ -101,13 +87,8 @@ function onSubmit() {
     formError.value = t('lead.errMinDimensions')
     return
   }
-  if (props.channel === 'email') {
-    const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t('lead.mailSubject'))}&body=${encodeURIComponent(text)}`
-    window.open(mailto, '_blank', 'noopener,noreferrer')
-  } else {
-    const url = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }
+  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t('lead.mailSubject'))}&body=${encodeURIComponent(text)}`
+  window.open(mailto, '_blank', 'noopener,noreferrer')
   emit('close')
 }
 </script>
@@ -119,19 +100,17 @@ function onSubmit() {
       class="backdrop"
       role="dialog"
       aria-modal="true"
-      :aria-labelledby="titleId"
+      aria-labelledby="lead-email-title"
       @click="onBackdrop"
     >
       <div class="modal" @click.stop>
         <div class="modal__head">
-          <h2 :id="titleId" class="modal__title">{{ modalTitle }}</h2>
+          <h2 id="lead-email-title" class="modal__title">{{ t('lead.titleEmail') }}</h2>
           <button type="button" class="modal__close" :aria-label="t('common.close')" @click="emit('close')">
             ×
           </button>
         </div>
-        <p class="modal__lead">
-          {{ modalLead }}
-        </p>
+        <p class="modal__lead">{{ t('lead.leadEmail') }}</p>
         <form class="form" @submit.prevent="onSubmit">
           <p v-if="formError" class="form__error" role="alert">{{ formError }}</p>
 
@@ -327,15 +306,14 @@ function onSubmit() {
   font-weight: 700;
   font-family: inherit;
   color: #fff;
-  background: #25d366;
-  border: 2px solid #1ebe57;
+  background: var(--allexo-teal);
+  border: none;
   border-radius: var(--radius);
   cursor: pointer;
   box-shadow: var(--shadow-md);
 }
 
 .btn-submit:hover {
-  background: #20bd5a;
-  border-color: #1aa34d;
+  background: var(--allexo-teal-light);
 }
 </style>

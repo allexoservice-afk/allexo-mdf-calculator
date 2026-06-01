@@ -2,6 +2,14 @@ import { typeTitle, translate } from '../i18n/translations.js'
 import { CONTACT_EMAIL } from '../constants/contact.js'
 import { SITE_URL } from '../constants/site.js'
 import { deliverLeadEmails, getProposalDeliveryUrl } from './proposalDelivery.js'
+import {
+  buildClientEmailHtml,
+  buildClientEmailPlain,
+  buildOwnerEmailHtml,
+  buildOwnerEmailPlain,
+  clientEmailSubject,
+  ownerEmailSubject,
+} from '../utils/emailHtmlTemplates.js'
 import { formatEuroExclVat } from '../utils/priceDisplay.js'
 
 const OWNER_EMAIL = CONTACT_EMAIL
@@ -66,93 +74,12 @@ function buildPositionsSummary(locale, leadData) {
 }
 
 /**
- * Лист клієнту — без формул, без цін за одиницю, лише орієнтовний підсумок.
- * @param {Record<string, unknown>} leadData
- */
-function buildClientEmailBody(leadData) {
-  const locale = /** @type {import('../i18n/translations.js').Locale} */ (
-    typeof leadData.language === 'string' ? leadData.language : 'uk'
-  )
-  const name = String(leadData.name || '').trim()
-  const price = formatEuroExclVat(Number(leadData.total_price) || 0, locale)
-  const calcForCount = leadData.calculation_data ?? leadData.calculation_details
-  const linesForCount =
-    calcForCount && typeof calcForCount === 'object'
-      ? /** @type {unknown} */ (/** @type {Record<string, unknown>} */ (calcForCount).lines)
-      : null
-  const positions =
-    leadData.positions_count != null
-      ? String(leadData.positions_count)
-      : Array.isArray(linesForCount)
-        ? String(linesForCount.length)
-        : '—'
-  const windows = String(leadData.windows_count ?? '—')
-  const summary = buildPositionsSummary(locale, leadData)
-
-  return [
-    translate(locale, 'email.clientGreeting').replace('{name}', name),
-    '',
-    `${translate(locale, 'email.positionsLabel')}: ${positions}`,
-    `${translate(locale, 'email.windowsLabel')}: ${windows}`,
-    `${translate(locale, 'email.estimatedLabel')}: ${price}`,
-    '',
-    summary,
-    '',
-    translate(locale, 'email.disclaimer'),
-    '',
-    translate(locale, 'email.contactHeader'),
-    `${translate(locale, 'contacts.phoneDisplay')}`,
-    `${translate(locale, 'contacts.emailDisplay')}`,
-    '',
-    `${translate(locale, 'email.siteLabel')}: ${SITE_URL}`,
-  ].join('\n')
-}
-
-/**
- * Лист власнику — повні контакти + сума + JSON розрахунку.
- * @param {Record<string, unknown>} leadData
- */
-function buildOwnerEmailBody(leadData) {
-  const locale = /** @type {import('../i18n/translations.js').Locale} */ (
-    typeof leadData.language === 'string' ? leadData.language : 'uk'
-  )
-  const price = formatEuroExclVat(Number(leadData.total_price) || 0, locale)
-  const calcJson = JSON.stringify(
-    leadData.calculation_data ?? leadData.calculation_details ?? {},
-    null,
-    2,
-  )
-
-  return [
-    'ALLEXO — new quote request (website)',
-    '',
-    `Name: ${leadData.name}`,
-    `Phone: ${leadData.phone}`,
-    `Email: ${leadData.email}`,
-    `City: ${leadData.city || '—'}`,
-    `Preferred contact: ${leadData.preferred_contact_method || '—'}`,
-    `Comment: ${leadData.comment || '—'}`,
-    '',
-    `Positions: ${leadData.positions_count ?? '—'}`,
-    `Windows (units): ${leadData.windows_count ?? '—'}`,
-    `Total (excl. VAT): ${price}`,
-    `Discount (€): ${leadData.discount ?? 0}`,
-    `Language: ${leadData.language || '—'}`,
-    '',
-    'Calculation data (JSON):',
-    calcJson,
-  ].join('\n')
-}
-
-/**
  * @param {Record<string, unknown>} leadData
  */
 function buildSharedParams(leadData) {
   const locale = /** @type {import('../i18n/translations.js').Locale} */ (
     typeof leadData.language === 'string' ? leadData.language : 'uk'
   )
-  const clientBody = buildClientEmailBody(leadData)
-  const ownerBody = buildOwnerEmailBody(leadData)
   const price = formatEuroExclVat(Number(leadData.total_price) || 0, locale)
 
   return {
@@ -170,13 +97,10 @@ function buildSharedParams(leadData) {
     allexo_phone: ALLEXO_PHONE,
     allexo_email: CONTACT_EMAIL,
     site_url: SITE_URL,
-    client_email_body: clientBody,
-    owner_email_body: ownerBody,
-    calculation_json: JSON.stringify(
-      leadData.calculation_data ?? leadData.calculation_details ?? {},
-      null,
-      2,
-    ),
+    client_email_body: buildClientEmailPlain(leadData),
+    client_email_html: buildClientEmailHtml(leadData),
+    owner_email_body: buildOwnerEmailPlain(leadData),
+    owner_email_html: buildOwnerEmailHtml(leadData),
     reply_to: String(leadData.email || '').trim(),
   }
 }
@@ -200,8 +124,8 @@ export async function sendLeadEmails(leadData) {
   const locale = /** @type {import('../i18n/translations.js').Locale} */ (
     typeof leadData.language === 'string' ? leadData.language : 'uk'
   )
-  const clientSubject = translate(locale, 'proposal.emailSubject')
-  const ownerSubject = `ALLEXO — заявка з сайту (${shared.client_name || 'client'})`
+  const clientSubject = clientEmailSubject(locale)
+  const ownerSubject = ownerEmailSubject()
 
   let clientSent = false
   let ownerSent = false
@@ -215,9 +139,11 @@ export async function sendLeadEmails(leadData) {
         to_email: shared.client_email,
         subject: clientSubject,
         client_plain: shared.client_email_body,
+        client_html: shared.client_email_html,
         owner_email: OWNER_EMAIL,
         owner_subject: ownerSubject,
         owner_plain: shared.owner_email_body,
+        owner_html: shared.owner_email_html,
         reply_to: shared.reply_to,
       })
       if (server.clientSent) clientSent = true

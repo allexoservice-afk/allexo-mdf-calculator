@@ -106,12 +106,12 @@ function formatHoursForOffer(h) {
 }
 
 /**
- * Метадані виїзду для тексту пропозиції (копіювання / WhatsApp / e-mail).
+ * Метадані виїзду для тексту пропозиції (копіювання / e-mail).
  * @typedef {{ distanceKm: number, workTotalEur: number, travelEur: number, over100: boolean }} OfferTravelMeta
  */
 
 /**
- * Текст пропозиції для копіювання / WhatsApp / e-mail.
+ * Текст пропозиції для копіювання / e-mail.
  * @param {unknown[]} lines
  * @param {import('../i18n/translations.js').Locale} locale
  * @param {OfferTravelMeta | null} [travelMeta]

@@ -10,11 +10,17 @@
 /**
  * @returns {string}
  */
+const PRODUCTION_DELIVERY_URL = 'https://allexo.be/api/proposal-delivery'
+
 export function getProposalDeliveryUrl() {
   const explicit = String(import.meta.env.VITE_PROPOSAL_DELIVERY_URL || '').trim()
   if (explicit) return explicit
   if (typeof window !== 'undefined' && window.location?.origin) {
-    return new URL('/api/proposal-delivery', window.location.origin).href
+    const origin = window.location.origin
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+      return PRODUCTION_DELIVERY_URL
+    }
+    return new URL('/api/proposal-delivery', origin).href
   }
   return ''
 }
@@ -34,9 +40,11 @@ export function getProposalDeliveryUrl() {
  * @property {string} to_email
  * @property {string} subject
  * @property {string} client_plain
+ * @property {string} [client_html]
  * @property {string} owner_email
  * @property {string} owner_subject
  * @property {string} owner_plain
+ * @property {string} [owner_html]
  * @property {string} [reply_to]
  */
 

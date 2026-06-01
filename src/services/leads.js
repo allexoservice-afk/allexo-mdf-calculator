@@ -1,23 +1,5 @@
 import { supabase } from '../lib/supabase.js'
 
-/**
- * @typedef {'whatsapp' | 'email' | 'phone'} PreferredContactMethod
- *
- * @typedef {Object} LeadInsert
- * @property {string} name
- * @property {string} phone
- * @property {string} email
- * @property {string | null} [city]
- * @property {PreferredContactMethod} contact_method
- * @property {string | null} [comment]
- * @property {number} total_price
- * @property {number} [discount]
- * @property {number} [windows_count]
- * @property {Record<string, unknown>} calculation_details
- * @property {string} created_at
- */
-
-/** Колонки, які точно були в початковій таблиці `leads`. */
 const CORE_LEAD_COLUMNS = new Set([
   'name',
   'phone',
@@ -30,9 +12,28 @@ const CORE_LEAD_COLUMNS = new Set([
   'created_at',
 ])
 
+const ULTRA_MINIMAL_COLUMNS = new Set([
+  'name',
+  'phone',
+  'email',
+  'contact_method',
+  'total_price',
+  'created_at',
+])
+
+/**
+ * @param {{ message?: string, code?: string } | null} error
+ */
+function isRlsError(error) {
+  if (!error) return false
+  const code = String(error.code ?? '')
+  if (code === '42501' || code === 'PGRST301') return true
+  const msg = String(error.message ?? '').toLowerCase()
+  return msg.includes('row-level security') || msg.includes('violates row-level security')
+}
+
 /**
  * @param {Record<string, unknown>} data
- * @returns {Record<string, unknown>}
  */
 function buildCalculationDetails(data) {
   const d = data
@@ -65,7 +66,6 @@ function buildCalculationDetails(data) {
 
 /**
  * @param {Record<string, unknown>} data
- * @returns {Record<string, unknown>}
  */
 function toLeadInsertRow(data) {
   const d = data
@@ -85,12 +85,7 @@ function toLeadInsertRow(data) {
     created_at: typeof d.created_at === 'string' ? d.created_at : new Date().toISOString(),
   }
 
-  // Додаткові колонки (якщо є в Supabase) — при помилці insert їх прибере fallback
-  if (d.city != null && String(d.city).trim()) row.city = String(d.city).trim()
-  if (d.comment != null && String(d.comment).trim()) row.comment = String(d.comment).trim()
-  row.preferred_contact_method = preferred
-  const positions = d.positions_count != null ? Math.round(Number(d.positions_count) || 0) : NaN
-  if (Number.isFinite(positions) && positions >= 0) row.positions_count = positions
+  // city, comment, positions_count — лише в calculation_details.meta (без окремих колонок у БД)
 
   return row
 }
@@ -101,10 +96,6 @@ function isSupabaseEnvReady() {
   return typeof u === 'string' && u.length > 0 && typeof k === 'string' && k.length > 0
 }
 
-/**
- * @param {string} message
- * @returns {string | null}
- */
 function unknownColumnFromError(message) {
   const m = String(message || '').match(/Could not find the '([^']+)' column/)
   return m ? m[1] : null
@@ -112,73 +103,89 @@ function unknownColumnFromError(message) {
 
 /**
  * @param {Record<string, unknown>} row
+ * @param {Set<string>} keys
  */
-async function insertLeadRow(row) {
-  let current = { ...row }
-
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const { error } = await supabase.from('leads').insert(current)
-
-    if (!error) return { ok: true }
-
-    const missing = unknownColumnFromError(error.message)
-    if (missing && missing in current) {
-      const next = { ...current }
-      delete next[missing]
-      current = next
-      continue
-    }
-
-    // Якщо зламалось на некоректному полі — спробувати лише базовий набір колонок
-    if (attempt === 0) {
-      /** @type {Record<string, unknown>} */
-      const minimal = {}
-      for (const key of CORE_LEAD_COLUMNS) {
-        if (row[key] !== undefined) minimal[key] = row[key]
-      }
-      if (JSON.stringify(minimal) !== JSON.stringify(current)) {
-        current = minimal
-        continue
-      }
-    }
-
-    console.error('[saveLead] Supabase error:', error.message, error)
-    return {
-      ok: false,
-      error: error.message || 'Supabase insert failed',
-      code: error.code,
-    }
+function pickColumns(row, keys) {
+  /** @type {Record<string, unknown>} */
+  const out = {}
+  for (const key of keys) {
+    if (row[key] !== undefined) out[key] = row[key]
   }
-
-  return { ok: false, error: 'Supabase insert failed after retries', code: 'insert_retries_exhausted' }
+  return out
 }
 
 /**
- * Додаткові колонки в Supabase (SQL Editor), якщо потрібні окремо від JSON:
- *
- * alter table public.leads add column if not exists city text;
- * alter table public.leads add column if not exists preferred_contact_method text;
- * alter table public.leads add column if not exists comment text;
- * alter table public.leads add column if not exists positions_count integer;
- * alter table public.leads add column if not exists calculation_data jsonb;
- *
+ * @param {Record<string, unknown>} row
+ */
+async function insertLeadRow(row) {
+  const attempts = [
+    pickColumns(row, ULTRA_MINIMAL_COLUMNS),
+    pickColumns(row, CORE_LEAD_COLUMNS),
+    { ...row },
+  ]
+
+  let lastError = /** @type {{ message: string, code?: string } | null} */ (null)
+
+  for (const payload of attempts) {
+    let current = { ...payload }
+    for (let i = 0; i < 12; i += 1) {
+      const { error } = await supabase.from('leads').insert(current)
+      if (!error) return { ok: true }
+
+      lastError = error
+      const missing = unknownColumnFromError(error.message)
+      if (missing && missing in current) {
+        const next = { ...current }
+        delete next[missing]
+        current = next
+        continue
+      }
+      break
+    }
+  }
+
+  console.error('[saveLead] Supabase error:', lastError?.message, lastError)
+
+  if (isRlsError(lastError)) {
+    return {
+      ok: false,
+      error: 'Supabase RLS: заборонено вставку. Виконайте supabase/setup-leads.sql у SQL Editor.',
+      code: 'rls_denied',
+    }
+  }
+
+  return {
+    ok: false,
+    error: lastError?.message || 'Supabase insert failed',
+    code: lastError?.code,
+  }
+}
+
+/**
  * @param {Record<string, unknown>} data
- * @returns {Promise<{ ok: true } | { ok: false, error: string, code?: string }>}
  */
 export async function saveLead(data) {
   if (!isSupabaseEnvReady()) {
-    const msg = 'Supabase: не задано VITE_SUPABASE_URL або VITE_SUPABASE_ANON_KEY'
-    console.warn(`[saveLead] ${msg}`)
-    return { ok: false, error: msg, code: 'env_missing' }
+    return {
+      ok: false,
+      error:
+        'Supabase не налаштовано (додайте VITE_SUPABASE_URL і VITE_SUPABASE_ANON_KEY у .env або Cloudflare Build).',
+      code: 'env_missing',
+    }
   }
 
-  const row = toLeadInsertRow(data)
-
   try {
-    return await insertLeadRow(row)
+    return await insertLeadRow(toLeadInsertRow(data))
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     console.error('[saveLead]', e)
     return { ok: false, error: message, code: 'exception' }
   }
+}
+
+/** @param {{ ok: boolean, code?: string, error?: string }} saved */
+export function isLeadSaveRlsError(saved) {
+  if (!saved || saved.ok) return false
+  if (saved.code === 'rls_denied' || saved.code === '42501') return true
+  return /row-level security/i.test(String(saved.error || ''))
 }
