@@ -1,25 +1,41 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
-import { buildAllexoOfferText } from '../utils/offerText.js'
+import { sendHtmlProposalToEmail, sendLeadEmails } from '../services/emailService.js'
+import { getProposalDeliveryUrl } from '../services/proposalDelivery.js'
+import { buildCalculationData } from '../utils/buildCalculationData.js'
+import { allocateQuoteReference } from '../utils/quoteReference.js'
 import { orderHasInvalidWindowDimensions } from '../utils/windowDimensions.js'
-import { CONTACT_EMAIL } from '../constants/contact.js'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
+  /** `pro-lead` — клієнту + копія власнику; `self` — лише HTML на вказаний email */
+  variant: { type: String, default: 'pro-lead' },
   lines: { type: Array, required: true },
   travelMeta: { type: Object, default: null },
+  estimatedTotalEur: { type: Number, default: 0 },
+  orderSubtotalEur: { type: Number, default: 0 },
+  discountEuros: { type: Number, default: 0 },
+  discountPercent: { type: Number, default: 0 },
+  windowsCount: { type: Number, default: 0 },
+  leadTimeNote: { type: String, default: '' },
 })
 
 const emit = defineEmits(['close'])
 
 const { locale, t } = useLocale()
 
+const isSelf = () => props.variant === 'self'
+
 const name = ref('')
 const phone = ref('')
+const email = ref('')
 const address = ref('')
 const comment = ref('')
 const formError = ref('')
+const submitting = ref(false)
+/** @type {import('vue').Ref<'form' | 'success'>} */
+const step = ref('form')
 
 watch(
   () => props.open,
@@ -27,69 +43,130 @@ watch(
     if (isOpen) {
       name.value = ''
       phone.value = ''
+      email.value = ''
       address.value = ''
       comment.value = ''
       formError.value = ''
+      submitting.value = false
+      step.value = 'form'
     }
   },
 )
 
-function buildMailBody() {
-  const offerText = buildAllexoOfferText(props.lines, locale.value, props.travelMeta)
-  if (!offerText) return ''
-  const n = name.value.trim()
-  const p = phone.value.trim()
-  const addr = String(address.value ?? '').trim() || t('lead.notSpecified')
-  const comm = String(comment.value ?? '').trim() || t('lead.notSpecified')
-  return (
-    offerText +
-    '\n\n' +
-    t('lead.clientTitle') +
-    '\n' +
-    t('lead.clientName') +
-    ' ' +
-    n +
-    '\n' +
-    t('lead.clientPhone') +
-    ' ' +
-    p +
-    '\n' +
-    t('lead.clientAddress') +
-    ' ' +
-    addr +
-    '\n' +
-    t('lead.clientComment') +
-    ' ' +
-    comm +
-    '\n\n' +
-    t('lead.contactMe')
-  )
+function validateEmail(v) {
+  const s = String(v).trim()
+  if (!s) return false
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
+}
+
+function buildLeadPayload() {
+  const calculation_data = buildCalculationData(props.lines, {
+    estimatedTotalEur: props.estimatedTotalEur,
+    orderSubtotalEur: props.orderSubtotalEur,
+    discountEuros: props.discountEuros,
+    discountPercent: props.discountPercent,
+    windowsCount: props.windowsCount,
+    positionsCount: props.lines.length,
+    locale: locale.value,
+    travelMeta: props.travelMeta,
+    leadTimeNote: props.leadTimeNote,
+  })
+
+  return {
+    name: name.value.trim(),
+    phone: phone.value.trim(),
+    email: email.value.trim(),
+    city: address.value.trim() || null,
+    comment: comment.value.trim() || null,
+    language: locale.value,
+    total_price: Number(props.estimatedTotalEur) || 0,
+    discount: Number(props.discountEuros) || 0,
+    windows_count: Math.max(0, Math.round(Number(props.windowsCount) || 0)),
+    positions_count: props.lines.length,
+    calculation_data,
+    skipClientCta: isSelf(),
+  }
 }
 
 function onBackdrop(e) {
   if (e.target === e.currentTarget) emit('close')
 }
 
-function onSubmit() {
+async function onSubmit() {
   formError.value = ''
-  const n = name.value.trim()
-  const p = phone.value.trim()
-  if (!n || !p) {
-    formError.value = t('lead.errRequired')
-    return
-  }
-  const text = buildMailBody()
-  if (!text) {
-    formError.value = t('lead.errNoLines')
-    return
-  }
+
   if (orderHasInvalidWindowDimensions(props.lines)) {
     formError.value = t('lead.errMinDimensions')
     return
   }
-  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t('lead.mailSubject'))}&body=${encodeURIComponent(text)}`
-  window.open(mailto, '_blank', 'noopener,noreferrer')
-  emit('close')
+
+  if (!getProposalDeliveryUrl()) {
+    formError.value = t('lead.errEmailNotConfigured')
+    return
+  }
+
+  const n = name.value.trim()
+  const p = phone.value.trim()
+  const em = email.value.trim()
+
+  if (isSelf()) {
+    if (!em) {
+      formError.value = t('lead.errEmailRequired')
+      return
+    }
+    if (!validateEmail(em)) {
+      formError.value = t('lead.errInvalidEmail')
+      return
+    }
+  } else {
+    if (!n || !p) {
+      formError.value = t('lead.errRequired')
+      return
+    }
+    if (!em) {
+      formError.value = t('lead.errEmailRequired')
+      return
+    }
+    if (!validateEmail(em)) {
+      formError.value = t('lead.errInvalidEmail')
+      return
+    }
+  }
+
+  submitting.value = true
+  try {
+    const lead = buildLeadPayload()
+    lead.quote_reference = await allocateQuoteReference()
+
+    if (isSelf()) {
+      const mail = await sendHtmlProposalToEmail(lead, em)
+      if (!mail.ok) {
+        formError.value =
+          mail.code === 'email_not_configured'
+            ? t('lead.errEmailNotConfigured')
+            : mail.error || t('lead.errEmailFailed')
+        return
+      }
+    } else {
+      const mail = await sendLeadEmails(lead)
+      if (!mail.ok || !mail.clientSent) {
+        formError.value =
+          mail.code === 'email_not_configured'
+            ? t('lead.errEmailNotConfigured')
+            : typeof mail.error === 'string'
+              ? mail.error
+              : t('lead.errEmailFailed')
+        return
+      }
+    }
+
+    step.value = 'success'
+  } catch (e) {
+    console.error(e)
+    formError.value = t('lead.errEmailFailed')
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -100,58 +177,92 @@ function onSubmit() {
       class="backdrop"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="lead-email-title"
+      :aria-labelledby="isSelf() ? 'html-email-title' : 'lead-email-title'"
       @click="onBackdrop"
     >
       <div class="modal" @click.stop>
         <div class="modal__head">
-          <h2 id="lead-email-title" class="modal__title">{{ t('lead.titleEmail') }}</h2>
+          <h2 :id="isSelf() ? 'html-email-title' : 'lead-email-title'" class="modal__title">
+            {{ isSelf() ? t('lead.titleHtmlSelf') : t('lead.titleEmail') }}
+          </h2>
           <button type="button" class="modal__close" :aria-label="t('common.close')" @click="emit('close')">
             ×
           </button>
         </div>
-        <p class="modal__lead">{{ t('lead.leadEmail') }}</p>
-        <form class="form" @submit.prevent="onSubmit">
-          <p v-if="formError" class="form__error" role="alert">{{ formError }}</p>
 
-          <label class="field">
-            <span class="field__label">{{ t('lead.name') }} <span class="req">{{ t('lead.required') }}</span></span>
-            <input
-              v-model="name"
-              type="text"
-              autocomplete="name"
-              class="field__input"
-              :class="{ 'field__input--error': formError && !name.trim() }"
-              @input="formError = ''"
-            />
-          </label>
+        <template v-if="step === 'success'">
+          <p class="modal__success" role="status">{{ t('lead.successHtmlSent') }}</p>
+          <button type="button" class="btn-submit" @click="emit('close')">{{ t('common.close') }}</button>
+        </template>
 
-          <label class="field">
-            <span class="field__label">{{ t('lead.phone') }} <span class="req">{{ t('lead.required') }}</span></span>
-            <input
-              v-model="phone"
-              type="tel"
-              autocomplete="tel"
-              class="field__input"
-              :class="{ 'field__input--error': formError && !phone.trim() }"
-              @input="formError = ''"
-            />
-          </label>
+        <template v-else>
+          <p class="modal__lead">{{ isSelf() ? t('lead.leadHtmlSelf') : t('lead.leadEmail') }}</p>
+          <form class="form" @submit.prevent="onSubmit">
+            <p v-if="formError" class="form__error" role="alert">{{ formError }}</p>
 
-          <label class="field">
-            <span class="field__label">{{ t('lead.address') }}</span>
-            <input v-model="address" type="text" autocomplete="street-address" class="field__input" />
-          </label>
+            <label v-if="!isSelf()" class="field">
+              <span class="field__label">{{ t('lead.name') }} <span class="req">{{ t('lead.required') }}</span></span>
+              <input
+                v-model="name"
+                type="text"
+                autocomplete="name"
+                class="field__input"
+                :class="{ 'field__input--error': formError && !name.trim() }"
+                @input="formError = ''"
+              />
+            </label>
 
-          <label class="field">
-            <span class="field__label">{{ t('lead.comment') }}</span>
-            <textarea v-model="comment" class="field__input field__textarea" rows="3" />
-          </label>
+            <label v-if="!isSelf()" class="field">
+              <span class="field__label">{{ t('lead.phone') }} <span class="req">{{ t('lead.required') }}</span></span>
+              <input
+                v-model="phone"
+                type="tel"
+                autocomplete="tel"
+                class="field__input"
+                :class="{ 'field__input--error': formError && !phone.trim() }"
+                @input="formError = ''"
+              />
+            </label>
 
-          <p class="form__gdpr">{{ t('lead.gdprConsent') }}</p>
+            <label class="field">
+              <span class="field__label">
+                {{ isSelf() ? t('lead.emailSelf') : t('lead.emailClient') }}
+                <span class="req">{{ t('lead.required') }}</span>
+              </span>
+              <input
+                v-model="email"
+                type="email"
+                autocomplete="email"
+                class="field__input"
+                :class="{ 'field__input--error': formError && !email.trim() }"
+                @input="formError = ''"
+              />
+            </label>
 
-          <button type="submit" class="btn-submit">{{ t('lead.submit') }}</button>
-        </form>
+            <label v-if="isSelf()" class="field">
+              <span class="field__label">{{ t('lead.name') }}</span>
+              <input v-model="name" type="text" autocomplete="name" class="field__input" />
+            </label>
+
+            <template v-if="!isSelf()">
+              <label class="field">
+                <span class="field__label">{{ t('lead.address') }}</span>
+                <input v-model="address" type="text" autocomplete="street-address" class="field__input" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">{{ t('lead.comment') }}</span>
+                <textarea v-model="comment" class="field__input field__textarea" rows="3" />
+              </label>
+            </template>
+
+            <p class="form__gdpr">{{ t('lead.gdprConsent') }}</p>
+
+            <button type="submit" class="btn-submit" :disabled="submitting">
+              {{ submitting ? t('lead.sending') : t('lead.submitHtml') }}
+            </button>
+          </form>
+        </template>
       </div>
     </div>
   </Teleport>
@@ -231,6 +342,17 @@ function onSubmit() {
   font-size: 0.875rem;
   color: var(--allexo-muted);
   line-height: 1.45;
+}
+
+.modal__success {
+  margin: 1rem 0 1.25rem;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--allexo-teal);
+  background: rgba(15, 61, 62, 0.08);
+  border: 1px solid rgba(15, 61, 62, 0.15);
+  border-radius: var(--radius);
 }
 
 .form {
@@ -313,7 +435,12 @@ function onSubmit() {
   box-shadow: var(--shadow-md);
 }
 
-.btn-submit:hover {
+.btn-submit:hover:not(:disabled) {
   background: var(--allexo-teal-light);
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 </style>

@@ -218,8 +218,15 @@ export async function onRequest(context) {
         headers,
       })
     }
+    const proposalHtml = String(body.proposal_html || body.html || '').trim()
     try {
-      await sendResendEmail(env, { to, subject, text: proposalPlain })
+      await sendResendEmail(env, {
+        to,
+        subject,
+        text: proposalPlain,
+        html: proposalHtml || undefined,
+        replyTo: String(body.reply_to || '').trim() || undefined,
+      })
     } catch (e) {
       return new Response(JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }), {
         status: 502,

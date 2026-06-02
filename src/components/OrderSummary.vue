@@ -13,7 +13,7 @@ import {
   quoteWindowsillOnlyHours,
   quoteWindowsillOnlyRoundedEuros,
 } from '../pricing/windowQuote.js'
-import { buildAllexoOfferText } from '../utils/offerText.js'
+import { buildClientProposalPlainFromOrder } from '../utils/clientProposalShare.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
 import EmailRequestModal from './EmailRequestModal.vue'
 import GetQuoteLeadModal from './GetQuoteLeadModal.vue'
@@ -385,6 +385,7 @@ const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTot
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
 const emailRequestModalOpen = ref(false)
+const htmlSelfModalOpen = ref(false)
 
 const travelKmInput = ref('')
 
@@ -417,11 +418,7 @@ function showSummaryNotice(msg, ms = 2500, isError = false) {
 }
 
 async function copyProposal() {
-  if (orderHasInvalidWindowDimensions(props.lines)) {
-    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
-    return
-  }
-  const text = buildAllexoOfferText(props.lines, locale.value, offerTravelMeta.value)
+  const text = proposalTextForShare()
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -441,6 +438,35 @@ async function copyProposal() {
     }
   }
   showSummaryNotice(t('summary.copied'))
+}
+
+function proposalShareOptions(clientName = '') {
+  return {
+    estimatedTotalEur: offerTravelMeta.value ? grandTotalEuros.value : payableWorkAfterDiscountEuros.value,
+    orderSubtotalEur: orderTotalEuros.value,
+    discountEuros: discountEuros.value,
+    discountPercent: discountPct.value,
+    windowsCount: publicTotalWindowUnits.value,
+    positionsCount: props.lines.length,
+    travelMeta: offerTravelMeta.value,
+    leadTimeNote: publicLeadTimeNoteDisplay.value,
+    clientName,
+    skipClientCta: true,
+  }
+}
+
+function proposalTextForShare(clientName = '') {
+  if (orderHasInvalidWindowDimensions(props.lines)) {
+    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
+    return ''
+  }
+  return (
+    buildClientProposalPlainFromOrder(props.lines, locale.value, proposalShareOptions(clientName)) || ''
+  )
+}
+
+function openHtmlSelfModal() {
+  htmlSelfModalOpen.value = true
 }
 
 function openContactEmailModal() {
@@ -703,6 +729,9 @@ function openContactEmailModal() {
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
           </button>
+          <button type="button" class="contact-btn contact-btn--whatsapp" @click="openHtmlSelfModal">
+            {{ t('summary.sendWhSelf') }}
+          </button>
         </div>
 
         <div class="contact-section__utils">
@@ -726,9 +755,30 @@ function openContactEmailModal() {
 
   <EmailRequestModal
     :open="emailRequestModalOpen"
+    variant="pro-lead"
     :lines="lines"
     :travel-meta="offerTravelMeta"
+    :estimated-total-eur="offerTravelMeta ? grandTotalEuros : payableWorkAfterDiscountEuros"
+    :order-subtotal-eur="orderTotalEuros"
+    :discount-euros="discountEuros"
+    :discount-percent="discountPct"
+    :windows-count="publicTotalWindowUnits"
+    :lead-time-note="publicLeadTimeNoteDisplay"
     @close="emailRequestModalOpen = false"
+  />
+
+  <EmailRequestModal
+    :open="htmlSelfModalOpen"
+    variant="self"
+    :lines="lines"
+    :travel-meta="offerTravelMeta"
+    :estimated-total-eur="offerTravelMeta ? grandTotalEuros : payableWorkAfterDiscountEuros"
+    :order-subtotal-eur="orderTotalEuros"
+    :discount-euros="discountEuros"
+    :discount-percent="discountPct"
+    :windows-count="publicTotalWindowUnits"
+    :lead-time-note="publicLeadTimeNoteDisplay"
+    @close="htmlSelfModalOpen = false"
   />
 
   <GetQuoteLeadModal
@@ -1213,6 +1263,18 @@ function openContactEmailModal() {
 .contact-btn--email:hover {
   background: #f0f4f8;
   border-color: #547896;
+}
+
+.contact-btn--whatsapp {
+  min-height: 2.75rem;
+  color: #fff;
+  background: #25d366;
+  border-color: #1da851;
+}
+
+.contact-btn--whatsapp:hover {
+  background: #20bd5a;
+  border-color: #189648;
 }
 
 

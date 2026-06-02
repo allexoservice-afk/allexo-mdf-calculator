@@ -32,6 +32,8 @@ export function getProposalDeliveryUrl() {
  * @property {string} [to_phone]
  * @property {string} subject
  * @property {string} proposal_plain
+ * @property {string} [proposal_html]
+ * @property {string} [reply_to]
  */
 
 /**
@@ -128,4 +130,44 @@ export async function deliverLeadEmails(payload) {
   }
 
   return { ok: true, clientSent, ownerSent }
+}
+
+/**
+ * Один HTML-лист з пропозицією (PRO: собі або клієнту).
+ * @param {{ to_email: string, subject: string, proposal_plain: string, proposal_html: string, reply_to?: string }} payload
+ */
+export async function deliverHtmlProposalEmail(payload) {
+  const url = getProposalDeliveryUrl()
+  if (!url) {
+    return { ok: false, skipped: true }
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      delivery_target: 'email',
+      to_email: payload.to_email,
+      subject: payload.subject,
+      proposal_plain: payload.proposal_plain,
+      proposal_html: payload.proposal_html,
+      reply_to: payload.reply_to,
+    }),
+  })
+
+  const text = await res.text()
+  let body = /** @type {Record<string, unknown>} */ ({})
+  try {
+    body = text ? /** @type {Record<string, unknown>} */ (JSON.parse(text)) : {}
+  } catch {
+    body = { error: text }
+  }
+
+  if (!res.ok) {
+    const msg = typeof body.error === 'string' ? body.error : text || `HTTP ${res.status}`
+    throw new Error(msg)
+  }
+
+  return { ok: true }
 }

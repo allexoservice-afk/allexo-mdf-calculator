@@ -142,17 +142,21 @@ function clientWorkTimeText(locale, totalHours) {
 /**
  * @param {import('../i18n/translations.js').Locale} locale
  * @param {number} amount
+ * @param {boolean} [skipCta]
  */
-function clientGrandTotalHtml(locale, amount) {
+function clientGrandTotalHtml(locale, amount, skipCta = false) {
   const euro = formatEuroAmount(amount)
   const vat = translate(locale, 'price.exVat')
+  const cta = skipCta
+    ? ''
+    : `<p style="margin:22px 0 0;font-size:15px;line-height:1.5;color:#1c2424;max-width:420px;margin-left:auto;margin-right:auto;">${esc(translate(locale, 'emailHtml.ctaReply'))}</p>`
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;border-top:2px solid ${GOLD};">
 <tr><td align="center" style="padding:26px 16px 8px;">
 <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.grandTotalLabel'))}</p>
 <p style="margin:0;font-size:40px;font-weight:800;line-height:1.05;color:${TEAL};">${esc(euro)}</p>
 <p style="margin:10px 0 0;font-size:14px;color:${MUTED};">(${esc(vat)})</p>
-<p style="margin:22px 0 0;font-size:15px;line-height:1.5;color:#1c2424;max-width:420px;margin-left:auto;margin-right:auto;">${esc(translate(locale, 'emailHtml.ctaReply'))}</p>
+${cta}
 </td></tr>
 </table>`
 }
@@ -171,6 +175,7 @@ export function buildClientEmailHtml(leadData) {
   const totalAmount = Number(leadData.total_price) || 0
   const hours = computeBufferedWorkHours(lines)
   const workTimeText = clientWorkTimeText(locale, hours)
+  const skipCta = leadData.skipClientCta === true
 
   const cards = items.length
     ? items.map((item) => clientItemCardHtml(locale, item)).join('')
@@ -183,7 +188,7 @@ export function buildClientEmailHtml(leadData) {
 <p style="margin:0 0 22px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientIntro'))}</p>
 <p style="margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.yourOrder'))}</p>
 ${cards}
-${clientGrandTotalHtml(locale, totalAmount)}
+${clientGrandTotalHtml(locale, totalAmount, skipCta)}
 <p style="margin:20px 0 8px;font-size:15px;text-align:center;color:#1c2424;">${esc(workTimeText)}</p>
 <p style="margin:0 0 20px;font-size:15px;text-align:center;color:#1c2424;">${esc(translate(locale, 'emailHtml.planningNote'))}</p>
 <p style="margin:0 0 6px;font-size:14px;color:${MUTED};text-align:center;">${esc(translate(locale, 'emailHtml.preliminaryNote'))}</p>
@@ -282,6 +287,7 @@ export function buildClientEmailPlain(leadData) {
   const hours = computeBufferedWorkHours(lines)
   const workTimeText = clientWorkTimeText(locale, hours)
   const vat = translate(locale, 'price.exVat')
+  const skipCta = leadData.skipClientCta === true
 
   const itemBlocks = items.flatMap((item) => {
     const cost =
@@ -310,12 +316,14 @@ export function buildClientEmailPlain(leadData) {
     '',
     ...itemBlocks,
     '---',
+    '━━━━━━━━━━━━━━━━━━━━',
     translate(locale, 'emailHtml.grandTotalLabel').toUpperCase(),
+    '',
     formatEuroAmount(totalAmount),
     `(${vat})`,
+    '━━━━━━━━━━━━━━━━━━━━',
     '',
-    translate(locale, 'emailHtml.ctaReply'),
-    '',
+    ...(skipCta ? [] : [translate(locale, 'emailHtml.ctaReply'), '']),
     workTimeText,
     translate(locale, 'emailHtml.planningNote'),
     '',

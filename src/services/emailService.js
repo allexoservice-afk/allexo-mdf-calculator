@@ -1,7 +1,7 @@
 import { typeTitle, translate } from '../i18n/translations.js'
 import { CONTACT_EMAIL } from '../constants/contact.js'
 import { SITE_URL } from '../constants/site.js'
-import { deliverLeadEmails, getProposalDeliveryUrl } from './proposalDelivery.js'
+import { deliverLeadEmails, deliverHtmlProposalEmail, getProposalDeliveryUrl } from './proposalDelivery.js'
 import {
   buildClientEmailHtml,
   buildClientEmailPlain,
@@ -205,6 +205,44 @@ export async function sendLeadEmails(leadData) {
   }
 
   return { ok: true, clientSent, ownerSent, code: clientSent ? '' : 'client_email_failed' }
+}
+
+/**
+ * HTML-пропозиція на одну адресу (без збереження в Supabase).
+ * @param {Record<string, unknown>} leadData
+ * @param {string} toEmail
+ */
+export async function sendHtmlProposalToEmail(leadData, toEmail) {
+  const to = String(toEmail || '').trim()
+  if (!to) {
+    return { ok: false, code: 'invalid_email' }
+  }
+
+  const shared = buildSharedParams(leadData)
+  const locale = /** @type {import('../i18n/translations.js').Locale} */ (
+    typeof leadData.language === 'string' ? leadData.language : 'uk'
+  )
+  const subject = clientEmailSubject(locale)
+  const deliveryUrl = getProposalDeliveryUrl()
+
+  if (!deliveryUrl) {
+    return { ok: false, code: 'email_not_configured' }
+  }
+
+  try {
+    await deliverHtmlProposalEmail({
+      to_email: to,
+      subject,
+      proposal_plain: shared.client_email_body,
+      proposal_html: shared.client_email_html,
+      reply_to: shared.reply_to || undefined,
+    })
+    return { ok: true }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[sendHtmlProposalToEmail]', msg)
+    return { ok: false, code: 'email_send_failed', error: msg }
+  }
 }
 
 /** @deprecated */
