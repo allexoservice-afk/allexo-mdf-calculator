@@ -337,6 +337,78 @@ export function buildClientEmailPlain(leadData) {
   ].join('\n')
 }
 
+/** @param {string} s */
+function waBold(s) {
+  return `*${String(s).replace(/[*_~`]/g, '')}*`
+}
+
+/**
+ * Пропозиція для WhatsApp — структурований текст із *жирним* (підтримка WhatsApp).
+ * @param {Record<string, unknown>} leadData
+ */
+export function buildClientEmailWhatsApp(leadData) {
+  const locale = /** @type {import('../i18n/translations.js').Locale} */ (
+    typeof leadData.language === 'string' ? leadData.language : 'uk'
+  )
+  const name = String(leadData.name || '').trim() || translate(locale, 'proposal.clientFallbackName')
+  const quoteRef = quoteReferenceFromLead(leadData)
+  const lines = linesFromLead(leadData)
+  const items = collectClientLineItems(lines, locale)
+  const totalAmount = Number(leadData.total_price) || 0
+  const hours = computeBufferedWorkHours(lines)
+  const workTimeText = clientWorkTimeText(locale, hours)
+  const vat = translate(locale, 'price.exVat')
+  const sep = '══════════════════════'
+
+  const itemBlocks = items.flatMap((item) => {
+    const cost =
+      item.lineTotalEur != null && item.lineTotalEur > 0
+        ? formatEuroExclVat(item.lineTotalEur, locale)
+        : '—'
+    return [
+      '',
+      waBold(item.title),
+      `▸ ${translate(locale, 'emailHtml.sizeLabel')}: ${item.size}`,
+      `▸ ${translate(locale, 'emailHtml.qtyLabel')}: ${item.quantity} ${translate(locale, 'emailHtml.qtyUnit')}`,
+      `▸ ${translate(locale, 'emailHtml.costLabel')}: ${waBold(cost)} (${vat})`,
+    ]
+  })
+
+  const yourOrder = translate(locale, 'emailHtml.yourOrder').replace(/:$/, '').trim()
+
+  return [
+    waBold('ALLEXO'),
+    sep,
+    ...(quoteRef
+      ? [`${translate(locale, 'emailHtml.quoteReferenceLabel')}: ${waBold(quoteRef)}`, '']
+      : []),
+    translate(locale, 'emailHtml.clientGreeting').replace('{name}', name),
+    translate(locale, 'emailHtml.clientThanks'),
+    translate(locale, 'emailHtml.clientIntro'),
+    '',
+    waBold(yourOrder.toUpperCase()),
+    ...itemBlocks,
+    '',
+    sep,
+    waBold(translate(locale, 'emailHtml.grandTotalLabel').toUpperCase()),
+    '',
+    waBold(formatEuroAmount(totalAmount)),
+    `(${vat})`,
+    sep,
+    '',
+    workTimeText,
+    translate(locale, 'emailHtml.planningNote'),
+    '',
+    translate(locale, 'emailHtml.preliminaryNote'),
+    translate(locale, 'emailHtml.finalPriceNote'),
+    '',
+    waBold('ALLEXO'),
+    `📧 ${CONTACT_EMAIL}`,
+    '📞 +32 493 86 07 53',
+    '📍 Brugge, Belgium',
+  ].join('\n')
+}
+
 /** @param {Record<string, unknown>} leadData */
 export function buildOwnerEmailPlain(leadData) {
   const clientLocale = /** @type {import('../i18n/translations.js').Locale} */ (

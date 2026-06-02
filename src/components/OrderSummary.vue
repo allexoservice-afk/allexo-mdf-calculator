@@ -13,7 +13,7 @@ import {
   quoteWindowsillOnlyHours,
   quoteWindowsillOnlyRoundedEuros,
 } from '../pricing/windowQuote.js'
-import { buildClientProposalPlainFromOrder } from '../utils/clientProposalShare.js'
+import { buildClientProposalPlainFromOrder, buildClientProposalWhatsAppFromOrder } from '../utils/clientProposalShare.js'
 import { openWhatsAppChat } from '../utils/whatsappShare.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
 import EmailRequestModal from './EmailRequestModal.vue'
@@ -459,18 +459,20 @@ function proposalShareOptions(clientName = '') {
   }
 }
 
-function proposalTextForShare(clientName = '') {
+function proposalTextForShare(clientName = '', channel = 'plain') {
   if (orderHasInvalidWindowDimensions(props.lines)) {
     showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
     return ''
   }
-  return (
-    buildClientProposalPlainFromOrder(props.lines, locale.value, proposalShareOptions(clientName)) || ''
-  )
+  const opts = proposalShareOptions(clientName)
+  if (channel === 'whatsapp') {
+    return buildClientProposalWhatsAppFromOrder(props.lines, locale.value, opts) || ''
+  }
+  return buildClientProposalPlainFromOrder(props.lines, locale.value, opts) || ''
 }
 
 function sendProposalToWhatsAppSelf() {
-  const text = proposalTextForShare()
+  const text = proposalTextForShare('', 'whatsapp')
   if (!text) return
   openWhatsAppChat(CONTACT_WHATSAPP_WA_ME, text)
 }

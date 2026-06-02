@@ -1,5 +1,5 @@
 import { buildCalculationData } from './buildCalculationData.js'
-import { buildClientEmailHtml, buildClientEmailPlain } from './emailHtmlTemplates.js'
+import { buildClientEmailHtml, buildClientEmailPlain, buildClientEmailWhatsApp } from './emailHtmlTemplates.js'
 
 /**
  * @param {unknown[]} lines
@@ -50,6 +50,16 @@ function leadDataFromOrder(lines, locale, options) {
  */
 export function buildClientProposalPlainFromOrder(lines, locale, options) {
   return buildClientEmailPlain(leadDataFromOrder(lines, locale, options))
+}
+
+/**
+ * Пропозиція для WhatsApp (*жирний*, структура як у HTML-листі).
+ * @param {unknown[]} lines
+ * @param {import('../i18n/translations.js').Locale} locale
+ * @param {Parameters<typeof leadDataFromOrder>[2]} options
+ */
+export function buildClientProposalWhatsAppFromOrder(lines, locale, options) {
+  return buildClientEmailWhatsApp(leadDataFromOrder(lines, locale, options))
 }
 
 /**
