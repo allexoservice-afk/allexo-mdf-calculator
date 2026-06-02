@@ -14,6 +14,7 @@ import {
   quoteWindowsillOnlyRoundedEuros,
 } from '../pricing/windowQuote.js'
 import { buildClientProposalPlainFromOrder } from '../utils/clientProposalShare.js'
+import { openWhatsAppChat } from '../utils/whatsappShare.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
 import EmailRequestModal from './EmailRequestModal.vue'
 import GetQuoteLeadModal from './GetQuoteLeadModal.vue'
@@ -24,8 +25,15 @@ import {
   orderHasInvalidWindowDimensions,
   windowEligibleForAutoQuote,
 } from '../utils/windowDimensions.js'
-import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
+import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF, CONTACT_WHATSAPP_WA_ME } from '../constants/contact.js'
 import { isProUnlocked } from '../constants/proUnlock.js'
+import { useProManualDiscount } from '../composables/useProManualDiscount.js'
+import {
+  MIN_ORDER_EUR,
+  discountEurosFor,
+  effectiveDiscountPercent,
+  payableWorkEurosFor,
+} from '../pricing/orderDiscount.js'
 
 const props = defineProps({
   lines: { type: Array, required: true },
@@ -35,6 +43,12 @@ const props = defineProps({
 const emit = defineEmits(['remove', 'clear', 'update:quoteOpen'])
 
 const { locale, t } = useLocale()
+const { manualDiscountPct, setManualDiscount, toggleManualDiscount, PRO_MANUAL_DISCOUNT_OPTIONS } =
+  useProManualDiscount()
+
+const discountManualActive = computed(
+  () => proActive.value && manualDiscountPct.value != null && manualDiscountPct.value > 0,
+)
 
 function formatWindowMm(mm) {
   if (mm == null || Number.isNaN(mm)) return '—'
@@ -284,23 +298,14 @@ function lineSubtotalEuros(line) {
 
 const orderTotalEuros = computed(() => props.lines.reduce((s, line) => s + lineSubtotalEuros(line), 0))
 
-const MIN_ORDER_EUR = 500
 const minOrderApplied = computed(() => orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR)
-const payableWorkEuros = computed(() => (minOrderApplied.value ? MIN_ORDER_EUR : orderTotalEuros.value))
+const payableWorkEuros = computed(() => payableWorkEurosFor(orderTotalEuros.value))
 
-function discountPercentFor(eur) {
-  const v = Number(eur)
-  if (!Number.isFinite(v) || v <= 0) return 0
-  if (v >= 3000) return 10
-  if (v >= 2000) return 7
-  if (v >= 1500) return 5
-  if (v >= 1000) return 3
-  return 0
-}
-
-const discountPct = computed(() => discountPercentFor(payableWorkEuros.value))
+const discountPct = computed(() =>
+  effectiveDiscountPercent(payableWorkEuros.value, manualDiscountPct.value, proActive.value),
+)
 const discountEuros = computed(() =>
-  discountPct.value > 0 ? Math.round((payableWorkEuros.value * discountPct.value) / 100) : 0,
+  discountEurosFor(payableWorkEuros.value, manualDiscountPct.value, proActive.value),
 )
 const payableWorkAfterDiscountEuros = computed(() => payableWorkEuros.value - discountEuros.value)
 
@@ -385,7 +390,6 @@ const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTot
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
 const emailRequestModalOpen = ref(false)
-const htmlSelfModalOpen = ref(false)
 
 const travelKmInput = ref('')
 
@@ -465,8 +469,10 @@ function proposalTextForShare(clientName = '') {
   )
 }
 
-function openHtmlSelfModal() {
-  htmlSelfModalOpen.value = true
+function sendProposalToWhatsAppSelf() {
+  const text = proposalTextForShare()
+  if (!text) return
+  openWhatsAppChat(CONTACT_WHATSAPP_WA_ME, text)
 }
 
 function openContactEmailModal() {
@@ -643,6 +649,31 @@ function openContactEmailModal() {
       </div>
 
       <div class="order-totals">
+        <div v-if="proActive" class="pro-discount" role="group" :aria-label="t('summary.proDiscountAria')">
+          <p class="pro-discount__label">{{ t('summary.proDiscountLabel') }}</p>
+          <div class="pro-discount__btns">
+            <button
+              v-for="pct in PRO_MANUAL_DISCOUNT_OPTIONS"
+              :key="pct"
+              type="button"
+              class="pro-discount__btn"
+              :class="{ 'pro-discount__btn--active': manualDiscountPct === pct }"
+              :aria-pressed="manualDiscountPct === pct"
+              @click="toggleManualDiscount(pct)"
+            >
+              −{{ pct }}%
+            </button>
+            <button
+              type="button"
+              class="pro-discount__btn pro-discount__btn--auto"
+              :class="{ 'pro-discount__btn--active': manualDiscountPct == null }"
+              :aria-pressed="manualDiscountPct == null"
+              @click="setManualDiscount(null)"
+            >
+              {{ t('summary.proDiscountAuto') }}
+            </button>
+          </div>
+        </div>
         <p
           v-if="publicTotalWindowUnits > 0"
           class="order-totals__line order-totals__line--secondary"
@@ -658,7 +689,7 @@ function openContactEmailModal() {
           </p>
           <p v-if="discountEuros > 0" class="order-totals__min">
             {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
-            <span class="order-totals__min-note">({{ discountPct }}%)</span>
+            <span class="order-totals__min-note">({{ discountPct }}%<template v-if="discountManualActive"> · {{ t('summary.proDiscountManual') }}</template>)</span>
           </p>
           <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
@@ -682,7 +713,7 @@ function openContactEmailModal() {
           </p>
           <p v-if="discountEuros > 0" class="order-totals__min">
             {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
-            <span class="order-totals__min-note">({{ discountPct }}%)</span>
+            <span class="order-totals__min-note">({{ discountPct }}%<template v-if="discountManualActive"> · {{ t('summary.proDiscountManual') }}</template>)</span>
           </p>
           <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
             {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
@@ -729,7 +760,7 @@ function openContactEmailModal() {
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
           </button>
-          <button type="button" class="contact-btn contact-btn--whatsapp" @click="openHtmlSelfModal">
+          <button type="button" class="contact-btn contact-btn--whatsapp" @click="sendProposalToWhatsAppSelf">
             {{ t('summary.sendWhSelf') }}
           </button>
         </div>
@@ -765,20 +796,6 @@ function openContactEmailModal() {
     :windows-count="publicTotalWindowUnits"
     :lead-time-note="publicLeadTimeNoteDisplay"
     @close="emailRequestModalOpen = false"
-  />
-
-  <EmailRequestModal
-    :open="htmlSelfModalOpen"
-    variant="self"
-    :lines="lines"
-    :travel-meta="offerTravelMeta"
-    :estimated-total-eur="offerTravelMeta ? grandTotalEuros : payableWorkAfterDiscountEuros"
-    :order-subtotal-eur="orderTotalEuros"
-    :discount-euros="discountEuros"
-    :discount-percent="discountPct"
-    :windows-count="publicTotalWindowUnits"
-    :lead-time-note="publicLeadTimeNoteDisplay"
-    @close="htmlSelfModalOpen = false"
   />
 
   <GetQuoteLeadModal
@@ -1075,6 +1092,61 @@ function openContactEmailModal() {
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 2px solid var(--allexo-border);
+}
+
+.pro-discount {
+  margin: 0 0 1rem;
+  padding: 0.85rem 0.9rem;
+  background: rgba(15, 61, 62, 0.05);
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius);
+}
+
+.pro-discount__label {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--allexo-muted);
+}
+
+.pro-discount__btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pro-discount__btn {
+  min-width: 3.1rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--allexo-teal);
+  background: var(--allexo-surface);
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.pro-discount__btn:hover {
+  border-color: var(--allexo-teal);
+}
+
+.pro-discount__btn--active {
+  color: #fff;
+  background: var(--allexo-teal);
+  border-color: var(--allexo-teal);
+}
+
+.pro-discount__btn--auto {
+  min-width: auto;
+  padding-inline: 0.85rem;
 }
 
 .order-totals__line {

@@ -7,7 +7,7 @@ function trimForWhatsApp(text) {
 }
 
 /**
- * Відкрити WhatsApp з готовим текстом (чат на номер ALLEXO — зручно «собі» / переслати клієнту).
+ * Відкрити WhatsApp з готовим текстом.
  * @param {string} phoneDigits E.164 без +, напр. 32493860753
  * @param {string} text
  */
@@ -19,5 +19,6 @@ export function openWhatsAppChat(phoneDigits, text) {
   const url = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`
-  window.open(url, '_blank', 'noopener,noreferrer')
+  // На телефоні window.open часто не відкриває додаток — потрібен перехід у тій самій вкладці
+  window.location.assign(url)
 }

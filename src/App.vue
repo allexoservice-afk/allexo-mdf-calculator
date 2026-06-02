@@ -20,6 +20,12 @@ import { formatEuroExclVat } from './utils/priceDisplay.js'
 import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './utils/windowDimensions.js'
 import { getTypeById } from './constants/calculatorTypes.js'
 import { isProUnlocked } from './constants/proUnlock.js'
+import { useProManualDiscount } from './composables/useProManualDiscount.js'
+import {
+  MIN_ORDER_EUR,
+  discountEurosFor,
+  payableWorkEurosFor,
+} from './pricing/orderDiscount.js'
 import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 
 const { lines, addLine, removeLine, clearOrder } = useOrder()
@@ -82,6 +88,7 @@ function flashSummary() {
 }
 
 const proActive = ref(false)
+const { manualDiscountPct } = useProManualDiscount()
 function syncProActive() {
   proActive.value = isProUnlocked()
 }
@@ -201,23 +208,11 @@ const orderTotalEuros = computed(() =>
 
 const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value.length > 0)
 
-const MIN_ORDER_EUR = 500
-function discountPercentFor(eur) {
-  const v = Number(eur)
-  if (!Number.isFinite(v) || v <= 0) return 0
-  if (v >= 3000) return 10
-  if (v >= 2000) return 7
-  if (v >= 1500) return 5
-  if (v >= 1000) return 3
-  return 0
-}
-
 const payableOrderTotalEuros = computed(() => {
   const raw = orderTotalEuros.value
   if (!(raw > 0)) return 0
-  const base = raw < MIN_ORDER_EUR ? MIN_ORDER_EUR : raw
-  const pct = discountPercentFor(base)
-  const disc = pct > 0 ? Math.round((base * pct) / 100) : 0
+  const base = payableWorkEurosFor(raw)
+  const disc = discountEurosFor(base, manualDiscountPct.value, proActive.value)
   return base - disc
 })
 const minOrderDiffEuros = computed(() =>
