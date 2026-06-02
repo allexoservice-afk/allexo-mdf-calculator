@@ -120,6 +120,38 @@ export function collectClientLineItems(lines, locale) {
 }
 
 /**
+ * Позиції з даними для PDF-схеми вікна.
+ * @param {unknown[]} lines
+ * @param {import('../i18n/translations.js').Locale} locale
+ */
+export function collectClientLineItemsForPdf(lines, locale) {
+  if (!Array.isArray(lines) || !lines.length) return []
+
+  /** @type {Array<{ title: string, size: string, quantity: number, lineTotalEur: number | null, typeId: string, win: Record<string, unknown> }>} */
+  const items = []
+
+  for (const raw of lines) {
+    const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
+    const tid = typeof line.typeId === 'string' ? line.typeId : ''
+    const title = tid ? typeTitle(locale, tid) : '—'
+    for (const win of windowsForLine(line)) {
+      const qty = normalizeWindowQuantity(win.quantity)
+      const unit = unitPriceEuros(line, win)
+      const lineTotal = unit != null && unit > 0 ? unit * qty : null
+      items.push({
+        title,
+        size: formatClientSizeLabel(locale, line, win),
+        quantity: qty,
+        lineTotalEur: lineTotal,
+        typeId: tid,
+        win: /** @type {Record<string, unknown>} */ (win),
+      })
+    }
+  }
+  return items
+}
+
+/**
  * @param {unknown[]} lines
  * @param {import('../i18n/translations.js').Locale} locale
  */

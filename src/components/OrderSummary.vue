@@ -389,6 +389,7 @@ const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTot
 
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
+const pdfLoading = ref(false)
 const emailRequestModalOpen = ref(false)
 
 const travelKmInput = ref('')
@@ -475,6 +476,31 @@ function sendProposalToWhatsAppSelf() {
   const text = proposalTextForShare('', 'whatsapp')
   if (!text) return
   openWhatsAppChat(CONTACT_WHATSAPP_WA_ME, text)
+}
+
+async function downloadProposalPdfFile() {
+  if (orderHasInvalidWindowDimensions(props.lines)) {
+    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
+    return
+  }
+  pdfLoading.value = true
+  try {
+    const { downloadProposalPdf } = await import('../utils/proposalPdf.js')
+    await downloadProposalPdf({
+      lines: props.lines,
+      locale: locale.value,
+      estimatedTotalEur: offerTravelMeta.value ? grandTotalEuros.value : payableWorkAfterDiscountEuros.value,
+      discountEuros: discountEuros.value,
+      discountPercent: discountPct.value,
+      travelMeta: offerTravelMeta.value,
+    })
+    showSummaryNotice(t('summary.pdfDownloaded'))
+  } catch (e) {
+    console.error(e)
+    showSummaryNotice(t('summary.pdfFailed'), 4000, true)
+  } finally {
+    pdfLoading.value = false
+  }
 }
 
 function openContactEmailModal() {
@@ -768,6 +794,15 @@ function openContactEmailModal() {
         </div>
 
         <div class="contact-section__utils">
+          <button
+            type="button"
+            class="contact-util-btn contact-util-btn--pdf"
+            :disabled="pdfLoading"
+            @click="downloadProposalPdfFile"
+          >
+            <span class="contact-util-btn__icon" aria-hidden="true">↓</span>
+            {{ pdfLoading ? t('summary.pdfGenerating') : t('summary.downloadPdf') }}
+          </button>
           <button type="button" class="contact-util-btn" @click="copyProposal">
             <span class="contact-util-btn__icon" aria-hidden="true">⧉</span>
             {{ t('summary.copyOffer') }}
@@ -1297,6 +1332,15 @@ function openContactEmailModal() {
 
 .contact-util-btn:hover {
   color: var(--allexo-teal-light);
+}
+
+.contact-util-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.contact-util-btn--pdf {
+  font-weight: 700;
 }
 
 .contact-util-btn__icon {

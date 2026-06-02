@@ -150,6 +150,8 @@ export const TRANSLATIONS = {
         'Відповідайте на цей email, щоб підтвердити заявку або поставити питання.',
       preliminaryNote: 'Ця пропозиція є попередньою.',
       finalPriceNote: 'Остаточна вартість підтверджується після заміру.',
+      pdfPriceIncludes:
+        'У ціну входить: усі матеріали, силікон, прибирання та вивіз сміття.',
       ownerDepthSuffix: 'глибина',
       noLineItems: 'Деталі замовлення уточнються менеджером.',
     },
@@ -323,6 +325,10 @@ export const TRANSLATIONS = {
       sendWhSelf: 'Надіслати в WhatsApp',
       copyOffer: 'Скопіювати пропозицію',
       copyOfferHint: 'Вставте в WhatsApp, Facebook, SMS або інший месенджер — контакт клієнта не потрібен.',
+      downloadPdf: 'Завантажити PDF',
+      pdfGenerating: 'Створюємо PDF…',
+      pdfDownloaded: 'PDF збережено на пристрій',
+      pdfFailed: 'Не вдалося створити PDF. Спробуйте ще раз.',
       sendWh: 'Відправити в WhatsApp',
       copied: 'Скопійовано ✓',
       errMinDimensions:
@@ -573,6 +579,8 @@ export const TRANSLATIONS = {
       ctaReply: 'Reply to this email to confirm your request or ask a question.',
       preliminaryNote: 'This proposal is preliminary.',
       finalPriceNote: 'The final price is confirmed after measurement.',
+      pdfPriceIncludes:
+        'The price includes all materials, silicone, cleaning and waste removal.',
       ownerDepthSuffix: 'depth',
       noLineItems: 'Order details will be confirmed by our team.',
     },
@@ -745,6 +753,10 @@ export const TRANSLATIONS = {
       sendWhSelf: 'Send via WhatsApp',
       copyOffer: 'Copy quote',
       copyOfferHint: 'Paste into WhatsApp, Facebook, SMS or any messenger — no client contact needed.',
+      downloadPdf: 'Download PDF',
+      pdfGenerating: 'Creating PDF…',
+      pdfDownloaded: 'PDF saved to your device',
+      pdfFailed: 'Could not create PDF. Please try again.',
       sendWh: 'Send via WhatsApp',
       copied: 'Copied ✓',
       errMinDimensions:
@@ -999,6 +1011,8 @@ export const TRANSLATIONS = {
         'Beantwoord deze e-mail om uw aanvraag te bevestigen of een vraag te stellen.',
       preliminaryNote: 'Deze offerte is voorlopig.',
       finalPriceNote: 'De definitieve prijs wordt bevestigd na opmeting.',
+      pdfPriceIncludes:
+        'In de prijs inbegrepen: alle materialen, silicone, schoonmaak en afvoer van afval.',
       ownerDepthSuffix: 'diepte',
       noLineItems: 'Bestelgegevens worden door ons team bevestigd.',
     },
@@ -1171,6 +1185,10 @@ export const TRANSLATIONS = {
       sendWhSelf: 'Verzenden via WhatsApp',
       copyOffer: 'Offerte kopiëren',
       copyOfferHint: 'Plak in WhatsApp, Facebook, SMS of een andere messenger — geen klantcontact nodig.',
+      downloadPdf: 'PDF downloaden',
+      pdfGenerating: 'PDF maken…',
+      pdfDownloaded: 'PDF opgeslagen op uw apparaat',
+      pdfFailed: 'PDF maken mislukt. Probeer opnieuw.',
       sendWh: 'Verzenden via WhatsApp',
       copied: 'Gekopieerd ✓',
       errMinDimensions:
@@ -1430,6 +1448,8 @@ export const TRANSLATIONS = {
         'Répondez à cet e-mail pour confirmer votre demande ou poser une question.',
       preliminaryNote: 'Cette proposition est préliminaire.',
       finalPriceNote: 'Le prix final est confirmé après prise de mesures.',
+      pdfPriceIncludes:
+        'Le prix comprend tous les matériaux, le silicone, le nettoyage et l’évacuation des déchets.',
       ownerDepthSuffix: 'profondeur',
       noLineItems: 'Les détails seront confirmés par notre équipe.',
     },
@@ -1603,6 +1623,10 @@ export const TRANSLATIONS = {
       sendWhSelf: 'Envoyer par WhatsApp',
       copyOffer: 'Copier l’offre',
       copyOfferHint: 'Collez dans WhatsApp, Facebook, SMS ou tout autre messager — pas besoin du contact client.',
+      downloadPdf: 'Télécharger le PDF',
+      pdfGenerating: 'Création du PDF…',
+      pdfDownloaded: 'PDF enregistré sur votre appareil',
+      pdfFailed: 'Impossible de créer le PDF. Réessayez.',
       sendWh: 'Envoyer par WhatsApp',
       copied: 'Copié ✓',
       errMinDimensions:
