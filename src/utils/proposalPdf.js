@@ -83,7 +83,8 @@ export function buildProposalPdfHtml(opts) {
 <p style="margin:0;font-size:20px;font-weight:800;letter-spacing:0.1em;color:${TEAL};">ALLEXO</p>
 ${quoteRef ? `<p style="margin:4px 0 0;font-size:10px;color:${MUTED};">${esc(translate(locale, 'emailHtml.quoteReferenceLabel'))}: <strong style="color:${TEAL};">${esc(quoteRef)}</strong></p>` : ''}
 </div>
-<p style="margin:10px 0 3px;font-size:11px;">${esc(translate(locale, 'emailHtml.clientGreeting').replace('{name}', name))} ${esc(translate(locale, 'emailHtml.clientThanks'))}</p>
+<p style="margin:10px 0 3px;font-size:11px;">${esc(translate(locale, 'emailHtml.clientGreeting').replace('{name}', name))}</p>
+<p style="margin:0 0 3px;font-size:11px;">${esc(translate(locale, 'emailHtml.clientThanks'))}</p>
 <p style="margin:0 0 10px;font-size:11px;">${esc(translate(locale, 'emailHtml.clientIntro'))}</p>
 <p style="margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.yourOrder'))}</p>
 ${itemBlocks || `<p style="color:${MUTED};font-size:11px;">${esc(translate(locale, 'emailHtml.noLineItems'))}</p>`}

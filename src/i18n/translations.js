@@ -994,7 +994,7 @@ export const TRANSLATIONS = {
       ownerSubject: 'Nieuwe aanvraag via ALLEXO-website',
       referenceLabel: 'Referentienummer',
       quoteReferenceLabel: 'Offerte referentie',
-      clientGreeting: 'Goedendag, {name}.',
+      clientGreeting: 'Beste {name},',
       clientThanks: 'Bedankt voor uw aanvraag.',
       clientIntro: 'Op basis van de ingevoerde afmetingen hebben wij een voorlopige offerte opgesteld.',
       yourOrder: 'Uw bestelling:',
@@ -1021,7 +1021,7 @@ export const TRANSLATIONS = {
       greeting: 'Beste {name},',
       intro: 'Hieronder staat uw geschatte offerte: regels, bedragen (excl. btw), geschatte werktijd en voorwaarden.',
       specificLeadTime: 'Geschatte levertijd:',
-      clientFallbackName: 'Klant',
+      clientFallbackName: 'klant',
     },
     works: {
       title: 'Voorbeelden van uitgevoerde werken',
