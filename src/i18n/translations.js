@@ -322,6 +322,7 @@ export const TRANSLATIONS = {
       sendEmail: 'Надіслати Email',
       sendWhSelf: 'Надіслати в WhatsApp',
       copyOffer: 'Скопіювати пропозицію',
+      copyOfferHint: 'Вставте в WhatsApp, Facebook, SMS або інший месенджер — контакт клієнта не потрібен.',
       sendWh: 'Відправити в WhatsApp',
       copied: 'Скопійовано ✓',
       errMinDimensions:
@@ -743,6 +744,7 @@ export const TRANSLATIONS = {
       sendEmail: 'Send email',
       sendWhSelf: 'Send via WhatsApp',
       copyOffer: 'Copy quote',
+      copyOfferHint: 'Paste into WhatsApp, Facebook, SMS or any messenger — no client contact needed.',
       sendWh: 'Send via WhatsApp',
       copied: 'Copied ✓',
       errMinDimensions:
@@ -1168,6 +1170,7 @@ export const TRANSLATIONS = {
       sendEmail: 'E-mail verzenden',
       sendWhSelf: 'Verzenden via WhatsApp',
       copyOffer: 'Offerte kopiëren',
+      copyOfferHint: 'Plak in WhatsApp, Facebook, SMS of een andere messenger — geen klantcontact nodig.',
       sendWh: 'Verzenden via WhatsApp',
       copied: 'Gekopieerd ✓',
       errMinDimensions:
@@ -1599,6 +1602,7 @@ export const TRANSLATIONS = {
       sendEmail: 'Envoyer un e-mail',
       sendWhSelf: 'Envoyer par WhatsApp',
       copyOffer: 'Copier l’offre',
+      copyOfferHint: 'Collez dans WhatsApp, Facebook, SMS ou tout autre messager — pas besoin du contact client.',
       sendWh: 'Envoyer par WhatsApp',
       copied: 'Copié ✓',
       errMinDimensions:

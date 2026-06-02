@@ -422,7 +422,7 @@ function showSummaryNotice(msg, ms = 2500, isError = false) {
 }
 
 async function copyProposal() {
-  const text = proposalTextForShare()
+  const text = proposalTextForShare('', 'whatsapp')
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -772,6 +772,7 @@ function openContactEmailModal() {
             <span class="contact-util-btn__icon" aria-hidden="true">⧉</span>
             {{ t('summary.copyOffer') }}
           </button>
+          <p class="contact-section__copy-hint">{{ t('summary.copyOfferHint') }}</p>
           <p
             v-if="copyNotice"
             class="contact-util-feedback"
@@ -1301,6 +1302,13 @@ function openContactEmailModal() {
 .contact-util-btn__icon {
   font-size: 1rem;
   line-height: 1;
+}
+
+.contact-section__copy-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--allexo-muted);
 }
 
 .contact-util-feedback {
