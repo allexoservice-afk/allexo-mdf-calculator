@@ -1,0 +1,59 @@
+/**
+ * ALLEXO — Варіант 0 (оригінал teal)
+ * Увімкнення: data-theme="teal" на <html>
+ */
+
+html[data-theme='teal'] {
+  --allexo-teal: #0f3d3e;
+  --allexo-teal-light: #1a5c5e;
+  --allexo-accent: #c4a35a;
+  --allexo-accent-soft: #e8dcc0;
+  --allexo-bg: #f6f8f8;
+  --allexo-surface: #ffffff;
+  --allexo-text: #1c2424;
+  --allexo-muted: #5c6b6b;
+  --allexo-border: #d9e3e3;
+  --shadow: 0 1px 3px rgba(15, 61, 62, 0.08);
+  --shadow-md: 0 8px 24px rgba(15, 61, 62, 0.1);
+}
+
+html[data-theme='teal'] .header {
+  background:
+    radial-gradient(900px 520px at 20% 20%, rgba(196, 163, 90, 0.12), transparent 60%),
+    linear-gradient(135deg, var(--allexo-teal) 0%, #0b2f30 100%);
+}
+
+html[data-theme='teal'] .header__brand {
+  color: var(--allexo-accent-soft);
+  font-weight: 600;
+  text-shadow: none;
+}
+
+html[data-theme='teal'] .header__tag {
+  color: inherit;
+  opacity: 0.88;
+}
+
+html[data-theme='teal'] .lang__btn--active {
+  color: #fff;
+  text-decoration-color: currentColor;
+}
+
+html[data-theme='teal'] .about {
+  background: linear-gradient(180deg, rgba(15, 61, 62, 0.04) 0%, rgba(15, 61, 62, 0.02) 100%);
+}
+
+html[data-theme='teal'] .about::before {
+  background: var(--allexo-teal);
+}
+
+html[data-theme='teal'] .sticky-total__btn--primary {
+  background: var(--allexo-teal);
+  color: #fff;
+  border-color: var(--allexo-border);
+}
+
+html[data-theme='teal'] .sticky-total__btn--primary:hover {
+  background: var(--allexo-teal-light);
+  color: #fff;
+}

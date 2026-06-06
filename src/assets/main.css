@@ -1,18 +1,18 @@
 :root {
-  --allexo-teal: #0f3d3e;
-  --allexo-teal-light: #1a5c5e;
+  --allexo-teal: #111111;
+  --allexo-teal-light: #2a2a2a;
   --allexo-accent: #c4a35a;
-  --allexo-accent-soft: #e8dcc0;
-  --allexo-bg: #f6f8f8;
+  --allexo-accent-soft: #d4b76a;
+  --allexo-bg: #f5f1ea;
   --allexo-surface: #ffffff;
-  --allexo-text: #1c2424;
-  --allexo-muted: #5c6b6b;
-  --allexo-border: #d9e3e3;
+  --allexo-text: #111111;
+  --allexo-muted: #6b6560;
+  --allexo-border: #e5ddd0;
   --allexo-danger: #b42318;
   --radius: 12px;
   --radius-lg: 16px;
-  --shadow: 0 1px 3px rgba(15, 61, 62, 0.08);
-  --shadow-md: 0 8px 24px rgba(15, 61, 62, 0.1);
+  --shadow: 0 1px 3px rgba(17, 17, 17, 0.06);
+  --shadow-md: 0 8px 22px rgba(17, 17, 17, 0.08);
   font-family:
     ui-sans-serif,
     system-ui,

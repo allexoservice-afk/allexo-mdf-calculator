@@ -13,7 +13,8 @@
     "secrets:list": "wrangler pages secret list --project-name=allexo-mdf-calculator-v2",
     "test:supabase": "node scripts/test-supabase-lead.mjs",
     "optimize:work-images": "node scripts/generate-work-images.mjs",
-    "generate:work-images": "node scripts/generate-work-images.mjs"
+    "generate:work-images": "node scripts/generate-work-images.mjs",
+    "export:brand-logos": "node scripts/export-brand-logos.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

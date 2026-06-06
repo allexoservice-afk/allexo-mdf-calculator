@@ -1316,15 +1316,14 @@ function sizeLabel(id) {
   gap: 1rem;
 }
 
-/* Вузькі поля ширини/висоти — без зайвої ширини на десктопі */
 .row--dims {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
   width: 100%;
   max-width: 100%;
 }
 
 .row--single {
-  grid-template-columns: minmax(0, 8.75rem);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .field {
@@ -1353,7 +1352,9 @@ function sizeLabel(id) {
 }
 
 .row--dims .field__input {
+  width: 100%;
   max-width: none;
+  min-width: 0;
 }
 
 @media (max-width: 420px) {
@@ -1382,7 +1383,7 @@ select.field__input {
 .field__input:focus {
   outline: none;
   border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(15, 61, 62, 0.12);
+  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
 }
 
 .field__input--error:focus {
@@ -1440,12 +1441,19 @@ select.field__input {
 }
 
 .btn--primary {
-  background: var(--allexo-teal);
+  background: #111111;
   color: #fff;
+  border: 1px solid #111111;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-accent);
+  color: #111111;
+  border-color: var(--allexo-accent);
 }
 
 .btn--primary:disabled {

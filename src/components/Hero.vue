@@ -141,15 +141,18 @@ async function submitUnlock() {
 .header__brand {
   margin: 0;
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--allexo-accent-soft);
+  color: #c4a35a;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
   text-align: left;
+  text-shadow:
+    0 0 24px rgba(196, 163, 90, 0.2),
+    0 0 48px rgba(196, 163, 90, 0.08);
 }
 
 .lang {
@@ -173,26 +176,38 @@ async function submitUnlock() {
   color: inherit;
   cursor: pointer;
   font: inherit;
-  opacity: 0.72;
+  opacity: 0.52;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
+  transition: opacity 0.25s ease;
 }
 
 .lang__btn:hover {
-  opacity: 0.95;
+  opacity: 0.78;
 }
 
 .lang__btn--active {
   opacity: 1;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: #c4a35a;
+  text-decoration: none;
+}
+
+.lang__btn--active::after {
+  content: '';
+  position: absolute;
+  left: 0.4rem;
+  right: 0.4rem;
+  bottom: 0.28rem;
+  height: 1px;
+  background: #c4a35a;
 }
 
 .lang__sep {
-  opacity: 0.45;
+  opacity: 0.28;
   user-select: none;
   padding: 0 0.05rem;
 }
@@ -201,9 +216,10 @@ async function submitUnlock() {
   margin: 0.55rem 0 0;
   font-size: 1.3rem;
   font-weight: 750;
+  color: #ffffff;
   letter-spacing: -0.02em;
-  line-height: 1.22;
-  max-width: 100%;
+  line-height: 1.38;
+  max-width: min(56.25rem, 100%);
   text-wrap: balance;
   overflow-wrap: break-word;
   hyphens: auto;
@@ -232,14 +248,14 @@ async function submitUnlock() {
 
   .header__title {
     font-size: 1.08rem;
-    line-height: 1.2;
+    line-height: 1.32;
   }
 }
 
 @media (min-width: 640px) {
   .header__title {
     font-size: clamp(2.05rem, 2.65vw, 2.35rem);
-    line-height: 1.18;
+    line-height: 1.34;
   }
 }
 
@@ -247,7 +263,8 @@ async function submitUnlock() {
   margin: 8px 0 0;
   font-size: 1.05rem;
   line-height: 1.45;
-  opacity: 0.86;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 1;
   max-width: 32rem;
   text-wrap: balance;
   overflow-wrap: break-word;
@@ -258,35 +275,31 @@ async function submitUnlock() {
   min-height: 3.15rem;
   padding: 0.78rem 1.25rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+  border: 1px solid #c4a35a;
+  background: #111111;
   color: #fff;
   font: inherit;
   font-weight: 850;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow:
-    0 14px 36px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
   -webkit-tap-highlight-color: transparent;
   transition:
-    transform 0.14s ease,
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .header__cta:hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
-  border-color: rgba(255, 255, 255, 0.44);
-  transform: translateY(-1px);
+  background: #c4a35a;
+  border-color: #c4a35a;
+  color: #000;
+  box-shadow: 0 12px 32px rgba(196, 163, 90, 0.18);
 }
 
 .header__cta:active {
-  transform: translateY(0);
-  box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
 }
 
 .header__cta:focus-visible {
@@ -347,7 +360,7 @@ async function submitUnlock() {
   height: 2.5rem;
   border: none;
   border-radius: 12px;
-  background: rgba(15, 61, 62, 0.08);
+  background: rgba(17, 17, 17, 0.06);
   color: var(--allexo-text);
   font-size: 1.4rem;
   cursor: pointer;
@@ -373,7 +386,7 @@ async function submitUnlock() {
 .unlock__input:focus {
   outline: none;
   border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(15, 61, 62, 0.12);
+  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
 }
 
 .unlock__err {
@@ -394,12 +407,22 @@ async function submitUnlock() {
   min-height: 2.7rem;
   padding: 0.6rem 1rem;
   border-radius: 999px;
-  border: 1px solid rgba(15, 61, 62, 0.16);
-  background: var(--allexo-teal);
+  border: 1px solid #111111;
+  background: #111111;
   color: #fff;
   font: inherit;
   font-weight: 850;
   cursor: pointer;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
+}
+
+.unlock__btn:hover {
+  background: var(--allexo-accent);
+  color: #111111;
+  border-color: var(--allexo-accent);
 }
 
 .unlock__btn--ghost {

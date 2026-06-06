@@ -64,7 +64,7 @@ const ariaDescription = computed(() => {
 }
 
 .card:hover {
-  border-color: var(--allexo-teal);
+  border-color: var(--allexo-accent);
   box-shadow: var(--shadow-md);
 }
 
@@ -115,6 +115,6 @@ const ariaDescription = computed(() => {
 .card__cta {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--allexo-teal-light);
+  color: var(--allexo-accent);
 }
 </style>

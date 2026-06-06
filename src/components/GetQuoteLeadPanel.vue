@@ -313,7 +313,7 @@ async function onSubmit() {
 .gq {
   margin-top: 1.25rem;
   padding: 1.25rem 1rem;
-  background: linear-gradient(165deg, rgba(15, 61, 62, 0.06), rgba(196, 163, 90, 0.08));
+  background: linear-gradient(165deg, rgba(245, 241, 234, 0.9), rgba(196, 163, 90, 0.1));
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
   box-sizing: border-box;
@@ -460,10 +460,18 @@ async function onSubmit() {
   font-size: 1.05rem;
   font-weight: 800;
   color: #fff;
-  background: var(--allexo-teal);
+  background: #111111;
   border: none;
   border-radius: var(--radius-lg);
   cursor: pointer;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+
+.gq__submit:hover:not(:disabled) {
+  background: var(--allexo-accent);
+  color: #111111;
 }
 
 .gq__submit:disabled {
@@ -522,14 +530,18 @@ async function onSubmit() {
   font-weight: 700;
   font-family: inherit;
   color: #fff;
-  background: var(--allexo-teal);
+  background: #111111;
   border: none;
   border-radius: var(--radius-lg);
   cursor: pointer;
+  transition:
+    background 0.18s,
+    color 0.18s;
 }
 
 .gq__close-btn:hover {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-accent);
+  color: #111111;
 }
 
 </style>

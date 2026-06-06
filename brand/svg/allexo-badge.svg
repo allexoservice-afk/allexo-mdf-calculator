@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 280" fill="none" role="img" aria-label="ALLEXO MDF window finishing">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a5c5e"/>
+      <stop offset="100%" stop-color="#0f3d3e"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8dcc0"/>
+      <stop offset="45%" stop-color="#c4a35a"/>
+      <stop offset="100%" stop-color="#8f7340"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="280" rx="40" fill="url(#bg)"/>
+  <rect x="48" y="48" width="184" height="184" rx="40" fill="#0b2f30" stroke="url(#gold)" stroke-width="6"/>
+  <path d="M140 88 L188 192 H164 L152 160 H128 L116 192 H92 L140 88 Z" fill="#ffffff"/>
+  <path d="M124 144 H156" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  <g font-family="ui-sans-serif, system-ui, 'DM Sans', 'Segoe UI', Arial, sans-serif" font-weight="700" letter-spacing="0.14em">
+    <text x="280" y="142" font-size="96" fill="#ffffff">ALLE</text>
+    <text x="650" y="142" font-size="96" fill="url(#gold)">X</text>
+    <text x="750" y="142" font-size="96" fill="#ffffff">O</text>
+  </g>
+  <text x="280" y="210" font-family="ui-sans-serif, system-ui, 'DM Sans', 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="600" letter-spacing="0.28em" fill="#e8dcc0">MDF WINDOW FINISHING</text>
+</svg>

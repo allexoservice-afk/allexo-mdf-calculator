@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
   -webkit-overflow-scrolling: touch;
   background: var(--allexo-surface);
   border-radius: var(--radius-lg);
-  box-shadow: 0 24px 64px rgba(15, 61, 62, 0.28);
+  box-shadow: 0 24px 64px rgba(17, 17, 17, 0.2);
   padding: 1.35rem 1.25rem 1.5rem;
   box-sizing: border-box;
 }

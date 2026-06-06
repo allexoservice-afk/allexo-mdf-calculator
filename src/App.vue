@@ -31,6 +31,29 @@ import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 const { lines, addLine, removeLine, clearOrder } = useOrder()
 const { locale, t } = useLocale()
 
+/** Варіант 1 (logo) = themes/variant-1-logo.css · Варіант 0 (teal) = main.css */
+const THEME_STORAGE_KEY = 'allexo-theme-preview'
+/** @type {import('vue').Ref<'logo' | 'teal'>} */
+const colorTheme = ref('logo')
+
+function applyColorTheme(name) {
+  colorTheme.value = name
+  if (name === 'teal') {
+    document.documentElement.dataset.theme = 'teal'
+  } else {
+    delete document.documentElement.dataset.theme
+  }
+  try {
+    sessionStorage.setItem(THEME_STORAGE_KEY, name)
+  } catch {
+    /* ignore */
+  }
+}
+
+function toggleColorTheme() {
+  applyColorTheme(colorTheme.value === 'logo' ? 'teal' : 'logo')
+}
+
 /** @param {(typeof PUBLISHED_REVIEWS)[number]} review */
 function reviewQuoteText(review) {
   const loc = locale.value
@@ -94,6 +117,14 @@ function syncProActive() {
 }
 
 onMounted(() => {
+  let savedTheme = 'logo'
+  try {
+    const stored = sessionStorage.getItem(THEME_STORAGE_KEY)
+    if (stored === 'teal' || stored === 'logo') savedTheme = stored
+  } catch {
+    /* ignore */
+  }
+  applyColorTheme(savedTheme)
   syncProActive()
   if (typeof window !== 'undefined') {
     window.addEventListener('allexo-pro-change', syncProActive)
@@ -363,6 +394,15 @@ const minOrderDiffEuros = computed(() =>
 
     <div v-if="proActive" class="pro-indicator" aria-hidden="true">PRO</div>
 
+    <button
+      type="button"
+      class="theme-preview-toggle"
+      :aria-pressed="colorTheme === 'logo'"
+      @click="toggleColorTheme"
+    >
+      {{ colorTheme === 'logo' ? '↩ Teal (оригінал)' : '◆ Чорний + золото' }}
+    </button>
+
     <OrderFormModal
       :open="formOpen"
       :type-id="selectedTypeId"
@@ -393,14 +433,50 @@ const minOrderDiffEuros = computed(() =>
   flex-direction: column;
 }
 
+.theme-preview-toggle {
+  position: fixed;
+  left: max(0.75rem, env(safe-area-inset-left));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 60;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--allexo-border);
+  background: var(--allexo-surface);
+  color: var(--allexo-text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-preview-toggle:hover {
+  border-color: var(--allexo-accent);
+  color: var(--allexo-teal);
+}
+
 .header {
   background:
-    radial-gradient(900px 520px at 20% 20%, rgba(196, 163, 90, 0.12), transparent 60%),
-    linear-gradient(135deg, var(--allexo-teal) 0%, #0b2f30 100%);
+    radial-gradient(380px 240px at 6% 22%, rgba(196, 163, 90, 0.11), transparent 72%),
+    radial-gradient(720px 420px at 14% 8%, rgba(196, 163, 90, 0.07), transparent 62%),
+    linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
   color: #fff;
   padding: 0;
   position: relative;
   overflow: clip;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #c4a35a;
+  opacity: 0.25;
+  pointer-events: none;
 }
 
 .header__inner {
@@ -458,17 +534,22 @@ const minOrderDiffEuros = computed(() =>
 
 .hero-corner-contacts__link {
   color: rgba(255, 255, 255, 0.92);
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-size: 0.96rem;
+  font-weight: 600;
   letter-spacing: 0.01em;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  text-underline-offset: 4px;
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
+  transition:
+    color 0.25s ease,
+    text-decoration-color 0.25s ease;
 }
 
 .hero-corner-contacts__link:hover {
   color: #fff;
+  text-decoration-color: #c4a35a;
 }
 
 @media (max-width: 640px) {
@@ -523,7 +604,7 @@ const minOrderDiffEuros = computed(() =>
 
 .steps__label {
   font-weight: 700;
-  color: var(--allexo-teal);
+  color: var(--allexo-accent);
   margin-right: 0.25rem;
 }
 
@@ -532,7 +613,7 @@ const minOrderDiffEuros = computed(() =>
   padding: 1rem 1rem;
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(15, 61, 62, 0.04) 0%, rgba(15, 61, 62, 0.02) 100%);
+  background: var(--allexo-surface);
   box-shadow: var(--shadow);
   max-width: none;
   position: relative;
@@ -551,9 +632,9 @@ const minOrderDiffEuros = computed(() =>
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--allexo-teal);
+  background: var(--allexo-accent);
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  opacity: 0.75;
+  opacity: 1;
 }
 
 .about__title {
@@ -622,7 +703,7 @@ const minOrderDiffEuros = computed(() =>
   padding: 0.85rem 1rem;
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
-  background: var(--allexo-bg);
+  background: var(--allexo-surface);
 }
 
 .reviews__item-stars {
@@ -668,7 +749,7 @@ const minOrderDiffEuros = computed(() =>
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
-  box-shadow: 0 12px 28px rgba(15, 61, 62, 0.10);
+  box-shadow: var(--shadow-md);
 }
 
 .sticky-total__sum {
@@ -704,12 +785,16 @@ const minOrderDiffEuros = computed(() =>
   padding: 0.55rem 0.9rem;
   border-radius: var(--radius);
   border: 1px solid var(--allexo-border);
-  background: var(--allexo-teal);
+  background: #111111;
   color: #fff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
 }
 
 .sticky-total__btn--primary {
@@ -718,31 +803,23 @@ const minOrderDiffEuros = computed(() =>
 }
 
 .sticky-total__btn--primary:hover {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-accent);
+  color: #111111;
+  border-color: var(--allexo-accent);
 }
 
-.sticky-total__btn--ghost {
-  background: transparent;
-  color: var(--allexo-teal);
-}
-
+.sticky-total__btn--ghost,
 .sticky-total__btn--secondary {
-  background: transparent;
-  color: var(--allexo-teal);
+  background: var(--allexo-surface);
+  color: var(--allexo-text);
+  border-color: var(--allexo-accent);
 }
 
-.sticky-total__btn--ghost:hover {
-  background: var(--allexo-bg);
-  color: var(--allexo-teal);
-}
-
+.sticky-total__btn--ghost:hover,
 .sticky-total__btn--secondary:hover {
-  background: var(--allexo-bg);
-  color: var(--allexo-teal);
-}
-
-.sticky-total__btn:hover {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-surface);
+  color: var(--allexo-accent);
+  border-color: var(--allexo-accent);
 }
 
 @media (max-width: 430px) {
@@ -909,7 +986,7 @@ const minOrderDiffEuros = computed(() =>
   z-index: 70;
   padding: 0.3rem 0.55rem;
   border-radius: 999px;
-  border: 1px solid rgba(15, 61, 62, 0.18);
+  border: 1px solid var(--allexo-border);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   color: var(--allexo-teal);

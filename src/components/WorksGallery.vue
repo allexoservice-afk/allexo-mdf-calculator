@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
   background: transparent;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 14px 34px rgba(15, 61, 62, 0.14);
+  box-shadow: var(--shadow-md);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.2s ease;
   -webkit-tap-highlight-color: transparent;
@@ -431,7 +431,7 @@ onBeforeUnmount(() => {
 
 .works__thumb:hover {
   transform: translateY(-1px);
-  box-shadow: 0 18px 44px rgba(15, 61, 62, 0.18);
+  box-shadow: 0 12px 32px rgba(17, 17, 17, 0.12);
 }
 
 .works__thumb:focus-visible {
@@ -610,17 +610,23 @@ onBeforeUnmount(() => {
   min-height: 2.85rem;
   padding: 0.65rem 1.05rem;
   border-radius: var(--radius);
-  border: 1px solid var(--allexo-border);
-  background: var(--allexo-teal);
+  border: 1px solid #111111;
+  background: #111111;
   color: #fff;
   font: inherit;
   font-weight: 900;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
 }
 
 .lightbox__cta-btn:hover {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-accent);
+  color: #111111;
+  border-color: var(--allexo-accent);
 }
 
 @keyframes lightboxStageIn {

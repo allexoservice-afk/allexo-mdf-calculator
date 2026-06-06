@@ -127,14 +127,16 @@ export function collectClientLineItems(lines, locale) {
 export function collectClientLineItemsForPdf(lines, locale) {
   if (!Array.isArray(lines) || !lines.length) return []
 
-  /** @type {Array<{ title: string, size: string, quantity: number, lineTotalEur: number | null, typeId: string, win: Record<string, unknown> }>} */
+  /** @type {Array<{ title: string, size: string, quantity: number, lineTotalEur: number | null, typeId: string, win: Record<string, unknown>, windowIndex: number }>} */
   const items = []
+  let windowIndex = 0
 
   for (const raw of lines) {
     const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
     const tid = typeof line.typeId === 'string' ? line.typeId : ''
     const title = tid ? typeTitle(locale, tid) : '—'
     for (const win of windowsForLine(line)) {
+      windowIndex += 1
       const qty = normalizeWindowQuantity(win.quantity)
       const unit = unitPriceEuros(line, win)
       const lineTotal = unit != null && unit > 0 ? unit * qty : null
@@ -145,6 +147,7 @@ export function collectClientLineItemsForPdf(lines, locale) {
         lineTotalEur: lineTotal,
         typeId: tid,
         win: /** @type {Record<string, unknown>} */ (win),
+        windowIndex,
       })
     }
   }

@@ -1,7 +1,8 @@
 import { CONTACT_EMAIL } from '../constants/contact.js'
 import { translate } from '../i18n/translations.js'
-import { collectClientLineItemsForPdf } from './proposalLineItems.js'
+import { collectClientLineItemsForPdf, computeBufferedWorkHours } from './proposalLineItems.js'
 import { buildWindowSchematicSvg } from './windowSchematicSvg.js'
+import { formatWorkTimePdfLines } from './workTimeDisplay.js'
 
 const TEAL = '#0f3d3e'
 const GOLD = '#c4a35a'
@@ -51,10 +52,15 @@ export function buildProposalPdfHtml(opts) {
       const cost =
         item.lineTotalEur != null && item.lineTotalEur > 0 ? formatEuroPlain(item.lineTotalEur) : '—'
       const svg = buildWindowSchematicSvg(item.typeId, item.win, mm)
-      return `<div style="margin:0 0 8px;padding:8px 10px;border:1px solid ${BORDER};border-radius:6px;page-break-inside:avoid;">
+      const positionLabel =
+        item.windowIndex > 0
+          ? translate(locale, 'summary.positionLabel').replace('{n}', String(item.windowIndex))
+          : ''
+      return `<div style="position:relative;margin:0 0 8px;padding:8px 10px 8px 10px;border:1px solid ${BORDER};border-radius:6px;page-break-inside:avoid;">
+${positionLabel ? `<p style="position:absolute;top:6px;right:8px;margin:0;font-size:9px;font-weight:700;letter-spacing:0.02em;color:${TEAL};">${esc(positionLabel)}</p>` : ''}
 <table style="width:100%;border-collapse:collapse;"><tr>
-<td style="width:126px;vertical-align:middle;padding:0 6px 0 0;">${svg}</td>
-<td style="vertical-align:middle;">
+<td style="width:136px;vertical-align:middle;padding:0 6px 0 0;">${svg}</td>
+<td style="vertical-align:middle;padding-right:${positionLabel ? '58px' : '0'};">
 <p style="margin:0 0 4px;font-size:12px;font-weight:700;line-height:1.25;color:${TEAL};">${esc(item.title)}</p>
 <p style="margin:0 0 2px;font-size:10.5px;line-height:1.35;color:${MUTED};">${esc(translate(locale, 'emailHtml.sizeLabel'))}: <strong style="color:#1c2424;">${esc(item.size)}</strong> · ${esc(translate(locale, 'emailHtml.qtyLabel'))}: <strong style="color:#1c2424;">${item.quantity} ${esc(translate(locale, 'emailHtml.qtyUnit'))}</strong></p>
 <p style="margin:0;font-size:11px;font-weight:700;color:${TEAL};">${esc(translate(locale, 'emailHtml.costLabel'))}: ${esc(cost)}</p>
@@ -67,6 +73,14 @@ export function buildProposalPdfHtml(opts) {
   const discountBlock =
     discountEur > 0
       ? `<p style="margin:0 0 4px;font-size:10px;color:${MUTED};">${esc(translate(locale, 'summary.discountLabel'))} −${esc(formatEuroPlain(discountEur))} (${discountPct}%)</p>`
+      : ''
+
+  const workHours = computeBufferedWorkHours(opts.lines)
+  const { hoursLine, daysLine } = formatWorkTimePdfLines(workHours, locale)
+  const workTimeBlock =
+    hoursLine && daysLine
+      ? `<p style="margin:6px 0 0;font-size:10px;text-align:center;color:#1c2424;line-height:1.4;">${esc(hoursLine)}</p>
+<p style="margin:2px 0 0;font-size:10px;text-align:center;color:#1c2424;line-height:1.4;">${esc(daysLine)}</p>`
       : ''
 
   let travelBlock = ''
@@ -94,9 +108,9 @@ ${itemBlocks || `<p style="color:${MUTED};font-size:11px;">${esc(translate(local
 <p style="margin:3px 0 0;font-size:10px;color:${MUTED};">(${esc(vat)})</p>
 ${discountBlock}
 ${travelBlock}
+${workTimeBlock}
 </div>
-<p style="margin:8px 0 0;font-size:10px;text-align:center;color:#1c2424;line-height:1.4;">${esc(translate(locale, 'emailHtml.planningNote'))}</p>
-<p style="margin:4px 0 0;font-size:10px;text-align:center;color:${MUTED};line-height:1.4;">${esc(translate(locale, 'emailHtml.pdfPriceIncludes'))}</p>
+<p style="margin:8px 0 0;font-size:10px;text-align:center;color:${MUTED};line-height:1.45;">${esc(translate(locale, 'emailHtml.pdfPriceIncludes'))}</p>
 <div style="margin-top:8px;padding:8px 0 0;border-top:1px solid ${BORDER};text-align:center;font-size:10px;color:${MUTED};">
 <p style="margin:0 0 3px;font-weight:700;color:${TEAL};">ALLEXO</p>
 <p style="margin:0;">${esc(CONTACT_EMAIL)} · +32 493 86 07 53 · Brugge, Belgium</p>
@@ -104,33 +118,105 @@ ${travelBlock}
 </div>`
 }
 
+/** @param {string} [customName] */
+export function proposalPdfFilename(customName) {
+  if (customName) return customName
+  const date = new Date().toISOString().slice(0, 10)
+  return `ALLEXO-proposal-${date}.pdf`
+}
+
+const PDF_RENDER_OPTS = {
+  margin: [8, 10, 8, 10],
+  image: { type: 'jpeg', quality: 0.92 },
+  html2canvas: { scale: 2, useCORS: true, logging: false },
+  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+  pagebreak: { mode: ['css', 'legacy'] },
+}
+
+/** @param {unknown} raw */
+function normalizePdfBlob(raw) {
+  if (raw instanceof Blob) return raw
+  if (raw instanceof ArrayBuffer) return new Blob([raw], { type: 'application/pdf' })
+  if (ArrayBuffer.isView(raw)) {
+    return new Blob([raw], { type: 'application/pdf' })
+  }
+  throw new Error('Invalid PDF output')
+}
+
+/**
+ * @param {HTMLElement} element
+ * @param {string} filename
+ */
+async function renderProposalPdfBlob(element, filename) {
+  const html2pdf = (await import('html2pdf.js')).default
+  const raw = await html2pdf()
+    .set({ ...PDF_RENDER_OPTS, filename })
+    .from(element)
+    .toPdf()
+    .then(function exportPdfBlob() {
+      const out = this.prop.pdf.output('blob')
+      return out instanceof Promise ? out : out
+    })
+  const blob = normalizePdfBlob(raw)
+  if (!blob.size) throw new Error('Empty PDF')
+  return blob
+}
+
+/**
+ * @param {Parameters<typeof buildProposalPdfHtml>[0] & { filename?: string }} opts
+ * @returns {Promise<{ blob: Blob, filename: string }>}
+ */
+export async function generateProposalPdfBlob(opts) {
+  const html = buildProposalPdfHtml(opts)
+  const host = document.createElement('div')
+  host.innerHTML = html
+  host.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:680px;opacity:1;pointer-events:none;z-index:-1;'
+  document.body.appendChild(host)
+
+  const filename = proposalPdfFilename(opts.filename)
+  const element = /** @type {HTMLElement} */ (host.firstElementChild || host)
+
+  try {
+    const blob = await renderProposalPdfBlob(element, filename)
+    return { blob, filename }
+  } finally {
+    if (host.parentNode) host.parentNode.removeChild(host)
+  }
+}
+
+/**
+ * @param {Parameters<typeof buildProposalPdfHtml>[0] & { filename?: string }} opts
+ */
+export async function saveProposalPdf(opts) {
+  const html = buildProposalPdfHtml(opts)
+  const host = document.createElement('div')
+  host.innerHTML = html
+  host.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:680px;opacity:1;pointer-events:none;z-index:-1;'
+  document.body.appendChild(host)
+
+  const filename = proposalPdfFilename(opts.filename)
+  const element = /** @type {HTMLElement} */ (host.firstElementChild || host)
+
+  try {
+    const html2pdf = (await import('html2pdf.js')).default
+    await html2pdf().set({ ...PDF_RENDER_OPTS, filename }).from(element).save()
+  } finally {
+    if (host.parentNode) host.parentNode.removeChild(host)
+  }
+}
+
 /**
  * @param {Parameters<typeof buildProposalPdfHtml>[0] & { filename?: string }} opts
  */
 export async function downloadProposalPdf(opts) {
-  const html = buildProposalPdfHtml(opts)
-  const host = document.createElement('div')
-  host.innerHTML = html
-  host.style.cssText = 'position:fixed;left:0;top:0;width:680px;opacity:0;pointer-events:none;z-index:-1;'
-  document.body.appendChild(host)
-
-  const date = new Date().toISOString().slice(0, 10)
-  const filename = opts.filename || `ALLEXO-proposal-${date}.pdf`
-
   try {
-    const html2pdf = (await import('html2pdf.js')).default
-    await html2pdf()
-      .set({
-        margin: [8, 10, 8, 10],
-        filename,
-        image: { type: 'jpeg', quality: 0.92 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] },
-      })
-      .from(host.firstElementChild || host)
-      .save()
-  } finally {
-    document.body.removeChild(host)
+    const { blob, filename } = await generateProposalPdfBlob(opts)
+    const { downloadPdfBlob } = await import('./shareProposalPdf.js')
+    downloadPdfBlob(blob, filename)
+  } catch (err) {
+    console.warn('PDF blob export failed, falling back to save()', err)
+    await saveProposalPdf(opts)
   }
 }

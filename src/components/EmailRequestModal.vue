@@ -350,8 +350,8 @@ async function onSubmit() {
   font-size: 0.95rem;
   line-height: 1.45;
   color: var(--allexo-teal);
-  background: rgba(15, 61, 62, 0.08);
-  border: 1px solid rgba(15, 61, 62, 0.15);
+  background: rgba(245, 241, 234, 0.9);
+  border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
 }
 
@@ -405,7 +405,7 @@ async function onSubmit() {
 .field__input:focus {
   outline: none;
   border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(15, 61, 62, 0.12);
+  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
 }
 
 .field__input--error {
@@ -428,15 +428,19 @@ async function onSubmit() {
   font-weight: 700;
   font-family: inherit;
   color: #fff;
-  background: var(--allexo-teal);
+  background: #111111;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
   box-shadow: var(--shadow-md);
+  transition:
+    background 0.18s,
+    color 0.18s;
 }
 
 .btn-submit:hover:not(:disabled) {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-accent);
+  color: #111111;
 }
 
 .btn-submit:disabled {

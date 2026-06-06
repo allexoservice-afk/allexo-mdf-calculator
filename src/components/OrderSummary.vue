@@ -13,11 +13,11 @@ import {
   quoteWindowsillOnlyHours,
   quoteWindowsillOnlyRoundedEuros,
 } from '../pricing/windowQuote.js'
-import { buildClientProposalPlainFromOrder, buildClientProposalWhatsAppFromOrder } from '../utils/clientProposalShare.js'
-import { openWhatsAppChat } from '../utils/whatsappShare.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
+import { formatWorkDaysApproxLabel, formatWorkHoursDisplay } from '../utils/workTimeDisplay.js'
 import EmailRequestModal from './EmailRequestModal.vue'
 import GetQuoteLeadModal from './GetQuoteLeadModal.vue'
+import WindowSchematicPreview from './WindowSchematicPreview.vue'
 import { formatEuroExclVat } from '../utils/priceDisplay.js'
 import {
   lineWindowEligibleForAutoQuote,
@@ -25,7 +25,7 @@ import {
   orderHasInvalidWindowDimensions,
   windowEligibleForAutoQuote,
 } from '../utils/windowDimensions.js'
-import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF, CONTACT_WHATSAPP_WA_ME } from '../constants/contact.js'
+import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
 import { isProUnlocked } from '../constants/proUnlock.js'
 import { useProManualDiscount } from '../composables/useProManualDiscount.js'
 import {
@@ -148,6 +148,24 @@ onBeforeUnmount(() => {
 
 const isPublicMode = computed(() => !proActive.value)
 
+const globalWindowIndexMap = computed(() => {
+  const map = new Map()
+  let n = 0
+  for (const line of props.lines) {
+    const wins = windowsForLine(line)
+    for (let wi = 0; wi < wins.length; wi += 1) {
+      n += 1
+      map.set(`${line.key}:${wi}`, n)
+    }
+  }
+  return map
+})
+
+/** @param {string | number} lineKey @param {number} wIdx */
+function globalWindowIndex(lineKey, wIdx) {
+  return globalWindowIndexMap.value.get(`${lineKey}:${wIdx}`) ?? 0
+}
+
 /** Сума quantity по всіх вікнах (для орієнтовного терміну в public). */
 const publicTotalWindowUnits = computed(() =>
   props.lines.reduce(
@@ -177,29 +195,6 @@ function catLabel(id) {
 }
 
 const _TIME_BUFFER_COEFF = 1.44
-
-/** @param {number} h */
-function _roundUpToHalfHour(h) {
-  if (!Number.isFinite(h) || h <= 0) return 0
-  return Math.ceil(h * 2) / 2
-}
-
-/** @param {number} h */
-function formatHoursDisplay(h) {
-  const r = Math.round(h * 10) / 10
-  if (Number.isInteger(r)) return String(r)
-  return String(r)
-}
-
-/** @param {number} h */
-function formatWorkDaysApprox(h) {
-  const hh = _roundUpToHalfHour(h)
-  // Не показуємо “рівно 1 день”, щоб не створювати небезпечне очікування.
-  if (hh <= 8) return t('summary.workDays1to2')
-  if (hh <= 16) return t('summary.workDays1to2')
-  const minDays = Math.floor(hh / 8)
-  return translate(locale.value, 'summary.workDays2plus').replace('{n}', String(Math.max(minDays, 2)))
-}
 
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
@@ -384,8 +379,12 @@ const orderTotalBaseHours = computed(() =>
 )
 
 const orderTotalBufferedHours = computed(() => orderTotalBaseHours.value * _TIME_BUFFER_COEFF)
-const orderTotalHoursFormatted = computed(() => formatHoursDisplay(orderTotalBufferedHours.value))
-const orderTotalWorkDaysFormatted = computed(() => formatWorkDaysApprox(orderTotalBufferedHours.value))
+const orderTotalHoursFormatted = computed(() =>
+  formatWorkHoursDisplay(orderTotalBufferedHours.value, locale.value),
+)
+const orderTotalWorkDaysFormatted = computed(() =>
+  formatWorkDaysApproxLabel(orderTotalBufferedHours.value, locale.value),
+)
 
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
@@ -413,6 +412,15 @@ const grandTotalEuros = computed(() => {
   return m.workTotalEur + m.travelEur
 })
 
+const showFinalPayableLine = computed(() => orderTotalEuros.value > 0)
+
+const finalPayableEuros = computed(() => {
+  if (minOrderApplied.value && discountEuros.value === 0) return payableWorkEuros.value
+  return payableWorkAfterDiscountEuros.value
+})
+
+const showOrderTiming = computed(() => orderTotalBufferedHours.value > 0)
+
 function showSummaryNotice(msg, ms = 2500, isError = false) {
   copyNotice.value = msg
   copyNoticeIsError.value = isError
@@ -422,60 +430,20 @@ function showSummaryNotice(msg, ms = 2500, isError = false) {
   }, ms)
 }
 
-async function copyProposal() {
-  const text = proposalTextForShare('', 'whatsapp')
-  if (!text) return
-  try {
-    await navigator.clipboard.writeText(text)
-  } catch {
-    const ta = document.createElement('textarea')
-    ta.value = text
-    ta.setAttribute('aria-hidden', 'true')
-    ta.style.position = 'fixed'
-    ta.style.left = '-9999px'
-    document.body.appendChild(ta)
-    ta.focus()
-    ta.select()
-    try {
-      document.execCommand('copy')
-    } finally {
-      document.body.removeChild(ta)
-    }
-  }
-  showSummaryNotice(t('summary.copied'))
-}
-
-function proposalShareOptions(clientName = '') {
+function proposalPdfOptions() {
   return {
+    lines: props.lines,
+    locale: locale.value,
     estimatedTotalEur: offerTravelMeta.value ? grandTotalEuros.value : payableWorkAfterDiscountEuros.value,
-    orderSubtotalEur: orderTotalEuros.value,
     discountEuros: discountEuros.value,
     discountPercent: discountPct.value,
-    windowsCount: publicTotalWindowUnits.value,
-    positionsCount: props.lines.length,
     travelMeta: offerTravelMeta.value,
-    leadTimeNote: publicLeadTimeNoteDisplay.value,
-    clientName,
-    skipClientCta: true,
   }
 }
 
-function proposalTextForShare(clientName = '', channel = 'plain') {
-  if (orderHasInvalidWindowDimensions(props.lines)) {
-    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
-    return ''
-  }
-  const opts = proposalShareOptions(clientName)
-  if (channel === 'whatsapp') {
-    return buildClientProposalWhatsAppFromOrder(props.lines, locale.value, opts) || ''
-  }
-  return buildClientProposalPlainFromOrder(props.lines, locale.value, opts) || ''
-}
-
-function sendProposalToWhatsAppSelf() {
-  const text = proposalTextForShare('', 'whatsapp')
-  if (!text) return
-  openWhatsAppChat(CONTACT_WHATSAPP_WA_ME, text)
+async function buildProposalPdfFile() {
+  const { generateProposalPdfBlob } = await import('../utils/proposalPdf.js')
+  return generateProposalPdfBlob(proposalPdfOptions())
 }
 
 async function downloadProposalPdfFile() {
@@ -486,15 +454,51 @@ async function downloadProposalPdfFile() {
   pdfLoading.value = true
   try {
     const { downloadProposalPdf } = await import('../utils/proposalPdf.js')
-    await downloadProposalPdf({
-      lines: props.lines,
-      locale: locale.value,
-      estimatedTotalEur: offerTravelMeta.value ? grandTotalEuros.value : payableWorkAfterDiscountEuros.value,
-      discountEuros: discountEuros.value,
-      discountPercent: discountPct.value,
-      travelMeta: offerTravelMeta.value,
-    })
+    await downloadProposalPdf(proposalPdfOptions())
     showSummaryNotice(t('summary.pdfDownloaded'))
+  } catch (e) {
+    console.error(e)
+    showSummaryNotice(t('summary.pdfFailed'), 4000, true)
+  } finally {
+    pdfLoading.value = false
+  }
+}
+
+async function shareProposalPdfFile() {
+  if (orderHasInvalidWindowDimensions(props.lines)) {
+    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
+    return
+  }
+  pdfLoading.value = true
+  try {
+    const { shareProposalPdfBlob, downloadPdfBlob } = await import('../utils/shareProposalPdf.js')
+    let blob
+    let filename
+    try {
+      ;({ blob, filename } = await buildProposalPdfFile())
+    } catch (err) {
+      console.warn('PDF blob export failed for share, falling back to download', err)
+      const { saveProposalPdf } = await import('../utils/proposalPdf.js')
+      await saveProposalPdf(proposalPdfOptions())
+      showSummaryNotice(t('summary.pdfSavedAttach'), 4500)
+      return
+    }
+
+    const shareText = translate(locale.value, 'emailHtml.clientSubject')
+    const result = await shareProposalPdfBlob(blob, filename, {
+      title: 'ALLEXO',
+      text: shareText,
+    })
+
+    if (result.ok && !result.cancelled) {
+      showSummaryNotice(t('summary.pdfShareReady'))
+      return
+    }
+
+    if (result.reason === 'unsupported') {
+      downloadPdfBlob(blob, filename)
+      showSummaryNotice(t('summary.pdfSavedAttach'), 4500)
+    }
   } catch (e) {
     console.error(e)
     showSummaryNotice(t('summary.pdfFailed'), 4000, true)
@@ -539,8 +543,18 @@ function openContactEmailModal() {
               v-for="(win, wIdx) in windowsForLine(line)"
               :key="wIdx"
               class="window-entry"
+              :class="{ 'window-entry--with-visual': proActive }"
             >
-              <h4 v-if="!isPublicMode" class="window-entry__title">{{ windowEntryHeading(line, win) }}</h4>
+              <span v-if="proActive" class="window-entry__position">
+                {{ t('summary.positionLabel').replace('{n}', String(globalWindowIndex(line.key, wIdx))) }}
+              </span>
+              <div v-if="proActive" class="window-entry__visual-wrap">
+                <WindowSchematicPreview :type-id="line.typeId" :win="win" />
+                <div class="window-entry__visual-meta">
+                  <p class="window-entry__dims-short">{{ windowDimsLabelPublic(line, win) }}</p>
+                </div>
+              </div>
+              <h4 v-else-if="!isPublicMode" class="window-entry__title">{{ windowEntryHeading(line, win) }}</h4>
               <p v-else class="window-entry__title window-entry__title--public">
                 {{ windowDimsLabelPublic(line, win) }}
                 <span class="window-entry__qty">
@@ -632,7 +646,8 @@ function openContactEmailModal() {
                 class="window-time"
               >
                 <p class="window-time__main">
-                  {{ t('summary.windowTimeLabel') }} {{ formatHoursDisplay(windowBufferedHoursTotal(line, win)) }}
+                  {{ t('summary.windowTimeLabel') }}
+                  {{ formatWorkHoursDisplay(windowBufferedHoursTotal(line, win), locale) }}
                   {{ t('summary.hoursUnit') }}
                 </p>
                 <p class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
@@ -702,84 +717,68 @@ function openContactEmailModal() {
             </button>
           </div>
         </div>
-        <p
-          v-if="publicTotalWindowUnits > 0"
-          class="order-totals__line order-totals__line--secondary"
-        >
-          {{ t('offer.totalWindows') }} {{ publicTotalWindowUnits }}
-        </p>
-        <template v-if="!offerTravelMeta">
-          <p class="order-totals__line">
-            {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
+
+        <div class="order-totals__card">
+          <p v-if="publicTotalWindowUnits > 0" class="order-totals__windows">
+            {{ t('offer.totalWindows') }} {{ publicTotalWindowUnits }}
           </p>
-          <p v-if="minOrderApplied" class="order-totals__min">
-            {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
+
+          <dl class="order-totals__rows">
+            <div class="order-totals__row">
+              <dt>{{ t('summary.workSubtotal') }}</dt>
+              <dd>{{ formatEuroExclVat(orderTotalEuros, locale) }}</dd>
+            </div>
+            <div v-if="minOrderApplied" class="order-totals__row order-totals__row--muted">
+              <dt>{{ t('summary.minOrderDiffPrefix') }}</dt>
+              <dd>{{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}</dd>
+            </div>
+            <div v-if="discountEuros > 0" class="order-totals__row order-totals__row--muted">
+              <dt>
+                {{ t('summary.discountLabel') }}
+                <span class="order-totals__pct">
+                  ({{ discountPct }}%<template v-if="discountManualActive"> · {{ t('summary.proDiscountManual') }}</template>)
+                </span>
+              </dt>
+              <dd>−{{ formatEuroExclVat(discountEuros, locale) }}</dd>
+            </div>
+
+            <template v-if="offerTravelMeta">
+              <div v-if="showFinalPayableLine" class="order-totals__row order-totals__row--muted">
+                <dt>{{ t('summary.payableWorkTotal') }}</dt>
+                <dd>{{ formatEuroExclVat(finalPayableEuros, locale) }}</dd>
+              </div>
+              <div class="order-totals__row order-totals__row--muted">
+                <dt>{{ t('summary.travelTransportTotal') }}</dt>
+                <dd>
+                  <template v-if="offerTravelMeta.over100">{{ t('summary.travelDiscussedShort') }}</template>
+                  <template v-else-if="offerTravelMeta.travelEur === 0">{{ t('summary.travelFree') }}</template>
+                  <template v-else>{{ formatEuroExclVat(offerTravelMeta.travelEur, locale) }}</template>
+                </dd>
+              </div>
+              <div class="order-totals__row order-totals__row--grand">
+                <dt>{{ t('summary.grandTotal') }}</dt>
+                <dd>{{ formatEuroExclVat(grandTotalEuros, locale) }}</dd>
+              </div>
+            </template>
+            <div v-else-if="showFinalPayableLine" class="order-totals__row order-totals__row--grand">
+              <dt>{{ t('summary.payableTotal') }}</dt>
+              <dd>{{ formatEuroExclVat(finalPayableEuros, locale) }}</dd>
+            </div>
+          </dl>
+
+          <p v-if="showOrderTiming" class="order-totals__timing">
+            {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
+            <template v-if="orderTotalWorkDaysFormatted">
+              · {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
+            </template>
           </p>
-          <p v-if="discountEuros > 0" class="order-totals__min">
-            {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
-            <span class="order-totals__min-note">({{ discountPct }}%<template v-if="discountManualActive"> · {{ t('summary.proDiscountManual') }}</template>)</span>
-          </p>
-          <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
-          </p>
-          <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-          </p>
-          <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-          </p>
-          <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-          </p>
-        </template>
-        <template v-else>
-          <p class="order-totals__line">
-            {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(orderTotalEuros, locale) }}
-          </p>
-          <p v-if="minOrderApplied" class="order-totals__min">
-            {{ t('summary.minOrderDiffPrefix') }} {{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}
-          </p>
-          <p v-if="discountEuros > 0" class="order-totals__min">
-            {{ t('summary.discountLabel') }} −{{ formatEuroExclVat(discountEuros, locale) }}
-            <span class="order-totals__min-note">({{ discountPct }}%<template v-if="discountManualActive"> · {{ t('summary.proDiscountManual') }}</template>)</span>
-          </p>
-          <p v-if="minOrderApplied && discountEuros === 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkEuros, locale) }}
-          </p>
-          <p v-else-if="minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-          </p>
-          <p v-else-if="!minOrderApplied && discountEuros > 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-          </p>
-          <p v-else-if="orderTotalEuros > 0" class="order-totals__line order-totals__line--grand">
-            {{ t('summary.payableWorkTotal') }} {{ formatEuroExclVat(payableWorkAfterDiscountEuros, locale) }}
-          </p>
-          <p class="order-totals__line order-totals__line--secondary">
-            {{ t('summary.travelTransportTotal') }}
-            <template v-if="offerTravelMeta.over100">{{ t('summary.travelDiscussedShort') }}</template>
-            <template v-else-if="offerTravelMeta.travelEur === 0">{{ t('summary.travelFree') }}</template>
-            <template v-else>{{ formatEuroExclVat(offerTravelMeta.travelEur, locale) }}</template>
-          </p>
-          <p class="order-totals__line order-totals__line--grand">
-            {{ t('summary.grandTotal') }} {{ formatEuroExclVat(grandTotalEuros, locale) }}
-          </p>
-        </template>
-        <p class="order-totals__time">
-          {{ t('summary.totalTimeLabel') }} ~{{ orderTotalHoursFormatted }} {{ t('summary.hoursUnit') }}
-        </p>
-        <p class="order-totals__days">
-          {{ t('summary.workDaysApproxPrefix') }} {{ orderTotalWorkDaysFormatted }}
-        </p>
-        <p class="order-totals__fast">
-          {{ t('summary.fastExecutionNoDismantle') }}
-        </p>
-        <p class="order-totals__includes">
-          {{ t('summary.turnkeyIncludes') }}
-        </p>
-        <p class="order-totals__discount-policy">
-          {{ t('summary.discountPolicy') }}
-        </p>
+        </div>
+
+        <ul class="order-totals__notes">
+          <li>{{ t('summary.fastExecutionNoDismantle') }}</li>
+          <li>{{ t('summary.turnkeyIncludes') }}</li>
+          <li>{{ t('summary.discountPolicy') }}</li>
+        </ul>
       </div>
 
       <div class="contact-section" aria-labelledby="contact-heading">
@@ -788,12 +787,18 @@ function openContactEmailModal() {
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
           </button>
-          <button type="button" class="contact-btn contact-btn--whatsapp" @click="sendProposalToWhatsAppSelf">
-            {{ t('summary.sendWhSelf') }}
-          </button>
         </div>
 
         <div class="contact-section__utils">
+          <button
+            type="button"
+            class="contact-util-btn contact-util-btn--pdf-share"
+            :disabled="pdfLoading"
+            @click="shareProposalPdfFile"
+          >
+            <span class="contact-util-btn__icon" aria-hidden="true">↗</span>
+            {{ pdfLoading ? t('summary.pdfGenerating') : t('summary.sharePdf') }}
+          </button>
           <button
             type="button"
             class="contact-util-btn contact-util-btn--pdf"
@@ -803,11 +808,6 @@ function openContactEmailModal() {
             <span class="contact-util-btn__icon" aria-hidden="true">↓</span>
             {{ pdfLoading ? t('summary.pdfGenerating') : t('summary.downloadPdf') }}
           </button>
-          <button type="button" class="contact-util-btn" @click="copyProposal">
-            <span class="contact-util-btn__icon" aria-hidden="true">⧉</span>
-            {{ t('summary.copyOffer') }}
-          </button>
-          <p class="contact-section__copy-hint">{{ t('summary.copyOfferHint') }}</p>
           <p
             v-if="copyNotice"
             class="contact-util-feedback"
@@ -930,7 +930,7 @@ function openContactEmailModal() {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background: var(--allexo-bg);
+  background: var(--allexo-surface);
   border-radius: var(--radius);
   border: 1px solid var(--allexo-border);
 }
@@ -966,6 +966,40 @@ function openContactEmailModal() {
   margin: 0 0 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
+  color: var(--allexo-muted);
+}
+
+.window-entry--with-visual {
+  position: relative;
+  padding-right: 4.5rem;
+}
+
+.window-entry__position {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--allexo-teal);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.window-entry__visual-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.window-entry__visual-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.window-entry__dims-short {
+  margin: 0;
+  font-size: 0.82rem;
   color: var(--allexo-muted);
 }
 
@@ -1085,7 +1119,7 @@ function openContactEmailModal() {
 .travel-block {
   margin-top: 1.25rem;
   padding: 1rem;
-  background: var(--allexo-bg);
+  background: rgba(17, 17, 17, 0.04);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
 }
@@ -1123,19 +1157,19 @@ function openContactEmailModal() {
 .travel-block__input:focus {
   outline: none;
   border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(15, 61, 62, 0.12);
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.12);
 }
 
 .order-totals {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 2px solid var(--allexo-border);
+  border-top: 1px solid var(--allexo-border);
 }
 
 .pro-discount {
   margin: 0 0 1rem;
   padding: 0.85rem 0.9rem;
-  background: rgba(15, 61, 62, 0.05);
+  background: rgba(17, 17, 17, 0.05);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
 }
@@ -1187,43 +1221,116 @@ function openContactEmailModal() {
   padding-inline: 0.85rem;
 }
 
-.order-totals__line {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--allexo-teal);
+.order-totals__card {
+  padding: 1rem 1.05rem;
+  background: var(--allexo-surface);
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius);
 }
 
-.order-totals__line--secondary {
-  font-size: 0.95rem;
+.order-totals__windows {
+  margin: 0 0 0.75rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--allexo-muted);
 }
 
-.order-totals__line--grand {
-  margin-top: 0.25rem;
-  padding-top: 0.45rem;
-  border-top: 1px solid var(--allexo-border);
-  font-size: 1.05rem;
+.order-totals__rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-.order-totals__min {
-  margin: 0.1rem 0 0.4rem;
-  font-size: 0.9rem;
-  font-weight: 650;
-  color: var(--allexo-muted);
+.order-totals__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
 }
 
-.order-totals__min-note {
-  opacity: 0.75;
+.order-totals__row dt {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--allexo-teal);
+}
+
+.order-totals__row dd {
+  margin: 0;
+  font-size: 0.95rem;
   font-weight: 700;
+  color: var(--allexo-teal);
+  text-align: right;
+  white-space: nowrap;
 }
 
-.order-totals__discount-policy {
-  margin: 0.35rem 0 0;
-  font-size: 0.82rem;
-  font-weight: 500;
+.order-totals__row--muted dt,
+.order-totals__row--muted dd {
+  font-size: 0.88rem;
+  font-weight: 600;
   color: var(--allexo-muted);
+}
+
+.order-totals__pct {
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.order-totals__row--grand {
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 2px solid var(--allexo-accent);
+}
+
+.order-totals__row--grand dt,
+.order-totals__row--grand dd {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111111;
+}
+
+.order-totals__timing {
+  margin: 0.75rem 0 0;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(196, 163, 90, 0.35);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--allexo-muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.order-totals__notes {
+  margin: 0.75rem 0 0;
+  padding: 0.7rem 0.9rem;
+  list-style: none;
+  background: var(--allexo-bg);
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius);
+}
+
+.order-totals__notes li {
+  position: relative;
+  padding-left: 0.9rem;
+  font-size: 0.81rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--allexo-muted);
+}
+
+.order-totals__notes li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: var(--allexo-teal);
+  opacity: 0.55;
+}
+
+.order-totals__notes li + li {
+  margin-top: 0.38rem;
 }
 
 .order-totals__public-lead {
@@ -1252,37 +1359,9 @@ function openContactEmailModal() {
   color: var(--allexo-muted);
   line-height: 1.45;
   text-wrap: balance;
-  background: rgba(15, 61, 62, 0.04);
+  background: rgba(17, 17, 17, 0.04);
   border-radius: var(--radius);
-  border: 1px solid rgba(15, 61, 62, 0.08);
-}
-
-.order-totals__time {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--allexo-muted);
-}
-
-.order-totals__days {
-  margin: 0.15rem 0 0;
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--allexo-muted);
-}
-
-.order-totals__fast {
-  margin: 0.35rem 0 0;
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--allexo-muted);
-}
-
-.order-totals__includes {
-  margin: 0.35rem 0 0;
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--allexo-muted);
+  border: 1px solid rgba(17, 17, 17, 0.08);
 }
 
 .contact-section {
@@ -1339,6 +1418,30 @@ function openContactEmailModal() {
   cursor: wait;
 }
 
+.contact-util-btn--pdf-share {
+  font-weight: 700;
+  color: #fff;
+  background: #111111;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+  min-height: 2.5rem;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+
+.contact-util-btn--pdf-share:hover {
+  color: #111111;
+  background: var(--allexo-accent);
+}
+
+.contact-util-btn--pdf-share:disabled {
+  opacity: 0.65;
+}
+
 .contact-util-btn--pdf {
   font-weight: 700;
 }
@@ -1381,28 +1484,16 @@ function openContactEmailModal() {
 
 .contact-btn--email {
   min-height: 2.75rem;
-  color: var(--allexo-teal);
+  color: var(--allexo-text);
   background: var(--allexo-surface);
-  border-color: #6b8cae;
+  border-color: var(--allexo-accent);
 }
 
 .contact-btn--email:hover {
-  background: #f0f4f8;
-  border-color: #547896;
+  background: var(--allexo-surface);
+  color: var(--allexo-accent);
+  border-color: var(--allexo-accent);
 }
-
-.contact-btn--whatsapp {
-  min-height: 2.75rem;
-  color: #fff;
-  background: #25d366;
-  border-color: #1da851;
-}
-
-.contact-btn--whatsapp:hover {
-  background: #20bd5a;
-  border-color: #189648;
-}
-
 
 .summary__quote-cta-wrap {
   margin-top: 1.25rem;
@@ -1416,15 +1507,19 @@ function openContactEmailModal() {
   font-weight: 800;
   font-family: inherit;
   color: #fff;
-  background: var(--allexo-teal);
+  background: #111111;
   border: none;
   border-radius: var(--radius-lg);
   cursor: pointer;
   box-shadow: var(--shadow-md);
+  transition:
+    background 0.18s,
+    color 0.18s;
 }
 
 .summary__quote-cta:hover {
-  background: var(--allexo-teal-light);
+  background: var(--allexo-accent);
+  color: #111111;
 }
 
 .line__remove {
