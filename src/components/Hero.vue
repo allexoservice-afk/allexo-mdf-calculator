@@ -59,24 +59,31 @@ async function submitUnlock() {
 
 <template>
   <div class="header__text">
-    <div class="hero-top">
-      <button type="button" class="header__brand" @click="onBrandTap">
-        ALLEXO
-      </button>
+    <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+      <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
+        <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
+        <button
+          type="button"
+          class="lang__btn"
+          :class="{ 'lang__btn--active': locale === code }"
+          @click="pickLang(code)"
+        >
+          {{ t(`lang.${code}`) }}
+        </button>
+      </template>
+    </nav>
 
-      <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-        <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
-          <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
-          <button
-            type="button"
-            class="lang__btn"
-            :class="{ 'lang__btn--active': locale === code }"
-            @click="pickLang(code)"
-          >
-            {{ t(`lang.${code}`) }}
-          </button>
-        </template>
-      </nav>
+    <div class="hero-top">
+      <button type="button" class="header__brand" @click="onBrandTap" aria-label="ALLEXO">
+        <img
+          src="/allexo-header-logo-transparent.png"
+          alt="ALLEXO"
+          class="hero-logo"
+          width="1067"
+          height="500"
+          decoding="async"
+        />
+      </button>
     </div>
 
     <h1 class="header__title">{{ t('hero.title') }}</h1>
@@ -129,33 +136,76 @@ async function submitUnlock() {
 .header__text {
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 
 .hero-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
 }
 
 .header__brand {
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: #c4a35a;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
-  text-align: left;
-  text-shadow:
-    0 0 24px rgba(196, 163, 90, 0.2),
-    0 0 48px rgba(196, 163, 90, 0.08);
+  line-height: 0;
+  display: inline-flex;
+  align-items: flex-start;
+  grid-area: 1 / 1;
+  justify-self: start;
+  align-self: start;
+  margin-top: -16px;
+  margin-left: 35%;
+  transform: translateX(-50%);
+}
+
+@media (min-width: 769px) {
+  .header__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .hero-top {
+    display: block;
+    width: 100%;
+  }
+
+  .header__brand {
+    margin-top: 0;
+    margin-left: 0;
+    transform: none;
+    justify-self: start;
+    align-self: start;
+    display: inline-flex;
+  }
+
+  .header__cta {
+    align-self: flex-start;
+  }
+}
+
+.hero-logo {
+  display: block;
+  width: auto;
+  height: 110px;
+  object-fit: contain;
+}
+
+@media (max-width: 1024px) {
+  .hero-logo {
+    height: 95px;
+  }
 }
 
 .lang {
+  position: absolute;
+  top: -28px;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -163,7 +213,14 @@ async function submitUnlock() {
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  flex-shrink: 0;
+  z-index: 2;
+}
+
+@media (min-width: 769px) {
+  .lang {
+    top: 0;
+    right: 0;
+  }
 }
 
 .lang__btn {
@@ -213,49 +270,93 @@ async function submitUnlock() {
 }
 
 .header__title {
-  margin: 0.55rem 0 0;
-  font-size: 1.3rem;
+  margin: 28px 0 0;
+  font-size: 28px;
   font-weight: 750;
-  color: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f2ead0 42%, #d4b87a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   letter-spacing: -0.02em;
-  line-height: 1.38;
+  line-height: 1.08;
   max-width: min(56.25rem, 100%);
   text-wrap: balance;
   overflow-wrap: break-word;
   hyphens: auto;
 }
 
-@media (max-width: 430px) {
+@media (max-width: 1024px) {
+  .header__title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header__title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header__text {
+    padding-top: 2.5rem;
+  }
+
   .hero-top {
-    align-items: center;
+    display: block;
+  }
+
+  .header__brand {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0;
+    margin-left: 0;
+    transform: none;
+    grid-area: unset;
+  }
+
+  .hero-logo {
+    margin-top: 0;
   }
 
   .lang {
-    gap: 0.15rem 0.05rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.03em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: auto;
+    width: auto;
+    max-width: 54%;
+    z-index: 2;
+    gap: 0.1rem 0.05rem;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
   }
 
   .lang__btn {
-    min-width: 2.35rem;
-    min-height: 2.35rem;
-    padding: 0.25rem 0.35rem;
+    min-width: 0;
+    min-height: 2.1rem;
+    padding: 0.2rem 0.3rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .lang {
+    letter-spacing: 0.03em;
   }
 
   .lang__sep {
     display: none;
   }
-
-  .header__title {
-    font-size: 1.08rem;
-    line-height: 1.32;
-  }
 }
 
-@media (min-width: 640px) {
-  .header__title {
-    font-size: clamp(2.05rem, 2.65vw, 2.35rem);
-    line-height: 1.34;
+@media (max-width: 390px) {
+  .lang {
+    font-size: 14px;
+  }
+
+  .lang__btn {
+    padding: 0.15rem 0.25rem;
   }
 }
 
@@ -263,7 +364,7 @@ async function submitUnlock() {
   margin: 8px 0 0;
   font-size: 1.05rem;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.85);
+  color: #ffffff;
   opacity: 1;
   max-width: 32rem;
   text-wrap: balance;
@@ -305,12 +406,6 @@ async function submitUnlock() {
 .header__cta:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.9);
   outline-offset: 3px;
-}
-
-@media (max-width: 430px) {
-  .header__cta {
-    width: 100%;
-  }
 }
 
 .unlock-backdrop {
