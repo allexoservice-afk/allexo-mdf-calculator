@@ -28,8 +28,8 @@ export const TRANSLATIONS = {
       calcCta: 'Розрахувати вартість',
     },
     hero: {
-      title: 'Акуратні МДФ-відкоси для вашого\u00a0вікна — швидко та під ключ',
-      subtitle: 'Зазвичай готові за 1–3 дні · ціна за хвилину в калькуляторі',
+      title: 'Акуратні МДФ-відкоси для вашого\u00a0вікна',
+      subtitle: 'Зазвичай готові за 1–3 дні',
     },
     pro: {
       unlockTitle: 'Pro доступ',
@@ -469,8 +469,8 @@ export const TRANSLATIONS = {
       calcCta: 'Calculate price',
     },
     hero: {
-      title: 'Neat MDF window reveals for your home — fast and turnkey',
-      subtitle: 'Usually ready in 1–3 days · price in a minute with our calculator',
+      title: 'Neat MDF window reveals for your home',
+      subtitle: 'Usually ready in 1–3 days',
     },
     pro: {
       unlockTitle: 'Pro access',
@@ -904,8 +904,8 @@ export const TRANSLATIONS = {
       calcCta: 'Prijs berekenen',
     },
     hero: {
-      title: 'Nette MDF-dagkanten voor uw raam — snel en sleutel-op-de-deur',
-      subtitle: 'Meestal klaar binnen 1–3 dagen · prijs in een minuut via de calculator',
+      title: 'Nette MDF-dagkanten voor uw raam',
+      subtitle: 'Meestal klaar binnen 1–3 dagen',
     },
     pro: {
       unlockTitle: 'Pro-toegang',
@@ -1342,8 +1342,8 @@ export const TRANSLATIONS = {
       calcCta: 'Calculer le prix',
     },
     hero: {
-      title: 'Finitions MDF soignées pour votre fenêtre — rapide et clé en main',
-      subtitle: 'Généralement prêt en 1 à 3 jours · prix en une minute avec le calculateur',
+      title: 'Finitions MDF soignées pour votre fenêtre',
+      subtitle: 'Généralement prêt en 1 à 3 jours',
     },
     pro: {
       unlockTitle: 'Accès Pro',
