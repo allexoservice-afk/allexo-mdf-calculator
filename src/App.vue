@@ -31,29 +31,6 @@ import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 const { lines, addLine, removeLine, clearOrder } = useOrder()
 const { locale, t } = useLocale()
 
-/** Варіант 1 (logo) = themes/variant-1-logo.css · Варіант 0 (teal) = main.css */
-const THEME_STORAGE_KEY = 'allexo-theme-preview'
-/** @type {import('vue').Ref<'logo' | 'teal'>} */
-const colorTheme = ref('logo')
-
-function applyColorTheme(name) {
-  colorTheme.value = name
-  if (name === 'teal') {
-    document.documentElement.dataset.theme = 'teal'
-  } else {
-    delete document.documentElement.dataset.theme
-  }
-  try {
-    sessionStorage.setItem(THEME_STORAGE_KEY, name)
-  } catch {
-    /* ignore */
-  }
-}
-
-function toggleColorTheme() {
-  applyColorTheme(colorTheme.value === 'logo' ? 'teal' : 'logo')
-}
-
 /** @param {(typeof PUBLISHED_REVIEWS)[number]} review */
 function reviewQuoteText(review) {
   const loc = locale.value
@@ -117,14 +94,6 @@ function syncProActive() {
 }
 
 onMounted(() => {
-  let savedTheme = 'logo'
-  try {
-    const stored = sessionStorage.getItem(THEME_STORAGE_KEY)
-    if (stored === 'teal' || stored === 'logo') savedTheme = stored
-  } catch {
-    /* ignore */
-  }
-  applyColorTheme(savedTheme)
   syncProActive()
   if (typeof window !== 'undefined') {
     window.addEventListener('allexo-pro-change', syncProActive)
@@ -270,18 +239,7 @@ const minOrderDiffEuros = computed(() =>
   <div class="app">
     <header class="header">
       <div class="header__inner content-container hero">
-        <div class="header__row">
-          <Hero />
-        </div>
-
-        <div class="hero-corner-contacts" role="region" :aria-label="t('contacts.title')">
-          <a class="hero-corner-contacts__link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
-            {{ t('contacts.emailDisplay') }}
-          </a>
-          <a class="hero-corner-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
-            {{ t('contacts.phoneDisplay') }}
-          </a>
-        </div>
+        <Hero />
       </div>
     </header>
 
@@ -407,18 +365,6 @@ const minOrderDiffEuros = computed(() =>
       </div>
     </footer>
 
-    <div v-if="proActive && !isMobileLayout" class="pro-indicator" aria-hidden="true">PRO</div>
-
-    <button
-      v-if="!isMobileLayout"
-      type="button"
-      class="theme-preview-toggle"
-      :aria-pressed="colorTheme === 'logo'"
-      @click="toggleColorTheme"
-    >
-      {{ colorTheme === 'logo' ? '↩ Teal (оригінал)' : '◆ Чорний + золото' }}
-    </button>
-
     <OrderFormModal
       :open="formOpen"
       :type-id="selectedTypeId"
@@ -447,29 +393,6 @@ const minOrderDiffEuros = computed(() =>
   min-width: 0;
   display: flex;
   flex-direction: column;
-}
-
-.theme-preview-toggle {
-  position: fixed;
-  left: max(0.75rem, env(safe-area-inset-left));
-  bottom: max(0.75rem, env(safe-area-inset-bottom));
-  z-index: 60;
-  padding: 0.5rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--allexo-border);
-  background: var(--allexo-surface);
-  color: var(--allexo-text);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.theme-preview-toggle:hover {
-  border-color: var(--allexo-accent);
-  color: var(--allexo-teal);
 }
 
 .header {
@@ -505,18 +428,10 @@ const minOrderDiffEuros = computed(() =>
   position: relative;
 }
 
-@media (max-width: 768px) {
-  .header__row {
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-  }
-}
-
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .hero {
-    padding-top: 48px;
-    padding-bottom: 48px;
+    padding-top: 38px;
+    padding-bottom: 38px;
   }
 }
 
@@ -533,17 +448,6 @@ const minOrderDiffEuros = computed(() =>
   .main {
     padding-top: 1rem;
     padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
-  }
-
-  .hero-corner-contacts {
-    margin-top: 10px;
-    gap: 0.05rem;
-  }
-
-  .hero-corner-contacts__link {
-    font-size: 13px;
-    line-height: 1.3;
-    text-underline-offset: 3px;
   }
 
   .about {
@@ -607,61 +511,54 @@ const minOrderDiffEuros = computed(() =>
   }
 }
 
-.header__row {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem 1.5rem;
-}
-
-.hero-corner-contacts {
-  position: absolute;
-  right: 28px;
-  bottom: 44px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
-  z-index: 1;
-}
-
-.hero-corner-contacts__link {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.96rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-decoration: underline;
-  text-decoration-color: #c4a35a;
-  text-underline-offset: 4px;
-  -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-  transition:
-    color 0.25s ease,
-    text-decoration-color 0.25s ease;
-}
-
-.hero-corner-contacts__link:hover {
-  color: #fff;
-  text-decoration-color: #c4a35a;
-}
-
-@media (max-width: 768px) {
-  .hero-corner-contacts {
-    position: static;
-    align-items: center;
-    text-align: center;
+@media (min-width: 769px) {
+  .about {
+    margin: 0 0 1.75rem;
+    padding: 1.35rem 1.5rem 1.35rem 1.65rem;
+    box-shadow: 0 10px 36px rgba(17, 17, 17, 0.07);
   }
 
-  .hero-corner-contacts__link {
-    font-weight: 500;
-    opacity: 0.9;
-    color: rgba(255, 255, 255, 0.9);
+  .about__title {
+    margin-bottom: 0.65rem;
+    font-size: 0.82rem;
+  }
+
+  .about__line {
+    font-size: 1.08rem;
+    line-height: 1.4;
+  }
+
+  .about__line--secondary {
+    font-size: 1rem;
+  }
+
+  .reviews {
+    margin: 0.75rem 0 1.75rem;
+  }
+
+  .reviews__card {
+    padding: 1.4rem 1.55rem;
+    box-shadow: 0 10px 36px rgba(17, 17, 17, 0.07);
+  }
+
+  .reviews__title {
+    font-size: 1.05rem;
+  }
+
+  .reviews__list {
+    margin-top: 1rem;
+    gap: 1rem;
+  }
+
+  .reviews__item {
+    padding: 1.15rem 1.3rem;
+  }
+
+  .reviews__item-quote {
+    line-height: 1.55;
+    padding: 0 0.15rem;
   }
 }
-
 
 .main {
   flex: 1;
@@ -1082,19 +979,4 @@ const minOrderDiffEuros = computed(() =>
   }
 }
 
-.pro-indicator {
-  position: fixed;
-  left: max(0.85rem, env(safe-area-inset-left));
-  bottom: max(0.85rem, env(safe-area-inset-bottom));
-  z-index: 70;
-  padding: 0.3rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid var(--allexo-border);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-  color: var(--allexo-teal);
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-}
 </style>

@@ -542,25 +542,22 @@ function openContactEmailModal() {
             <div
               v-for="(win, wIdx) in windowsForLine(line)"
               :key="wIdx"
-              class="window-entry"
-              :class="{ 'window-entry--with-visual': proActive }"
+              class="window-entry window-entry--with-visual"
             >
-              <span v-if="proActive" class="window-entry__position">
+              <span class="window-entry__position">
                 {{ t('summary.positionLabel').replace('{n}', String(globalWindowIndex(line.key, wIdx))) }}
               </span>
-              <div v-if="proActive" class="window-entry__visual-wrap">
+              <div class="window-entry__visual-wrap">
                 <WindowSchematicPreview :type-id="line.typeId" :win="win" />
                 <div class="window-entry__visual-meta">
-                  <p class="window-entry__dims-short">{{ windowDimsLabelPublic(line, win) }}</p>
+                  <p class="window-entry__dims-short">
+                    {{ windowDimsLabelPublic(line, win) }}
+                    <span v-if="isPublicMode" class="window-entry__qty">
+                      · {{ windowQty(win) }} {{ t('summary.pcs') }}
+                    </span>
+                  </p>
                 </div>
               </div>
-              <h4 v-else-if="!isPublicMode" class="window-entry__title">{{ windowEntryHeading(line, win) }}</h4>
-              <p v-else class="window-entry__title window-entry__title--public">
-                {{ windowDimsLabelPublic(line, win) }}
-                <span class="window-entry__qty">
-                  · {{ windowQty(win) }} {{ t('summary.pcs') }}
-                </span>
-              </p>
 
               <dl v-if="!isPublicMode && isSimplifiedProductLine(line.typeId)" class="dims">
                 <div class="dims__row">
@@ -608,14 +605,14 @@ function openContactEmailModal() {
                 </div>
               </dl>
               <template
-                v-if="lineWindowOversized(line.typeId, win)"
+                v-if="!isPublicMode && lineWindowOversized(line.typeId, win)"
               >
                 <p class="window-price window-price--individual">
                   {{ t('summary.priceLabel') }} {{ t('summary.individualQuote') }}
                 </p>
               </template>
-              <template v-else-if="windowPriceEuros(line, win) > 0">
-                <dl v-if="!isPublicMode" class="dims dims--price">
+              <template v-else-if="!isPublicMode && windowPriceEuros(line, win) > 0">
+                <dl class="dims dims--price">
                   <div class="dims__row">
                     <dt>{{ t('summary.dtPricePerUnit') }}</dt>
                     <dd>{{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}</dd>
@@ -633,9 +630,6 @@ function openContactEmailModal() {
                     <dd>{{ formatEuroExclVat(windowsillAddonPriceEuros(line, win), locale) }}</dd>
                   </div>
                 </dl>
-                <p v-else class="window-entry__price-public window-entry__price-public--hidden">
-                  <span class="window-entry__price-value">{{ t('summary.publicWindowPriceHidden') }}</span>
-                </p>
               </template>
               <p v-else-if="!isPublicMode" class="window-price">
                 {{ t('summary.priceLabel') }} {{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}

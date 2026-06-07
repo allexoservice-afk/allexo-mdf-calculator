@@ -448,6 +448,42 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+@media (min-width: 769px) {
+  .works {
+    margin-bottom: 1.5rem;
+  }
+
+  .works__title {
+    margin-bottom: 0.4rem;
+    font-size: 1.12rem;
+  }
+
+  .works__subtitle {
+    margin-bottom: 0.85rem;
+  }
+
+  .works__strip {
+    gap: 14px;
+    padding: 6px 0 10px;
+  }
+
+  .works__thumb {
+    width: 192px;
+    height: 132px;
+    border-radius: 16px;
+    box-shadow: 0 10px 28px rgba(17, 17, 17, 0.14);
+  }
+
+  .works__thumb:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 18px 42px rgba(17, 17, 17, 0.2);
+  }
+
+  .works__thumb img {
+    border-radius: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .works {
     margin-bottom: 1.1rem;

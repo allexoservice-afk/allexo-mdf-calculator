@@ -3,6 +3,7 @@ import { computed, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
 import { LOCALE_SWITCH_ORDER } from '../i18n/translations.js'
+import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
 
 const { locale, setLocale, t } = useLocale()
 
@@ -73,24 +74,35 @@ async function submitUnlock() {
       </template>
     </nav>
 
-    <div class="hero-top">
-      <button type="button" class="header__brand" @click="onBrandTap" aria-label="ALLEXO">
-        <img
-          src="/allexo-header-logo-transparent.png"
-          alt="ALLEXO"
-          class="hero-logo"
-          width="1067"
-          height="500"
-          decoding="async"
-        />
+    <div class="hero-main">
+      <div class="hero-top">
+        <button type="button" class="header__brand" @click="onBrandTap" aria-label="ALLEXO">
+          <img
+            src="/allexo-header-logo-transparent.png"
+            alt="ALLEXO"
+            class="hero-logo"
+            width="1067"
+            height="500"
+            decoding="async"
+          />
+        </button>
+      </div>
+
+      <h1 class="header__title">{{ t('hero.title') }}</h1>
+      <p class="header__tag">{{ t('hero.subtitle') }}</p>
+      <button type="button" class="header__cta" @click="scrollToCalculator">
+        {{ t('app.calcCta') }}
       </button>
     </div>
 
-    <h1 class="header__title">{{ t('hero.title') }}</h1>
-    <p class="header__tag">{{ t('hero.subtitle') }}</p>
-    <button type="button" class="header__cta" @click="scrollToCalculator">
-      {{ t('app.calcCta') }}
-    </button>
+    <div class="hero-contacts" role="region" :aria-label="t('contacts.title')">
+      <a class="hero-contacts__link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
+        {{ t('contacts.emailDisplay') }}
+      </a>
+      <a class="hero-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
+        {{ t('contacts.phoneDisplay') }}
+      </a>
+    </div>
   </div>
 
   <Teleport to="body">
@@ -139,6 +151,10 @@ async function submitUnlock() {
   position: relative;
 }
 
+.hero-main {
+  display: contents;
+}
+
 .hero-top {
   display: grid;
   grid-template-columns: 1fr;
@@ -184,8 +200,109 @@ async function submitUnlock() {
     display: inline-flex;
   }
 
+  .header__title {
+    margin-top: 20px;
+    max-width: 32rem;
+  }
+
+  .header__tag {
+    max-width: 30rem;
+  }
+
   .header__cta {
     align-self: flex-start;
+    margin-top: 16px;
+  }
+
+  .hero-contacts {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  .hero-contacts__link {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-decoration: underline;
+    text-decoration-color: #c4a35a;
+    text-underline-offset: 4px;
+    white-space: nowrap;
+    transition:
+      color 0.25s ease,
+      text-decoration-color 0.25s ease;
+  }
+
+  .hero-contacts__link:hover {
+    color: #fff;
+    text-decoration-color: #c4a35a;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header__text {
+    width: 100%;
+    display: block;
+    box-sizing: border-box;
+    position: relative;
+    min-height: 360px;
+  }
+
+  .hero-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    padding: 38px 0 0 120px;
+    box-sizing: border-box;
+  }
+
+  .hero-top {
+    width: auto;
+    margin-left: -6px;
+  }
+
+  .header__brand {
+    transform: none;
+  }
+
+  .header__title {
+    margin-top: 16px;
+    margin-left: -14px;
+    max-width: 32rem;
+  }
+
+  .header__tag {
+    margin-top: 12px;
+    margin-left: -14px;
+    max-width: 30rem;
+  }
+
+  .header__cta {
+    margin-top: 16px;
+    margin-left: -14px;
+    width: auto;
+    max-width: 360px;
+    align-self: flex-start;
+  }
+
+  .lang {
+    top: 50px;
+    right: 50px;
+  }
+
+  .hero-contacts {
+    position: absolute;
+    right: 50px;
+    bottom: 80px;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
   }
 }
 
@@ -291,12 +408,53 @@ async function submitUnlock() {
   }
 }
 
+.hero-contacts__link {
+  -webkit-tap-highlight-color: transparent;
+}
+
 @media (max-width: 768px) {
   .header__text {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+  }
+
+  .hero-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .hero-layout__visual {
+    display: none;
+  }
+
+  .hero-layout__main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .hero-contacts {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+  }
+
+  .hero-contacts__link {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: underline;
+    text-decoration-color: #c4a35a;
+    text-underline-offset: 3px;
   }
 
   .hero-top {
