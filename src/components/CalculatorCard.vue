@@ -117,4 +117,38 @@ const ariaDescription = computed(() => {
   font-weight: 600;
   color: var(--allexo-accent);
 }
+
+@media (max-width: 768px) {
+  .card {
+    position: relative;
+    z-index: auto;
+    padding: 1rem;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .card__visual {
+    padding: 0.85rem;
+    margin-bottom: 0.85rem;
+    min-height: 92px;
+  }
+
+  .card__title {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .card__hint {
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .card__cta {
+    display: block;
+    width: 100%;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
+  }
+}
 </style>

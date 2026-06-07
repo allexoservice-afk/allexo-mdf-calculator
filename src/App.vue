@@ -128,12 +128,19 @@ onMounted(() => {
   syncProActive()
   if (typeof window !== 'undefined') {
     window.addEventListener('allexo-pro-change', syncProActive)
+    mobileMq = window.matchMedia('(max-width: 768px)')
+    syncMobileLayout = () => {
+      isMobileLayout.value = mobileMq?.matches ?? false
+    }
+    syncMobileLayout()
+    mobileMq.addEventListener('change', syncMobileLayout)
   }
 })
 
 onBeforeUnmount(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('allexo-pro-change', syncProActive)
+    if (mobileMq && syncMobileLayout) mobileMq.removeEventListener('change', syncMobileLayout)
   }
   if (_flashTimer != null) window.clearTimeout(_flashTimer)
   _flashTimer = null
@@ -237,7 +244,15 @@ const orderTotalEuros = computed(() =>
   }, 0),
 )
 
-const showStickyTotal = computed(() => Array.isArray(lines.value) && lines.value.length > 0)
+const isMobileLayout = ref(false)
+/** @type {MediaQueryList | null} */
+let mobileMq = null
+/** @type {(() => void) | null} */
+let syncMobileLayout = null
+
+const showStickyTotal = computed(
+  () => !isMobileLayout.value && Array.isArray(lines.value) && lines.value.length > 0,
+)
 
 const payableOrderTotalEuros = computed(() => {
   const raw = orderTotalEuros.value
@@ -392,9 +407,10 @@ const minOrderDiffEuros = computed(() =>
       </div>
     </footer>
 
-    <div v-if="proActive" class="pro-indicator" aria-hidden="true">PRO</div>
+    <div v-if="proActive && !isMobileLayout" class="pro-indicator" aria-hidden="true">PRO</div>
 
     <button
+      v-if="!isMobileLayout"
       type="button"
       class="theme-preview-toggle"
       :aria-pressed="colorTheme === 'logo'"
@@ -505,9 +521,89 @@ const minOrderDiffEuros = computed(() =>
 }
 
 @media (max-width: 768px) {
+  .app {
+    overflow-x: hidden;
+  }
+
   .hero {
-    padding-top: 24px;
-    padding-bottom: 20px;
+    padding-top: 18px;
+    padding-bottom: 14px;
+  }
+
+  .main {
+    padding-top: 1rem;
+    padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
+  }
+
+  .hero-corner-contacts {
+    margin-top: 10px;
+    gap: 0.05rem;
+  }
+
+  .hero-corner-contacts__link {
+    font-size: 13px;
+    line-height: 1.3;
+    text-underline-offset: 3px;
+  }
+
+  .about {
+    margin-bottom: 1.1rem;
+    padding: 0.9rem 0.9rem;
+  }
+
+  .about__title {
+    margin-bottom: 0.4rem;
+  }
+
+  .about__line + .about__line {
+    margin-top: 0.3rem;
+  }
+
+  .reviews {
+    margin: 0.4rem 0 1.1rem;
+  }
+
+  .reviews__card {
+    padding: 0.85rem 0.85rem;
+  }
+
+  .reviews__list {
+    margin-top: 0.65rem;
+    gap: 0.65rem;
+  }
+
+  .reviews__item {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .reviews__item-quote {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .reviews__item-meta {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+  }
+
+  .steps {
+    margin-bottom: 1.1rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .calc {
+    position: relative;
+    z-index: auto;
+    margin-top: 1.1rem;
+  }
+
+  #summary {
+    position: relative;
+    z-index: auto;
+  }
+
+  .grid {
+    gap: 0.85rem;
   }
 }
 
@@ -555,14 +651,11 @@ const minOrderDiffEuros = computed(() =>
 @media (max-width: 768px) {
   .hero-corner-contacts {
     position: static;
-    margin-top: 20px;
     align-items: center;
     text-align: center;
-    gap: 0.1rem;
   }
 
   .hero-corner-contacts__link {
-    font-size: 14px;
     font-weight: 500;
     opacity: 0.9;
     color: rgba(255, 255, 255, 0.9);
@@ -576,8 +669,10 @@ const minOrderDiffEuros = computed(() =>
   padding-bottom: 2rem;
 }
 
-.app:has(.sticky-total) .main {
-  padding-bottom: 6.25rem;
+@media (min-width: 769px) {
+  .app:has(.sticky-total) .main {
+    padding-bottom: 6.25rem;
+  }
 }
 
 @media (min-width: 640px) {

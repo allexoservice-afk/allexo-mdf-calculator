@@ -862,9 +862,35 @@ function openContactEmailModal() {
   box-shadow: var(--shadow);
 }
 
-@media (max-width: 639px) {
+@media (max-width: 768px) {
   .summary {
-    padding: 1rem max(1rem, env(safe-area-inset-left)) 1rem max(1rem, env(safe-area-inset-right));
+    position: relative;
+    z-index: auto;
+    margin-top: 1.25rem;
+    padding: 0.9rem max(0.9rem, env(safe-area-inset-left)) 0.9rem max(0.9rem, env(safe-area-inset-right));
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .summary__quote-cta,
+  .contact-btn,
+  .contact-util-btn,
+  .line__remove,
+  .pro-discount__btn {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .pro-discount__btns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .pro-discount__btn--auto {
+    grid-column: 1 / -1;
   }
 }
 

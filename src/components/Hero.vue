@@ -302,7 +302,7 @@ async function submitUnlock() {
   .hero-top {
     display: block;
     width: 100%;
-    margin-top: 1.75rem;
+    margin-top: 1.25rem;
   }
 
   .header__brand {
@@ -311,69 +311,82 @@ async function submitUnlock() {
     width: 100%;
     margin-top: 0;
     margin-left: 0;
-    transform: none;
+    transform: translateX(-10px);
     grid-area: unset;
   }
 
   .hero-logo {
     height: auto;
-    max-height: 70px;
-    max-width: 220px;
+    max-height: 62px;
+    max-width: 195px;
     width: auto;
     margin-top: 0;
   }
 
   .lang {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 12px;
+    right: 12px;
     left: auto;
     width: auto;
-    max-width: 50%;
+    max-width: 42%;
     z-index: 2;
-    gap: 0.1rem 0.05rem;
-    font-size: 14px;
-    letter-spacing: 0.03em;
+    gap: 0;
+    font-size: 12px;
+    letter-spacing: 0.02em;
     justify-content: flex-end;
     flex-wrap: nowrap;
   }
 
   .lang__btn {
     min-width: 0;
-    min-height: 1.75rem;
-    padding: 0.15rem 0.25rem;
+    min-height: 1.5rem;
+    padding: 0.1rem 0.18rem;
   }
 
   .lang__sep {
-    display: none;
+    display: inline;
+    padding: 0 0.18rem;
+    opacity: 0.32;
   }
 
   .header__title {
-    margin-top: 14px;
+    margin-top: 10px;
     font-size: 18px;
     font-weight: 700;
-    line-height: 1.25;
-    max-width: 90%;
+    line-height: 1.22;
+    max-width: 88%;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
 
   .header__tag {
-    margin-top: 6px;
+    margin-top: 4px;
     font-size: 14px;
+    line-height: 1.35;
     opacity: 0.9;
-    max-width: 90%;
+    max-width: 88%;
   }
 
   .header__cta {
     width: 100%;
     max-width: 340px;
-    height: 56px;
-    min-height: 56px;
-    margin-top: 12px;
+    height: 52px;
+    min-height: 52px;
+    margin-top: 8px;
     margin-inline: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 1.25rem;
+    padding: 0 1.15rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .header__title {
+    font-size: 17px;
+    max-width: 92%;
   }
 }
 

@@ -448,6 +448,34 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+@media (max-width: 768px) {
+  .works {
+    margin-bottom: 1.1rem;
+  }
+
+  .works__title {
+    margin-bottom: 0.35rem;
+  }
+
+  .works__subtitle {
+    margin-bottom: 0.5rem;
+  }
+
+  .works__scroll-hint {
+    margin-bottom: 0.5rem;
+  }
+
+  .works__strip {
+    gap: 12px;
+    padding: 4px 0 8px;
+  }
+
+  .works__thumb {
+    width: 172px;
+    height: 127px;
+  }
+}
+
 .lightbox {
   position: fixed;
   inset: 0;
