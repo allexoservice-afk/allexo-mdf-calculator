@@ -292,18 +292,17 @@ async function submitUnlock() {
 }
 
 @media (max-width: 768px) {
-  .header__title {
-    font-size: 18px;
-  }
-}
-
-@media (max-width: 768px) {
   .header__text {
-    padding-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 
   .hero-top {
     display: block;
+    width: 100%;
+    margin-top: 1.75rem;
   }
 
   .header__brand {
@@ -317,46 +316,64 @@ async function submitUnlock() {
   }
 
   .hero-logo {
+    height: auto;
+    max-height: 70px;
+    max-width: 220px;
+    width: auto;
     margin-top: 0;
   }
 
   .lang {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 16px;
+    right: 16px;
     left: auto;
     width: auto;
-    max-width: 54%;
+    max-width: 50%;
     z-index: 2;
     gap: 0.1rem 0.05rem;
+    font-size: 14px;
+    letter-spacing: 0.03em;
     justify-content: flex-end;
     flex-wrap: nowrap;
   }
 
   .lang__btn {
     min-width: 0;
-    min-height: 2.1rem;
-    padding: 0.2rem 0.3rem;
-  }
-}
-
-@media (max-width: 430px) {
-  .lang {
-    letter-spacing: 0.03em;
+    min-height: 1.75rem;
+    padding: 0.15rem 0.25rem;
   }
 
   .lang__sep {
     display: none;
   }
-}
 
-@media (max-width: 390px) {
-  .lang {
-    font-size: 14px;
+  .header__title {
+    margin-top: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.25;
+    max-width: 90%;
   }
 
-  .lang__btn {
-    padding: 0.15rem 0.25rem;
+  .header__tag {
+    margin-top: 6px;
+    font-size: 14px;
+    opacity: 0.9;
+    max-width: 90%;
+  }
+
+  .header__cta {
+    width: 100%;
+    max-width: 340px;
+    height: 56px;
+    min-height: 56px;
+    margin-top: 12px;
+    margin-inline: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.25rem;
   }
 }
 
