@@ -27,6 +27,7 @@ import {
   payableWorkEurosFor,
 } from './pricing/orderDiscount.js'
 import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
+import { trackMetaViewContent } from './services/metaPixel.js'
 
 const { lines, addLine, updateLine, removeLine, clearOrder } = useOrder()
 const { locale, t } = useLocale()
@@ -55,6 +56,7 @@ const quoteLeadOpen = ref(false)
 function openForm(id) {
   editingLineKey.value = null
   selectedTypeId.value = id
+  trackMetaViewContent(id)
   formOpen.value = true
 }
 
@@ -64,6 +66,7 @@ function openEditForm(key) {
   if (!line) return
   editingLineKey.value = key
   selectedTypeId.value = line.typeId
+  trackMetaViewContent(line.typeId)
   formOpen.value = true
 }
 

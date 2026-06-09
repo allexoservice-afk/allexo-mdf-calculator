@@ -4,6 +4,7 @@ import { useLocale } from '../i18n/useLocale.js'
 import { isLeadSaveRlsError, saveLead } from '../services/leads.js'
 import { sendLeadEmails } from '../services/emailService.js'
 import { allocateQuoteReference } from '../utils/quoteReference.js'
+import { trackMetaLead } from '../services/metaPixel.js'
 import { buildCalculationData } from '../utils/buildCalculationData.js'
 import { CONTACT_EMAIL, CONTACT_EMAIL_HREF } from '../constants/contact.js'
 import PrivacyPolicyModal from './PrivacyPolicyModal.vue'
@@ -163,6 +164,7 @@ async function onSubmit() {
         successKind.value = 'saved_only'
         resetFormFields()
         step.value = 'success'
+        trackMetaLead()
         return
       }
       formError.value = isLeadSaveRlsError(saved)
@@ -185,6 +187,7 @@ async function onSubmit() {
 
     resetFormFields()
     step.value = 'success'
+    trackMetaLead()
   } catch (e) {
     console.error(e)
     formError.value = t('getQuote.errSubmit')

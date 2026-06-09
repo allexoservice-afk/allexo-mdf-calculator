@@ -3,7 +3,8 @@ import { computed, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
 import { LOCALE_SWITCH_ORDER } from '../i18n/translations.js'
-import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
+import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF, CONTACT_WHATSAPP_HREF } from '../constants/contact.js'
+import { trackMetaContact } from '../services/metaPixel.js'
 
 const { locale, setLocale, t } = useLocale()
 
@@ -18,6 +19,10 @@ function scrollToCalculator() {
   const el = document.getElementById('calculator')
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function onWhatsAppClick() {
+  trackMetaContact()
 }
 
 /** @param {import('../i18n/translations.js').Locale} code */
@@ -101,6 +106,16 @@ async function submitUnlock() {
       </a>
       <a class="hero-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
         {{ t('contacts.phoneDisplay') }}
+      </a>
+      <a
+        class="hero-contacts__link hero-contacts__link--wa"
+        :href="CONTACT_WHATSAPP_HREF"
+        target="_blank"
+        rel="noopener noreferrer"
+        :aria-label="t('fab.waAria')"
+        @click="onWhatsAppClick"
+      >
+        {{ t('getQuote.contactWhatsapp') }}
       </a>
     </div>
   </div>
