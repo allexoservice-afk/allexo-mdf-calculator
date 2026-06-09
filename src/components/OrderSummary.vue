@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getTypeById, isSimplifiedProductLine } from '../constants/calculatorTypes.js'
 import { normalizeStoredWindow, normalizeWindowQuantity } from '../constants/sizeCategories.js'
 import { useLocale } from '../i18n/useLocale.js'
@@ -34,13 +34,14 @@ import {
   effectiveDiscountPercent,
   payableWorkEurosFor,
 } from '../pricing/orderDiscount.js'
+import { preloadProposalPdfEngine } from '../utils/proposalPdf.js'
 
 const props = defineProps({
   lines: { type: Array, required: true },
   quoteOpen: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['remove', 'clear', 'update:quoteOpen'])
+const emit = defineEmits(['remove', 'edit', 'clear', 'update:quoteOpen'])
 
 const { locale, t } = useLocale()
 const { manualDiscountPct, setManualDiscount, toggleManualDiscount, PRO_MANUAL_DISCOUNT_OPTIONS } =
@@ -309,22 +310,31 @@ function windowBaseHours(line, win) {
   const tid = line.typeId
   if (tid === 'roller_box') {
     if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
-    return quoteRollerBoxOnlyHours()
+    return quoteRollerBoxOnlyHours(
+      Number(win.widthMm),
+      Number(win.rollerBoxHeightMm ?? win.heightMm),
+    )
   }
   if (tid === 'windowsill') {
     if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
-    return quoteWindowsillOnlyHours()
+    return quoteWindowsillOnlyHours(
+      Number(win.widthMm),
+      typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
+    )
   }
   const t = getTypeById(tid)
   if (!t) return 0
   if (!windowEligibleForAutoQuote(Number(win.widthMm), Number(win.heightMm))) return 0
   return quoteWindowHours(
+    Number(win.widthMm),
+    Number(win.heightMm),
     t.hasSill,
     t.hasRoller,
     /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
     win.rollerCategory != null
       ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
       : null,
+    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
   )
 }
 
@@ -342,7 +352,14 @@ const orderTotalBaseHours = computed(() =>
         sum +
         windowsForLine(line).reduce((s, w) => {
           if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-          return s + quoteRollerBoxOnlyHours() * windowQty(w)
+          return (
+            s +
+            quoteRollerBoxOnlyHours(
+              Number(w.widthMm),
+              Number(w.rollerBoxHeightMm ?? w.heightMm),
+            ) *
+              windowQty(w)
+          )
         }, 0)
       )
     }
@@ -351,7 +368,14 @@ const orderTotalBaseHours = computed(() =>
         sum +
         windowsForLine(line).reduce((s, w) => {
           if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
-          return s + quoteWindowsillOnlyHours() * windowQty(w)
+          return (
+            s +
+            quoteWindowsillOnlyHours(
+              Number(w.widthMm),
+              typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
+            ) *
+              windowQty(w)
+          )
         }, 0)
       )
     }
@@ -364,12 +388,15 @@ const orderTotalBaseHours = computed(() =>
         return (
           s +
           quoteWindowHours(
+            Number(w.widthMm),
+            Number(w.heightMm),
             t.hasSill,
             t.hasRoller,
             /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.depthCategory),
             w.rollerCategory != null
               ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
               : null,
+            typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
           ) *
             windowQty(w)
         )
@@ -390,6 +417,14 @@ const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
 const pdfLoading = ref(false)
 const emailRequestModalOpen = ref(false)
+
+watch(
+  () => props.lines.length,
+  (n) => {
+    if (n > 0) preloadProposalPdfEngine()
+  },
+  { immediate: true },
+)
 
 const travelKmInput = ref('')
 
@@ -452,6 +487,7 @@ async function downloadProposalPdfFile() {
     return
   }
   pdfLoading.value = true
+  await nextTick()
   try {
     const { downloadProposalPdf } = await import('../utils/proposalPdf.js')
     await downloadProposalPdf(proposalPdfOptions())
@@ -470,6 +506,7 @@ async function shareProposalPdfFile() {
     return
   }
   pdfLoading.value = true
+  await nextTick()
   try {
     const { shareProposalPdfBlob, downloadPdfBlob } = await import('../utils/shareProposalPdf.js')
     let blob
@@ -652,14 +689,24 @@ function openContactEmailModal() {
               {{ t('summary.lineSubtotal') }} {{ formatEuroExclVat(lineSubtotalEuros(line), locale) }}
             </p>
           </div>
-          <button
-            type="button"
-            class="line__remove"
-            :aria-label="t('summary.removeAriaPrefix') + ' ' + t('types.' + line.typeId + '.title')"
-            @click="emit('remove', line.key)"
-          >
-            {{ t('summary.remove') }}
-          </button>
+          <div class="line__actions">
+            <button
+              type="button"
+              class="line__edit"
+              :aria-label="t('summary.editAriaPrefix') + ' ' + t('types.' + line.typeId + '.title')"
+              @click="emit('edit', line.key)"
+            >
+              {{ t('summary.edit') }}
+            </button>
+            <button
+              type="button"
+              class="line__remove"
+              :aria-label="t('summary.removeAriaPrefix') + ' ' + t('types.' + line.typeId + '.title')"
+              @click="emit('remove', line.key)"
+            >
+              {{ t('summary.remove') }}
+            </button>
+          </div>
         </li>
       </ul>
 
@@ -869,6 +916,12 @@ function openContactEmailModal() {
   .summary__quote-cta,
   .contact-btn,
   .contact-util-btn,
+  .line__actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .line__edit,
   .line__remove,
   .pro-discount__btn {
     width: 100%;
@@ -1542,18 +1595,38 @@ function openContactEmailModal() {
   color: #111111;
 }
 
-.line__remove {
+.line__actions {
+  display: flex;
   flex-shrink: 0;
   align-self: flex-start;
+  gap: 0.5rem;
+}
+
+.line__edit,
+.line__remove {
   min-height: 2.75rem;
   padding: 0.45rem 0.95rem;
   font-size: 0.85rem;
   font-weight: 600;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.line__edit {
+  color: var(--allexo-teal);
+  background: #fff;
+  border: 1px solid rgba(15, 61, 62, 0.28);
+}
+
+.line__edit:hover {
+  background: rgba(15, 61, 62, 0.05);
+}
+
+.line__remove {
   color: var(--allexo-danger);
   background: #fff;
   border: 1px solid rgba(180, 35, 24, 0.35);
-  border-radius: var(--radius);
-  cursor: pointer;
 }
 
 .line__remove:hover {

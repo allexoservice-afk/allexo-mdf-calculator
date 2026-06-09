@@ -29,6 +29,8 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   /** @type {import('vue').PropType<import('../constants/calculatorTypes.js').CalculatorTypeId | null>} */
   typeId: { type: String, default: null },
+  /** @type {import('vue').PropType<import('../composables/useOrder.js').OrderLine | null>} */
+  initialLine: { type: Object, default: null },
 })
 
 const emit = defineEmits(['close', 'submit'])
@@ -46,6 +48,7 @@ const proUnlocked = ref(false)
 const mode = ref('client') // 'client' | 'pro'
 const isClientMode = computed(() => mode.value === 'client')
 const isProMode = computed(() => !isClientMode.value)
+const isEditMode = computed(() => Boolean(props.initialLine?.key))
 
 const modalEl = ref(/** @type {HTMLElement | null} */ (null))
 
@@ -88,12 +91,42 @@ function focusNextFromElement(el) {
   if (submit && typeof submit.focus === 'function') submit.focus()
 }
 
+/** @param {import('../composables/useOrder.js').OrderLine} line */
+function populateFromInitialLine(line) {
+  if (!line?.windows?.length) {
+    windows.value = [newWindowRow()]
+    return
+  }
+  windows.value = line.windows.map((win) => {
+    const row = newWindowRow()
+    row.widthMm = win.widthMm != null ? String(win.widthMm) : ''
+    row.heightMm = win.heightMm != null ? String(win.heightMm) : ''
+    row.quantity = normalizeWindowQuantity(win.quantity)
+    row.depthCategory =
+      win.depthCategory && isValidSizeCategory(String(win.depthCategory))
+        ? win.depthCategory
+        : DEFAULTS_CLIENT.depthCategory
+    row.rollerCategory =
+      win.rollerCategory && isValidSizeCategory(String(win.rollerCategory))
+        ? win.rollerCategory
+        : DEFAULTS_CLIENT.rollerCategory
+    row.rollerBoxHeightMm = Number(win.rollerBoxHeightMm ?? win.heightMm) || DEFAULTS_CLIENT.rollerBoxHeightMm
+    row.sillDepthMm = Number(win.windowsillDepthMm ?? win.heightMm) || DEFAULTS_CLIENT.windowsillDepthMm
+    return row
+  })
+}
+
 watch(
   () => props.open,
   (open) => {
     if (!open) return
     proUnlocked.value = isProUnlocked()
     mode.value = proUnlocked.value ? 'pro' : 'client'
+    if (props.initialLine?.windows?.length) {
+      populateFromInitialLine(props.initialLine)
+    } else {
+      windows.value = [newWindowRow()]
+    }
     void nextTick().then(() => {
       focusFirstField()
     })
@@ -167,6 +200,7 @@ watch(
 watch(
   () => props.typeId,
   () => {
+    if (!props.open || props.initialLine?.key) return
     windows.value = [newWindowRow()]
     proUnlocked.value = isProUnlocked()
     mode.value = proUnlocked.value ? 'pro' : 'client'
@@ -281,50 +315,70 @@ function parseMm(v) {
   return mm
 }
 
+/** @param {string} msg @param {'hint' | 'error'} [level] */
+function fieldIssue(msg, level = 'error') {
+  return { msg, level }
+}
+
+/** @param {{ msg: string, level: 'hint' | 'error' }} | undefined} issue */
+function fieldInputClass(issue) {
+  if (!issue) return {}
+  return issue.level === 'hint' ? { 'field__input--hint': true } : { 'field__input--error': true }
+}
+
+/** @param {{ msg: string, level: 'hint' | 'error' }} | undefined} issue */
+function fieldFeedbackClass(issue) {
+  return issue?.level === 'hint' ? 'field__hint' : 'field__err'
+}
+
 const windowErrors = computed(() => {
   void locale.value
   const tid = props.typeId
   return windows.value.map((formW) => {
     const e = {}
     const wMm = parseMm(formW.widthMm)
-    if (!Number.isFinite(wMm) || wMm <= 0) e.widthMm = t('form.errWidth')
-    else if (wMm < MIN_WINDOW_SIDE_MM) e.widthMm = t('form.errMinWindowSize')
+    if (!Number.isFinite(wMm) || wMm <= 0) e.widthMm = fieldIssue(t('form.errWidth'), 'hint')
+    else if (wMm < MIN_WINDOW_SIDE_MM) e.widthMm = fieldIssue(t('form.errMinWindowSize'), 'error')
 
     // У режимі “Клієнт” показуємо лише ширину/висоту/кількість і підставляємо інші параметри автоматично.
     if (isClientMode.value) {
       // Для “Підвіконник” та “Короб ролети” клієнт вводить тільки довжину (ширину).
       if (tid !== 'windowsill' && tid !== 'roller_box') {
         const hMm = parseMm(formW.heightMm)
-        if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = t('form.errHeight')
-        else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = t('form.errMinWindowSize')
+        if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
+        else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = fieldIssue(t('form.errMinWindowSize'), 'error')
       }
       return e
     }
 
     if (tid === 'roller_box') {
       const rhMm = Number(formW.rollerBoxHeightMm)
-      if (!ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(rhMm)) e.rollerBoxHeightMm = t('form.errRollerBoxSelect')
+      if (!ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(rhMm)) {
+        e.rollerBoxHeightMm = fieldIssue(t('form.errRollerBoxSelect'), 'hint')
+      }
     } else if (tid === 'windowsill') {
       const dMm = Number(formW.sillDepthMm)
       if (!WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)) {
-        e.sillDepthMm = t('form.errSillDepthSelect')
+        e.sillDepthMm = fieldIssue(t('form.errSillDepthSelect'), 'hint')
       }
     } else {
       const hMm = parseMm(formW.heightMm)
-      if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = t('form.errHeight')
-      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = t('form.errMinWindowSize')
+      if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
+      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = fieldIssue(t('form.errMinWindowSize'), 'error')
 
-      if (!isValidSizeCategory(String(formW.depthCategory))) e.depthCategory = t('form.errCategory')
+      if (!isValidSizeCategory(String(formW.depthCategory))) {
+        e.depthCategory = fieldIssue(t('form.errCategory'), 'hint')
+      }
 
       const ty = currentType.value
       if (ty?.hasSill) {
         const dMm = Number(formW.sillDepthMm)
         if (!WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)) {
-          e.sillDepthMm = t('form.errSillDepthSelect')
+          e.sillDepthMm = fieldIssue(t('form.errSillDepthSelect'), 'hint')
         }
       }
       if (ty?.hasRoller && !isValidSizeCategory(String(formW.rollerCategory))) {
-        e.rollerCategory = t('form.errCategory')
+        e.rollerCategory = fieldIssue(t('form.errCategory'), 'hint')
       }
     }
     return e
@@ -370,6 +424,7 @@ const formHasAnyOversized = computed(() => windows.value.some((formW) => formWin
 
 const primarySubmitLabel = computed(() => {
   void locale.value
+  if (isEditMode.value) return t('form.saveChanges')
   return formHasAnyOversized.value ? t('form.getExactQuote') : t('form.addToOrder')
 })
 
@@ -385,6 +440,7 @@ function buildSubmitPayload(extra = /** @type {Record<string, unknown>} */ ({}))
   return {
     typeId: props.typeId,
     uiMode: isClientMode.value ? 'client' : 'pro',
+    ...(props.initialLine?.key ? { editKey: props.initialLine.key } : {}),
     ...extra,
     windows: windows.value.map((formW) => {
       const widthMm = parseMm(formW.widthMm)
@@ -646,12 +702,14 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
                   @keydown="focusNextFieldOnEnter"
                 />
-                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
-                  windowErrors[idx].widthMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.widthMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
+                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
+                >
               </label>
             </div>
             <div v-else-if="isClientMode" class="row row--dims">
@@ -663,11 +721,13 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
                 />
-                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
-                  windowErrors[idx].widthMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.widthMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
+                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
+                >
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.heightMm') }}</span>
@@ -677,12 +737,14 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.heightMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.heightMm)"
                   @keydown="focusNextFieldOnEnter"
                 />
-                <span v-if="windowErrors[idx]?.heightMm" class="field__err">{{
-                  windowErrors[idx].heightMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.heightMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.heightMm)"
+                  >{{ windowErrors[idx]?.heightMm?.msg }}</span
+                >
               </label>
             </div>
             <div v-else-if="isSimplifiedLine && props.typeId === 'roller_box'" class="row row--dims">
@@ -694,12 +756,14 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
                   @keydown="focusNextFieldOnEnter"
                 />
-                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
-                  windowErrors[idx].widthMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.widthMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
+                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
+                >
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.rollerBoxHeightCm') }}</span>
@@ -707,15 +771,17 @@ function sizeLabel(id) {
                   v-model.number="windows[idx].rollerBoxHeightMm"
                   class="field__input"
                   autocomplete="off"
-                  :class="{ 'field__input--error': windowErrors[idx]?.rollerBoxHeightMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.rollerBoxHeightMm)"
                 >
                   <option v-for="mm in ROLLER_BOX_HEIGHT_MM_OPTIONS" :key="mm" :value="mm">
                     {{ mm }} {{ t('common.mm') }}
                   </option>
                 </select>
-                <span v-if="windowErrors[idx]?.rollerBoxHeightMm" class="field__err">{{
-                  windowErrors[idx].rollerBoxHeightMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.rollerBoxHeightMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.rollerBoxHeightMm)"
+                  >{{ windowErrors[idx]?.rollerBoxHeightMm?.msg }}</span
+                >
               </label>
             </div>
             <div v-else-if="isSimplifiedLine && props.typeId === 'windowsill'" class="row row--dims">
@@ -727,12 +793,14 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
                   @keydown="focusNextFieldOnEnter"
                 />
-                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
-                  windowErrors[idx].widthMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.widthMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
+                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
+                >
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.sillDepthCm') }}</span>
@@ -740,15 +808,17 @@ function sizeLabel(id) {
                   v-model.number="windows[idx].sillDepthMm"
                   class="field__input"
                   autocomplete="off"
-                  :class="{ 'field__input--error': windowErrors[idx]?.sillDepthMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.sillDepthMm)"
                 >
                   <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
                     {{ mm }} {{ t('common.mm') }}
                   </option>
                 </select>
-                <span v-if="windowErrors[idx]?.sillDepthMm" class="field__err">{{
-                  windowErrors[idx].sillDepthMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.sillDepthMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.sillDepthMm)"
+                  >{{ windowErrors[idx]?.sillDepthMm?.msg }}</span
+                >
               </label>
             </div>
             <div v-else class="row row--dims">
@@ -760,11 +830,13 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.widthMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
                 />
-                <span v-if="windowErrors[idx]?.widthMm" class="field__err">{{
-                  windowErrors[idx].widthMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.widthMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
+                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
+                >
               </label>
               <label class="field">
                 <span class="field__label">{{ t('form.heightMm') }}</span>
@@ -774,12 +846,14 @@ function sizeLabel(id) {
                   inputmode="decimal"
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
-                  :class="{ 'field__input--error': windowErrors[idx]?.heightMm }"
+                  :class="fieldInputClass(windowErrors[idx]?.heightMm)"
                   @keydown="focusNextFieldOnEnter"
                 />
-                <span v-if="windowErrors[idx]?.heightMm" class="field__err">{{
-                  windowErrors[idx].heightMm
-                }}</span>
+                <span
+                  v-if="windowErrors[idx]?.heightMm"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.heightMm)"
+                  >{{ windowErrors[idx]?.heightMm?.msg }}</span
+                >
               </label>
             </div>
             <label class="field field--compact">
@@ -802,7 +876,7 @@ function sizeLabel(id) {
               <select
                 v-model="windows[idx].depthCategory"
                 class="field__input"
-                :class="{ 'field__input--error': windowErrors[idx]?.depthCategory }"
+                :class="fieldInputClass(windowErrors[idx]?.depthCategory)"
                 @focus="onSelectFocus"
                 @change="onSelectChange"
                 @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
@@ -815,9 +889,11 @@ function sizeLabel(id) {
                   {{ sizeLabel(opt.id) }}
                 </option>
               </select>
-              <span v-if="windowErrors[idx]?.depthCategory" class="field__err">{{
-                windowErrors[idx].depthCategory
-              }}</span>
+              <span
+                v-if="windowErrors[idx]?.depthCategory"
+                :class="fieldFeedbackClass(windowErrors[idx]?.depthCategory)"
+                >{{ windowErrors[idx]?.depthCategory?.msg }}</span
+              >
             </label>
 
             <label v-if="!isSimplifiedLine && !isClientMode && currentType.hasSill" class="field">
@@ -826,7 +902,7 @@ function sizeLabel(id) {
                 v-model.number="windows[idx].sillDepthMm"
                 class="field__input"
                 autocomplete="off"
-                :class="{ 'field__input--error': windowErrors[idx]?.sillDepthMm }"
+                :class="fieldInputClass(windowErrors[idx]?.sillDepthMm)"
                 @focus="onSelectFocus"
                 @change="onSelectChange"
                 @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
@@ -835,9 +911,11 @@ function sizeLabel(id) {
                   {{ mm }} {{ t('common.mm') }}
                 </option>
               </select>
-              <span v-if="windowErrors[idx]?.sillDepthMm" class="field__err">{{
-                windowErrors[idx].sillDepthMm
-              }}</span>
+              <span
+                v-if="windowErrors[idx]?.sillDepthMm"
+                :class="fieldFeedbackClass(windowErrors[idx]?.sillDepthMm)"
+                >{{ windowErrors[idx]?.sillDepthMm?.msg }}</span
+              >
             </label>
 
             <label v-if="!isSimplifiedLine && !isClientMode && currentType.hasRoller" class="field">
@@ -845,7 +923,7 @@ function sizeLabel(id) {
               <select
                 v-model="windows[idx].rollerCategory"
                 class="field__input"
-                :class="{ 'field__input--error': windowErrors[idx]?.rollerCategory }"
+                :class="fieldInputClass(windowErrors[idx]?.rollerCategory)"
                 @focus="onSelectFocus"
                 @change="onSelectChange"
                 @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
@@ -858,9 +936,11 @@ function sizeLabel(id) {
                   {{ sizeLabel(opt.id) }}
                 </option>
               </select>
-              <span v-if="windowErrors[idx]?.rollerCategory" class="field__err">{{
-                windowErrors[idx].rollerCategory
-              }}</span>
+              <span
+                v-if="windowErrors[idx]?.rollerCategory"
+                :class="fieldFeedbackClass(windowErrors[idx]?.rollerCategory)"
+                >{{ windowErrors[idx]?.rollerCategory?.msg }}</span
+              >
             </label>
 
             <p v-if="!isClientMode && windowPreviews[idx]?.showPreview" class="window-preview-price">
@@ -879,6 +959,7 @@ function sizeLabel(id) {
             </div>
 
             <button
+              v-if="!isEditMode"
               type="button"
               class="btn-add-window"
               :class="{ 'btn-add-window--subtle': isClientMode }"
@@ -1386,6 +1467,16 @@ select.field__input {
   box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
 }
 
+.field__input--hint {
+  border-color: rgba(196, 163, 90, 0.65);
+  box-shadow: 0 0 0 1px rgba(196, 163, 90, 0.2);
+}
+
+.field__input--hint:focus {
+  border-color: var(--allexo-accent);
+  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.22);
+}
+
 .field__input--error:focus {
   border-color: var(--allexo-danger);
   box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.15);
@@ -1394,6 +1485,12 @@ select.field__input {
 .field__input--error {
   border-color: var(--allexo-danger);
   box-shadow: 0 0 0 1px var(--allexo-danger);
+}
+
+.field__hint {
+  font-size: 0.75rem;
+  color: var(--allexo-muted);
+  line-height: 1.35;
 }
 
 .dims-hint {

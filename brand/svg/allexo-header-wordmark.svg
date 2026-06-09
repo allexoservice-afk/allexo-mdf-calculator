@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 140" fill="none" role="img" aria-label="ALLEXO">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8dcc0"/>
+      <stop offset="45%" stop-color="#c4a35a"/>
+      <stop offset="100%" stop-color="#8f7340"/>
+    </linearGradient>
+  </defs>
+  <text
+    x="500"
+    y="102"
+    text-anchor="middle"
+    font-family="ui-sans-serif, system-ui, 'DM Sans', 'Segoe UI', Arial, sans-serif"
+    font-size="96"
+    font-weight="700"
+    letter-spacing="0.14em"
+  >
+    <tspan fill="#FFFFFF">ALLE</tspan><tspan fill="url(#gold)">X</tspan><tspan fill="#FFFFFF">O</tspan>
+  </text>
+</svg>

@@ -6,6 +6,7 @@ import {
   collectOwnerLineItems,
   computeBufferedWorkHours,
 } from './proposalLineItems.js'
+import { buildProposalContentHtml, proposalPricingFromLead } from './proposalContentHtml.js'
 import { quoteReferenceFromLead } from './quoteReference.js'
 
 const TEAL = '#0f3d3e'
@@ -171,26 +172,33 @@ export function buildClientEmailHtml(leadData) {
   const name = String(leadData.name || '').trim() || translate(locale, 'proposal.clientFallbackName')
   const quoteRef = quoteReferenceFromLead(leadData)
   const lines = linesFromLead(leadData)
-  const items = collectClientLineItems(lines, locale)
   const totalAmount = Number(leadData.total_price) || 0
-  const hours = computeBufferedWorkHours(lines)
-  const workTimeText = clientWorkTimeText(locale, hours)
+  const { discountEuros, discountPercent, travelMeta } = proposalPricingFromLead(leadData)
   const skipCta = leadData.skipClientCta === true
 
-  const cards = items.length
-    ? items.map((item) => clientItemCardHtml(locale, item)).join('')
-    : `<p style="margin:0;color:${MUTED};font-size:15px;">${esc(translate(locale, 'emailHtml.noLineItems'))}</p>`
+  const proposalContent = buildProposalContentHtml({
+    lines,
+    locale,
+    estimatedTotalEur: totalAmount,
+    discountEuros,
+    discountPercent,
+    clientName: name,
+    quoteReference: quoteRef,
+    travelMeta: /** @type {Parameters<typeof buildProposalContentHtml>[0]['travelMeta']} */ (travelMeta),
+    variant: 'email',
+    showTopHeader: false,
+    showBottomContacts: false,
+  })
+
+  const ctaBlock = skipCta
+    ? ''
+    : `<p style="margin:20px 0 0;font-size:15px;line-height:1.5;color:#1c2424;text-align:center;">${esc(translate(locale, 'emailHtml.ctaReply'))}</p>`
 
   const body = `${clientHeader(locale, quoteRef)}
-<tr><td style="padding:24px 24px 8px;">
-<p style="margin:0 0 12px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientGreeting').replace('{name}', name))}</p>
-<p style="margin:0 0 8px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientThanks'))}</p>
-<p style="margin:0 0 22px;font-size:16px;">${esc(translate(locale, 'emailHtml.clientIntro'))}</p>
-<p style="margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.yourOrder'))}</p>
-${cards}
-${clientGrandTotalHtml(locale, totalAmount, skipCta)}
-<p style="margin:20px 0 8px;font-size:15px;text-align:center;color:#1c2424;">${esc(workTimeText)}</p>
-<p style="margin:0 0 20px;font-size:15px;text-align:center;color:#1c2424;">${esc(translate(locale, 'emailHtml.planningNote'))}</p>
+<tr><td style="padding:20px 20px 8px;">
+${proposalContent}
+${ctaBlock}
+<p style="margin:16px 0 8px;font-size:14px;text-align:center;color:#1c2424;">${esc(translate(locale, 'emailHtml.planningNote'))}</p>
 <p style="margin:0 0 6px;font-size:14px;color:${MUTED};text-align:center;">${esc(translate(locale, 'emailHtml.preliminaryNote'))}</p>
 <p style="margin:0 0 24px;font-size:14px;color:${MUTED};text-align:center;">${esc(translate(locale, 'emailHtml.finalPriceNote'))}</p>
 </td></tr>

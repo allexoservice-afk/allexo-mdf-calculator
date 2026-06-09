@@ -204,14 +204,28 @@ export function computeBufferedWorkHours(lines) {
     if (tid === 'roller_box') {
       totalH += windowsForLine(L).reduce((s, w) => {
         if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-        return s + quoteRollerBoxOnlyHours() * normalizeWindowQuantity(w.quantity)
+        return (
+          s +
+          quoteRollerBoxOnlyHours(
+            Number(w.widthMm),
+            Number(w.rollerBoxHeightMm ?? w.heightMm),
+          ) *
+            normalizeWindowQuantity(w.quantity)
+        )
       }, 0)
       continue
     }
     if (tid === 'windowsill') {
       totalH += windowsForLine(L).reduce((s, w) => {
         if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
-        return s + quoteWindowsillOnlyHours() * normalizeWindowQuantity(w.quantity)
+        return (
+          s +
+          quoteWindowsillOnlyHours(
+            Number(w.widthMm),
+            typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
+          ) *
+            normalizeWindowQuantity(w.quantity)
+        )
       }, 0)
       continue
     }
@@ -222,12 +236,15 @@ export function computeBufferedWorkHours(lines) {
       return (
         s +
         quoteWindowHours(
+          Number(w.widthMm),
+          Number(w.heightMm),
           t.hasSill,
           t.hasRoller,
           /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.depthCategory),
           w.rollerCategory != null
             ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
             : null,
+          typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
         ) * normalizeWindowQuantity(w.quantity)
       )
     }, 0)

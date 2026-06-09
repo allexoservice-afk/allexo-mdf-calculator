@@ -1,4 +1,4 @@
-export const MIN_ORDER_EUR = 500
+export const MIN_ORDER_EUR = 350
 
 /** @type {readonly number[]} */
 export const PRO_MANUAL_DISCOUNT_OPTIONS = [5, 10, 15, 20, 25]

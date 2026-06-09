@@ -20,7 +20,7 @@ import {
 } from '../i18n/translations.js'
 
 const _TIME_BUFFER_COEFF = 1.44
-const _MIN_ORDER_EUR = 500
+const _MIN_ORDER_EUR = 350
 
 function _discountPercentFor(eur) {
   const v = Number(eur)
@@ -239,7 +239,14 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
         sum +
         windowsForLine(L).reduce((s, w) => {
           if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-          return s + quoteRollerBoxOnlyHours() * normalizeWindowQuantity(w.quantity)
+          return (
+            s +
+            quoteRollerBoxOnlyHours(
+              Number(w.widthMm),
+              Number(w.rollerBoxHeightMm ?? w.heightMm),
+            ) *
+              normalizeWindowQuantity(w.quantity)
+          )
         }, 0)
       )
     }
@@ -248,7 +255,14 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
         sum +
         windowsForLine(L).reduce((s, w) => {
           if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
-          return s + quoteWindowsillOnlyHours() * normalizeWindowQuantity(w.quantity)
+          return (
+            s +
+            quoteWindowsillOnlyHours(
+              Number(w.widthMm),
+              typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
+            ) *
+              normalizeWindowQuantity(w.quantity)
+          )
         }, 0)
       )
     }
@@ -260,12 +274,15 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
         if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
         const h =
           quoteWindowHours(
+            Number(w.widthMm),
+            Number(w.heightMm),
             t.hasSill,
             t.hasRoller,
             /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.depthCategory),
             w.rollerCategory != null
               ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
               : null,
+            typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
           ) * normalizeWindowQuantity(w.quantity)
         return s + h
       }, 0)

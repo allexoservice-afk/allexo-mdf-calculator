@@ -28,7 +28,7 @@ import {
 } from './pricing/orderDiscount.js'
 import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 
-const { lines, addLine, removeLine, clearOrder } = useOrder()
+const { lines, addLine, updateLine, removeLine, clearOrder } = useOrder()
 const { locale, t } = useLocale()
 
 /** @param {(typeof PUBLISHED_REVIEWS)[number]} review */
@@ -41,27 +41,51 @@ function reviewQuoteText(review) {
 /** @type {import('vue').Ref<import('./constants/calculatorTypes.js').CalculatorTypeId | null>} */
 const selectedTypeId = ref(null)
 const formOpen = ref(false)
+const editingLineKey = ref(/** @type {string | null} */ (null))
+
+const editingLine = computed(() => {
+  const key = editingLineKey.value
+  if (!key) return null
+  return lines.value.find((l) => l.key === key) ?? null
+})
 const privacyOpen = ref(false)
 const quoteLeadOpen = ref(false)
 
 /** @param {import('./constants/calculatorTypes.js').CalculatorTypeId} id */
 function openForm(id) {
+  editingLineKey.value = null
   selectedTypeId.value = id
+  formOpen.value = true
+}
+
+/** @param {string} key */
+function openEditForm(key) {
+  const line = lines.value.find((l) => l.key === key)
+  if (!line) return
+  editingLineKey.value = key
+  selectedTypeId.value = line.typeId
   formOpen.value = true
 }
 
 function closeForm() {
   formOpen.value = false
   selectedTypeId.value = null
+  editingLineKey.value = null
 }
 
-/** @param {Parameters<typeof addLine>[0]} payload */
+/** @param {Parameters<typeof addLine>[0] & { editKey?: string }} payload */
 function onSubmit(payload) {
-  const { uiMode, uiIntent, ...rest } = /** @type {any} */ (payload)
-  addLine(rest)
-  if (uiMode === 'client' && uiIntent !== 'pickType') {
+  const { uiMode, uiIntent, editKey, ...rest } = /** @type {any} */ (payload)
+  if (editKey) {
+    updateLine(editKey, rest)
     scrollToSummary()
     flashSummary()
+  } else {
+    addLine(rest)
+    if (uiMode === 'client' && uiIntent !== 'pickType') {
+      scrollToSummary()
+      flashSummary()
+    }
   }
 }
 
@@ -297,6 +321,7 @@ const minOrderDiffEuros = computed(() =>
             v-model:quote-open="quoteLeadOpen"
             :lines="lines"
             @remove="removeLine"
+            @edit="openEditForm"
             @clear="clearOrder"
           />
         </div>
@@ -368,6 +393,7 @@ const minOrderDiffEuros = computed(() =>
     <OrderFormModal
       :open="formOpen"
       :type-id="selectedTypeId"
+      :initial-line="editingLine"
       @close="closeForm"
       @submit="onSubmit"
     />
@@ -432,6 +458,17 @@ const minOrderDiffEuros = computed(() =>
   .hero {
     padding-top: 38px;
     padding-bottom: 38px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header {
+    background:
+      linear-gradient(128deg, rgba(196, 163, 90, 0.045) 0%, transparent 44%),
+      radial-gradient(440px 300px at 8% 28%, rgba(196, 163, 90, 0.15), transparent 72%),
+      radial-gradient(880px 500px at 16% 10%, rgba(196, 163, 90, 0.095), transparent 62%),
+      radial-gradient(640px 420px at 52% 48%, rgba(196, 163, 90, 0.04), transparent 68%),
+      linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
   }
 }
 

@@ -256,13 +256,13 @@ async function submitUnlock() {
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    padding: 38px 0 0 120px;
+    gap: 14px;
+    padding: 40px 0 0 106px;
     box-sizing: border-box;
   }
 
   .hero-top {
     width: auto;
-    margin-left: -6px;
   }
 
   .header__brand {
@@ -270,34 +270,31 @@ async function submitUnlock() {
   }
 
   .header__title {
-    margin-top: 16px;
-    margin-left: -14px;
+    margin-top: 0;
     max-width: 32rem;
   }
 
   .header__tag {
-    margin-top: 12px;
-    margin-left: -14px;
+    margin-top: 0;
     max-width: 30rem;
   }
 
   .header__cta {
-    margin-top: 16px;
-    margin-left: -14px;
+    margin-top: 0;
     width: auto;
     max-width: 360px;
     align-self: flex-start;
   }
 
   .lang {
-    top: 50px;
+    top: 40px;
     right: 50px;
   }
 
   .hero-contacts {
     position: absolute;
     right: 50px;
-    bottom: 80px;
+    bottom: 54px;
     margin-top: 0;
     display: flex;
     flex-direction: column;

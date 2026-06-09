@@ -182,9 +182,17 @@ export function useOrder() {
     lines.value = lines.value.filter((l) => l.key !== key)
   }
 
+  /**
+   * @param {string} key
+   * @param {Omit<OrderLine, 'key'>} payload
+   */
+  function updateLine(key, payload) {
+    lines.value = lines.value.map((l) => (l.key === key ? { ...payload, key } : l))
+  }
+
   function clearOrder() {
     lines.value = []
   }
 
-  return { lines, addLine, removeLine, clearOrder }
+  return { lines, addLine, updateLine, removeLine, clearOrder }
 }

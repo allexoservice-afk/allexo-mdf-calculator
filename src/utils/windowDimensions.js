@@ -6,7 +6,7 @@ import {
 } from '../constants/sizeCategories.js'
 
 /** Мінімальна ширина / висота вікна, мм (включно). */
-export const MIN_WINDOW_SIDE_MM = 450
+export const MIN_WINDOW_SIDE_MM = 300
 
 /** Мінімум другої величини (висота короба / глибина підвіконника), мм. */
 export const MIN_SECONDARY_DIM_MM = 100
