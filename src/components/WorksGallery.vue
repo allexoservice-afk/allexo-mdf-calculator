@@ -4,10 +4,15 @@ import { useLocale } from '../i18n/useLocale.js'
 import worksGallery from '../generated/works-gallery.json'
 
 const COUNT = worksGallery.count
+const CACHE_VERSION = worksGallery.version
+
+function workUrl(name) {
+  return `/images/works/${name}?v=${CACHE_VERSION}`
+}
 
 /** Публічні URL (файли в `public/images/works/`). */
-const ALL_THUMB = Array.from({ length: COUNT }, (_, i) => `/images/works/work${i + 1}-thumb.webp`)
-const ALL_LARGE = Array.from({ length: COUNT }, (_, i) => `/images/works/work${i + 1}-large.webp`)
+const ALL_THUMB = Array.from({ length: COUNT }, (_, i) => workUrl(`work${i + 1}-thumb.webp`))
+const ALL_LARGE = Array.from({ length: COUNT }, (_, i) => workUrl(`work${i + 1}-large.webp`))
 
 const { t } = useLocale()
 

@@ -124,7 +124,10 @@ async function main() {
   const metaDir = path.join(rootDir, 'src', 'generated')
   const metaPath = path.join(metaDir, 'works-gallery.json')
   fs.mkdirSync(metaDir, { recursive: true })
-  fs.writeFileSync(metaPath, `${JSON.stringify({ count: nFiles }, null, 2)}\n`)
+  fs.writeFileSync(
+    metaPath,
+    `${JSON.stringify({ count: nFiles, version: Date.now() }, null, 2)}\n`,
+  )
 
   console.log(`Готово. Пар: ${nFiles}. Вихід: ${outputDir}`)
 }
