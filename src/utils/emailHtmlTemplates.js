@@ -1,6 +1,6 @@
 import { CONTACT_EMAIL, CONTACT_PHONE_HREF } from '../constants/contact.js'
 import { translate } from '../i18n/translations.js'
-import { formatEuroExclVat } from './priceDisplay.js'
+import { formatEuroExclVat, formatEuroNumber } from './priceDisplay.js'
 import {
   collectClientLineItems,
   collectOwnerLineItems,
@@ -123,8 +123,7 @@ function localeToHtmlLang(locale) {
 
 /** @param {number} amount */
 function formatEuroAmount(amount) {
-  const n = Math.round(Number(amount) || 0)
-  return `${n}€`
+  return `${formatEuroNumber(amount)}€`
 }
 
 /**

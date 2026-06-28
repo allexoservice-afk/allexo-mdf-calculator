@@ -1,7 +1,9 @@
 import { windowProfileLengthMeters } from '../utils/mdfFormulas.js'
+import { normalizeSlopeDeepSurchargePct } from '../pricing/windowQuote.js'
 
 /**
  * @typedef {'small' | 'medium' | 'large' | 'custom'} SizeCategoryId
+ * @deprecated Лише для legacy-даних; нові рядки використовують slopeDeepOver25Cm.
  */
 
 export const SIZE_CATEGORY_OPTIONS = [
@@ -34,7 +36,7 @@ export function isValidSizeCategory(id) {
   return SIZE_CATEGORY_OPTIONS.some((o) => o.id === id)
 }
 
-/** Категорія за розміром у міліметрах. */
+/** Категорія за розміром у міліметрах (legacy). */
 /** @param {number} mm */
 export function mmToSizeCategory(mm) {
   if (typeof mm !== 'number' || Number.isNaN(mm)) return /** @type {SizeCategoryId} */ ('small')
@@ -44,32 +46,32 @@ export function mmToSizeCategory(mm) {
   return 'custom'
 }
 
-/** Варіанти висоти короба ролети (мм). */
+/** @deprecated Висота короба більше не вводиться — залишено для legacy. */
 export const ROLLER_BOX_HEIGHT_MM_OPTIONS = Object.freeze([300, 400, 500, 600])
 
-/** Варіанти глибини підвіконника (мм). */
+/** @deprecated Глибина підвіконника більше не вводиться — залишено для legacy. */
 export const WINDOWSILL_DEPTH_MM_OPTIONS = Object.freeze([150, 200, 250, 300, 350, 400])
 
-// Legacy exports kept (backward compatibility for stored data).
 /** @deprecated use ROLLER_BOX_HEIGHT_MM_OPTIONS */
 export const ROLLER_BOX_HEIGHT_CM_OPTIONS = Object.freeze(ROLLER_BOX_HEIGHT_MM_OPTIONS.map((mm) => mm / 10))
 /** @deprecated use WINDOWSILL_DEPTH_MM_OPTIONS */
 export const WINDOWSILL_DEPTH_CM_OPTIONS = Object.freeze(WINDOWSILL_DEPTH_MM_OPTIONS.map((mm) => mm / 10))
 
-/** @param {number} mm */
-export function isAllowedRollerBoxHeightMm(mm) {
-  return typeof mm === 'number' && !Number.isNaN(mm) && ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(mm)
-}
-
-/** @param {number} mm */
-export function isAllowedWindowsillDepthMm(mm) {
-  return typeof mm === 'number' && !Number.isNaN(mm) && WINDOWSILL_DEPTH_MM_OPTIONS.includes(mm)
+/**
+ * Legacy: depthCategory → глибина відкосу понад 25 см.
+ * @param {unknown} o
+ */
+function legacySlopeDeepFromRecord(o) {
+  if (typeof o.slopeDeepOver25Cm === 'boolean') return o.slopeDeepOver25Cm
+  if (typeof o.depthCategory === 'string' && o.depthCategory !== 'small') return true
+  if (typeof o.slopeDepthCm === 'number' && o.slopeDepthCm > 25) return true
+  return false
 }
 
 /**
- * Нормалізує вікно з localStorage (мм, категорії або legacy см).
+ * Нормалізує вікно з localStorage.
  * @param {unknown} raw
- * @param {string | null | undefined} [typeId] тип рядка замовлення (для «короб ролети» / «підвіконник»)
+ * @param {string | null | undefined} [typeId]
  */
 export function normalizeStoredWindow(raw, typeId) {
   if (!raw || typeof raw !== 'object') return null
@@ -84,57 +86,30 @@ export function normalizeStoredWindow(raw, typeId) {
     if (Number.isFinite(cm) && cm > 0) widthMm = cm * 10
   }
 
+  const slopeDeepOver25Cm = legacySlopeDeepFromRecord(o)
+  const slopeDeepSurchargePct = normalizeSlopeDeepSurchargePct(o.slopeDeepSurchargePct)
+  const quantity = normalizeWindowQuantity(o.quantity)
+
   if (typeId === 'roller_box') {
-    let rollerBoxHeightMm = Number(o.rollerBoxHeightMm)
-    if (!Number.isFinite(rollerBoxHeightMm) && typeof o.rollerBoxHeightCm === 'number') {
-      rollerBoxHeightMm = o.rollerBoxHeightCm * 10
-    }
-    if (!Number.isFinite(rollerBoxHeightMm) && typeof o.heightCm === 'number') {
-      rollerBoxHeightMm = o.heightCm * 10
-    }
-    if (!Number.isFinite(rollerBoxHeightMm) && typeof o.heightMm === 'number') {
-      rollerBoxHeightMm = o.heightMm
-    }
-    if (!Number.isFinite(widthMm) || !Number.isFinite(rollerBoxHeightMm)) return null
-    if (!isAllowedRollerBoxHeightMm(rollerBoxHeightMm)) return null
-    const quantity = normalizeWindowQuantity(o.quantity)
+    if (!Number.isFinite(widthMm)) return null
     return {
       widthMm,
-      heightMm: rollerBoxHeightMm,
-      rollerBoxHeightMm,
-      depthCategory: /** @type {SizeCategoryId} */ ('small'),
-      windowsillCategory: null,
-      rollerCategory: null,
-      profileLengthM: windowProfileLengthMeters(widthMm, rollerBoxHeightMm),
+      heightMm: widthMm,
+      slopeDeepOver25Cm: false,
+      slopeDeepSurchargePct: 15,
+      profileLengthM: widthMm / 1000,
       quantity,
     }
   }
 
   if (typeId === 'windowsill') {
-    let windowsillDepthMm = Number(o.windowsillDepthMm)
-    if (!Number.isFinite(windowsillDepthMm) && typeof o.sillDepthCm === 'number') {
-      windowsillDepthMm = o.sillDepthCm * 10
-    }
-    if (!Number.isFinite(windowsillDepthMm) && typeof o.windowsillDepthCm === 'number') {
-      windowsillDepthMm = o.windowsillDepthCm * 10
-    }
-    if (!Number.isFinite(windowsillDepthMm) && typeof o.heightCm === 'number') {
-      windowsillDepthMm = o.heightCm * 10
-    }
-    if (!Number.isFinite(windowsillDepthMm) && typeof o.heightMm === 'number') {
-      windowsillDepthMm = o.heightMm
-    }
-    if (!Number.isFinite(widthMm) || !Number.isFinite(windowsillDepthMm)) return null
-    if (!isAllowedWindowsillDepthMm(windowsillDepthMm)) return null
-    const quantity = normalizeWindowQuantity(o.quantity)
+    if (!Number.isFinite(widthMm)) return null
     return {
       widthMm,
-      heightMm: windowsillDepthMm,
-      windowsillDepthMm,
-      depthCategory: /** @type {SizeCategoryId} */ ('small'),
-      windowsillCategory: null,
-      rollerCategory: null,
-      profileLengthM: windowProfileLengthMeters(widthMm, windowsillDepthMm),
+      heightMm: widthMm,
+      slopeDeepOver25Cm: false,
+      slopeDeepSurchargePct: 15,
+      profileLengthM: widthMm / 1000,
       quantity,
     }
   }
@@ -146,44 +121,16 @@ export function normalizeStoredWindow(raw, typeId) {
 
   if (!Number.isFinite(widthMm) || !Number.isFinite(heightMm)) return null
 
-  let depthCategory = /** @type {SizeCategoryId} */ ('small')
-  if (typeof o.depthCategory === 'string' && isValidSizeCategory(o.depthCategory)) {
-    depthCategory = /** @type {SizeCategoryId} */ (o.depthCategory)
-  } else if (typeof o.slopeDepthCm === 'number') {
-    depthCategory = mmToSizeCategory(o.slopeDepthCm * 10)
-  }
-
-  /** @type {number | null} */
-  let windowsillDepthMm = null
-  if (typeof o.windowsillDepthMm === 'number' && Number.isFinite(o.windowsillDepthMm)) {
-    windowsillDepthMm = o.windowsillDepthMm
-  } else if (typeof o.sillDepthCm === 'number' && Number.isFinite(o.sillDepthCm)) {
-    windowsillDepthMm = o.sillDepthCm * 10
-  } else if (typeof o.windowsillDepthCm === 'number' && Number.isFinite(o.windowsillDepthCm)) {
-    windowsillDepthMm = o.windowsillDepthCm * 10
-  }
-
-  /** @type {SizeCategoryId | null} */
-  let rollerCategory = null
-  if (typeof o.rollerCategory === 'string' && isValidSizeCategory(o.rollerCategory)) {
-    rollerCategory = /** @type {SizeCategoryId} */ (o.rollerCategory)
-  } else if (typeof o.rollerBoxHeightCm === 'number') {
-    rollerCategory = mmToSizeCategory(o.rollerBoxHeightCm * 10)
-  }
-
   const profileLengthM =
     typeof o.profileLengthM === 'number' && Number.isFinite(o.profileLengthM)
       ? o.profileLengthM
       : windowProfileLengthMeters(widthMm, heightMm)
 
-  const quantity = normalizeWindowQuantity(o.quantity)
-
   return {
     widthMm,
     heightMm,
-    depthCategory,
-    windowsillDepthMm,
-    rollerCategory,
+    slopeDeepOver25Cm,
+    slopeDeepSurchargePct,
     profileLengthM,
     quantity,
   }

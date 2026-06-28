@@ -1,36 +1,25 @@
 import { getTypeById } from '../constants/calculatorTypes.js'
+import { normalizeMaterialId } from '../constants/materialTypes.js'
 import { normalizeStoredWindow, normalizeWindowQuantity } from '../constants/sizeCategories.js'
+import { MIN_ORDER_EUR, mdfSubtotalEurosForOrderLines, payableWorkEurosForOrderLines } from '../pricing/orderDiscount.js'
+import { quoteLineWindowEuros, quoteLineWindowsillAddonEuros } from '../pricing/quoteLineWindow.js'
 import {
   quoteRollerBoxOnlyHours,
-  quoteRollerBoxOnlyRoundedEuros,
   quoteWindowHours,
-  quoteWindowRoundedEuros,
-  quoteWindowsillAddonRoundedEuros,
   quoteWindowsillOnlyHours,
-  quoteWindowsillOnlyRoundedEuros,
+  winSlopeQuoteArgs,
+  normalizeSlopeDeepSurchargePct,
 } from '../pricing/windowQuote.js'
 import { formatEuroExclVat } from './priceDisplay.js'
 import { lineWindowEligibleForAutoQuote, orderHasOversizedWindows, windowEligibleForAutoQuote } from './windowDimensions.js'
 import { isProUnlocked } from '../constants/proUnlock.js'
 import {
-  sizeCategoryLabel,
   translate,
   typeTitle,
   windowsCountPhrase,
 } from '../i18n/translations.js'
 
 const _TIME_BUFFER_COEFF = 1.44
-const _MIN_ORDER_EUR = 350
-
-function _discountPercentFor(eur) {
-  const v = Number(eur)
-  if (!Number.isFinite(v) || v <= 0) return 0
-  if (v >= 3000) return 10
-  if (v >= 2000) return 7
-  if (v >= 1500) return 5
-  if (v >= 1000) return 3
-  return 0
-}
 
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
@@ -66,35 +55,14 @@ function windowsForLine(line) {
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowPriceEuros(line, win) {
-  if (!win) return 0
-  const tid = line.typeId
-  if (tid === 'roller_box') {
-    const wm = Number(win.widthMm)
-    const rh = Number(win.rollerBoxHeightMm ?? win.heightMm)
-    if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
-    return quoteRollerBoxOnlyRoundedEuros(wm, rh)
-  }
-  if (tid === 'windowsill') {
-    const wm = Number(win.widthMm)
-    const d = Number(win.windowsillDepthMm ?? win.heightMm)
-    if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
-    return quoteWindowsillOnlyRoundedEuros(wm, d)
-  }
-  const ty = getTypeById(tid)
-  if (!ty) return 0
-  const wm = Number(win.widthMm)
-  const hm = Number(win.heightMm)
-  if (!windowEligibleForAutoQuote(wm, hm)) return 0
-  return quoteWindowRoundedEuros(
-    wm,
-    hm,
-    /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
-    ty.hasSill,
-    ty.hasRoller,
-    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
-    win.rollerCategory != null
-      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
-      : null,
+  return quoteLineWindowEuros(line, win)
+}
+
+/** @param {Record<string, unknown>} line */
+function lineSubtotalEuros(line) {
+  return windowsForLine(line).reduce(
+    (s, w) => s + windowPriceEuros(line, w) * normalizeWindowQuantity(w.quantity),
+    0,
   )
 }
 
@@ -129,7 +97,7 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
   for (const line of lines) {
     const L = /** @type {Record<string, unknown>} */ (line)
     const t = getTypeById(L.typeId)
-    const title = t ? typeTitle(locale, String(L.typeId)) : String(L.typeId)
+    const title = t ? typeTitle(locale, String(L.typeId), L.materialId) : String(L.typeId)
     const n = windowsForLine(L).reduce((acc, w) => acc + normalizeWindowQuantity(w.quantity), 0)
     parts.push(`- ${title} – ${windowsCountPhrase(locale, n)}`)
   }
@@ -142,49 +110,40 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
     const t = getTypeById(L.typeId)
     if (!t) continue
     const wins = windowsForLine(L)
-    const itemTitle = typeTitle(locale, String(L.typeId))
+    const itemTitle = typeTitle(locale, String(L.typeId), L.materialId)
     for (const win of wins) {
       const wMm = Math.round(Number(win.widthMm))
       const qty = normalizeWindowQuantity(win.quantity)
-      if (L.typeId === 'roller_box') {
-        const hbMm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
+      if (L.typeId === 'roller_box' || L.typeId === 'windowsill') {
         let winHead = `- ${itemTitle}: ${wMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
-        parts.push(`- ${translate(locale, 'offer.rollerBoxHeightLine').replace('{n}', String(hbMm))}`)
-      } else if (L.typeId === 'windowsill') {
-        const dMm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-        let winHead = `- ${itemTitle}: ${wMm} ${translate(locale, 'common.mm')}`
-        if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
-        parts.push(winHead)
-        parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
       } else {
         const hMm = Math.round(Number(win.heightMm))
         let winHead = `- ${translate(locale, 'offer.windowLine')} ${wMm} × ${hMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
-        parts.push(
-          `- ${translate(locale, 'offer.depth')} ${sizeCategoryLabel(locale, String(win.depthCategory))}`,
-        )
+        if (win.slopeDeepOver25Cm && normalizeMaterialId(L.materialId) !== 'pvc') {
+          const pct = normalizeSlopeDeepSurchargePct(win.slopeDeepSurchargePct)
+          parts.push(
+            `- ${translate(locale, 'offer.slopeDeepLine').replace('{pct}', String(pct))}`,
+          )
+        }
         parts.push(`- ${translate(locale, 'offer.sill')} ${t.hasSill ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`)
         if (t.hasSill) {
-          const dMm = typeof win.windowsillDepthMm === 'number' ? Math.round(Number(win.windowsillDepthMm)) : null
           const wSillMm = wMm + 300
           parts.push(`- ${translate(locale, 'offer.sillWidthLine').replace('{n}', String(wSillMm))}`)
-          if (dMm != null) {
-            parts.push(`- ${translate(locale, 'offer.sillDepthLine').replace('{n}', String(dMm))}`)
-          }
           if (proPricing) {
             parts.push(
               `- ${translate(locale, 'offer.sillPriceLine')} ${formatEuroExclVat(
-                quoteWindowsillAddonRoundedEuros(Number(win.widthMm), win.windowsillDepthMm),
+                quoteLineWindowsillAddonEuros(L, win),
                 locale,
               )}`,
             )
           }
         }
         parts.push(
-          `- ${translate(locale, 'offer.roller')} ${t.hasRoller ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`,
+          `- ${translate(locale, 'offer.roller')} ${t.hasRoller && normalizeMaterialId(L.materialId) !== 'pvc' ? translate(locale, 'offer.yes') : translate(locale, 'offer.no')}`,
         )
       }
       const unitEur = windowPriceEuros(L, win)
@@ -241,10 +200,7 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
           if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
           return (
             s +
-            quoteRollerBoxOnlyHours(
-              Number(w.widthMm),
-              Number(w.rollerBoxHeightMm ?? w.heightMm),
-            ) *
+            quoteRollerBoxOnlyHours(Number(w.widthMm)) *
               normalizeWindowQuantity(w.quantity)
           )
         }, 0)
@@ -257,10 +213,7 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
           if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
           return (
             s +
-            quoteWindowsillOnlyHours(
-              Number(w.widthMm),
-              typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
-            ) *
+            quoteWindowsillOnlyHours(Number(w.widthMm)) *
               normalizeWindowQuantity(w.quantity)
           )
         }, 0)
@@ -272,17 +225,14 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
       sum +
       windowsForLine(L).reduce((s, w) => {
         if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
+        const slope = winSlopeQuoteArgs(w)
         const h =
           quoteWindowHours(
             Number(w.widthMm),
             Number(w.heightMm),
             t.hasSill,
             t.hasRoller,
-            /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.depthCategory),
-            w.rollerCategory != null
-              ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
-              : null,
-            typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
+            slope.deep,
           ) * normalizeWindowQuantity(w.quantity)
         return s + h
       }, 0)
@@ -296,17 +246,13 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
     parts.push(`${translate(locale, 'summary.workSubtotal')} ${formatEuroExclVat(totalEur, locale)}`)
 
     // Minimum order + discount (work subtotal only, excl. VAT)
-    if (totalEur > 0 && totalEur < _MIN_ORDER_EUR) {
-      const diff = _MIN_ORDER_EUR - totalEur
-      parts.push(`${translate(locale, 'summary.minOrderDiffPrefix')} ${formatEuroExclVat(diff, locale)}`)
+    const mdfSubtotal = mdfSubtotalEurosForOrderLines(lines, lineSubtotalEuros)
+    if (mdfSubtotal > 0 && mdfSubtotal < MIN_ORDER_EUR) {
+      parts.push(
+        `${translate(locale, 'form.minOrderHint').replace('{amount}', formatEuroExclVat(MIN_ORDER_EUR, locale))}`,
+      )
     }
-    const baseForDiscount = totalEur > 0 && totalEur < _MIN_ORDER_EUR ? _MIN_ORDER_EUR : totalEur
-    const pct = _discountPercentFor(baseForDiscount)
-    const disc = pct > 0 ? Math.round((baseForDiscount * pct) / 100) : 0
-    const payableWork = baseForDiscount - disc
-    if (disc > 0) {
-      parts.push(`${translate(locale, 'summary.discountLabel')} -${formatEuroExclVat(disc, locale)} (${pct}%)`)
-    }
+    const payableWork = payableWorkEurosForOrderLines(lines, lineSubtotalEuros)
     if (payableWork > 0 && payableWork !== totalEur) {
       parts.push(`${translate(locale, 'summary.payableTotal')} ${formatEuroExclVat(payableWork, locale)}`)
     }

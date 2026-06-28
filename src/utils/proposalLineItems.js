@@ -2,15 +2,16 @@
  * Структуровані позиції пропозиції для email (без зміни логіки цін).
  */
 import { getTypeById } from '../constants/calculatorTypes.js'
+import { normalizeMaterialId } from '../constants/materialTypes.js'
 import { normalizeStoredWindow, normalizeWindowQuantity } from '../constants/sizeCategories.js'
 import {
   quoteRollerBoxOnlyHours,
-  quoteRollerBoxOnlyRoundedEuros,
   quoteWindowHours,
-  quoteWindowRoundedEuros,
-  quoteWindowsillOnlyRoundedEuros,
   quoteWindowsillOnlyHours,
+  winSlopeQuoteArgs,
+  normalizeSlopeDeepSurchargePct,
 } from '../pricing/windowQuote.js'
+import { quoteLineWindowEuros } from '../pricing/quoteLineWindow.js'
 import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './windowDimensions.js'
 import { translate, typeTitle } from '../i18n/translations.js'
 
@@ -30,26 +31,13 @@ function unitPriceEuros(line, win) {
   const tid = line.typeId
   if (tid === 'roller_box') {
     if (!lineWindowEligibleForAutoQuote('roller_box', win)) return null
-    return quoteRollerBoxOnlyRoundedEuros(Number(win.widthMm), Number(win.rollerBoxHeightMm ?? win.heightMm))
-  }
-  if (tid === 'windowsill') {
+  } else if (tid === 'windowsill') {
     if (!lineWindowEligibleForAutoQuote('windowsill', win)) return null
-    return quoteWindowsillOnlyRoundedEuros(Number(win.widthMm), Number(win.windowsillDepthMm ?? win.heightMm))
+  } else if (!windowEligibleForAutoQuote(Number(win.widthMm), Number(win.heightMm))) {
+    return null
   }
-  const ty = getTypeById(tid)
-  if (!ty) return null
-  if (!windowEligibleForAutoQuote(Number(win.widthMm), Number(win.heightMm))) return null
-  return quoteWindowRoundedEuros(
-    Number(win.widthMm),
-    Number(win.heightMm),
-    /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
-    ty.hasSill,
-    ty.hasRoller,
-    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
-    win.rollerCategory != null
-      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
-      : null,
-  )
+  const unit = quoteLineWindowEuros(line, win)
+  return unit > 0 ? unit : null
 }
 
 /**
@@ -78,16 +66,16 @@ export function formatClientSizeLabel(locale, line, win) {
 export function formatOwnerSizeLines(locale, line, win) {
   const mm = translate(locale, 'common.mm')
   const w = Math.round(Number(win.widthMm))
-  if (line.typeId === 'roller_box') {
-    const h = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-    return [`${w} × ${h} ${mm}`]
-  }
-  if (line.typeId === 'windowsill') {
-    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-    return [`${w} ${mm}`, `${d} ${mm} ${translate(locale, 'emailHtml.ownerDepthSuffix')}`]
+  if (line.typeId === 'roller_box' || line.typeId === 'windowsill') {
+    return [`${w} ${mm}`]
   }
   const h = Math.round(Number(win.heightMm))
-  return [`${w} × ${h} ${mm}`]
+  const lines = [`${w} × ${h} ${mm}`]
+  if (win.slopeDeepOver25Cm && normalizeMaterialId(line.materialId) !== 'pvc') {
+    const pct = normalizeSlopeDeepSurchargePct(win.slopeDeepSurchargePct)
+    lines.push(translate(locale, 'offer.slopeDeepLine').replace('{pct}', String(pct)))
+  }
+  return lines
 }
 
 /**
@@ -103,7 +91,7 @@ export function collectClientLineItems(lines, locale) {
   for (const raw of lines) {
     const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
     const tid = typeof line.typeId === 'string' ? line.typeId : ''
-    const title = tid ? typeTitle(locale, tid) : '—'
+    const title = tid ? typeTitle(locale, tid, line.materialId) : '—'
     for (const win of windowsForLine(line)) {
       const qty = normalizeWindowQuantity(win.quantity)
       const unit = unitPriceEuros(line, win)
@@ -134,7 +122,7 @@ export function collectClientLineItemsForPdf(lines, locale) {
   for (const raw of lines) {
     const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
     const tid = typeof line.typeId === 'string' ? line.typeId : ''
-    const title = tid ? typeTitle(locale, tid) : '—'
+    const title = tid ? typeTitle(locale, tid, line.materialId) : '—'
     for (const win of windowsForLine(line)) {
       windowIndex += 1
       const qty = normalizeWindowQuantity(win.quantity)
@@ -167,7 +155,7 @@ export function collectOwnerLineItems(lines, locale) {
   for (const raw of lines) {
     const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
     const tid = typeof line.typeId === 'string' ? line.typeId : ''
-    const title = tid ? typeTitle(locale, tid) : '—'
+    const title = tid ? typeTitle(locale, tid, line.materialId) : '—'
     for (const win of windowsForLine(line)) {
       const qty = normalizeWindowQuantity(win.quantity)
       const unit = unitPriceEuros(line, win)
@@ -183,72 +171,60 @@ export function collectOwnerLineItems(lines, locale) {
   return items
 }
 
-/** @deprecated Use collectClientLineItems or collectOwnerLineItems */
-export function collectProposalLineItems(lines, locale) {
-  return collectClientLineItems(lines, locale).map((item) => ({
-    ...item,
-    details: [],
-    unitEur: item.lineTotalEur != null && item.quantity > 0 ? item.lineTotalEur / item.quantity : null,
-  }))
-}
-
 /**
+ * Орієнтовний час робіт (год) з буфером.
  * @param {unknown[]} lines
  */
-export function computeBufferedWorkHours(lines) {
+export function estimateBufferedWorkHours(lines) {
   if (!Array.isArray(lines) || !lines.length) return 0
-  let totalH = 0
-  for (const raw of lines) {
-    const L = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
-    const tid = L.typeId
+
+  const totalH = lines.reduce((sum, raw) => {
+    const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
+    const tid = line.typeId
     if (tid === 'roller_box') {
-      totalH += windowsForLine(L).reduce((s, w) => {
-        if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-        return (
-          s +
-          quoteRollerBoxOnlyHours(
-            Number(w.widthMm),
-            Number(w.rollerBoxHeightMm ?? w.heightMm),
-          ) *
-            normalizeWindowQuantity(w.quantity)
-        )
-      }, 0)
-      continue
+      return (
+        sum +
+        windowsForLine(line).reduce((s, w) => {
+          if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
+          return s + quoteRollerBoxOnlyHours(Number(w.widthMm)) * normalizeWindowQuantity(w.quantity)
+        }, 0)
+      )
     }
     if (tid === 'windowsill') {
-      totalH += windowsForLine(L).reduce((s, w) => {
-        if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
+      return (
+        sum +
+        windowsForLine(line).reduce((s, w) => {
+          if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
+          return s + quoteWindowsillOnlyHours(Number(w.widthMm)) * normalizeWindowQuantity(w.quantity)
+        }, 0)
+      )
+    }
+    const t = getTypeById(tid)
+    if (!t) return sum
+    return (
+      sum +
+      windowsForLine(line).reduce((s, w) => {
+        if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
+        const slope = winSlopeQuoteArgs(w)
         return (
           s +
-          quoteWindowsillOnlyHours(
+          quoteWindowHours(
             Number(w.widthMm),
-            typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
+            Number(w.heightMm),
+            t.hasSill,
+            t.hasRoller,
+            slope.deep,
           ) *
             normalizeWindowQuantity(w.quantity)
         )
       }, 0)
-      continue
-    }
-    const t = getTypeById(tid)
-    if (!t) continue
-    totalH += windowsForLine(L).reduce((s, w) => {
-      if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
-      return (
-        s +
-        quoteWindowHours(
-          Number(w.widthMm),
-          Number(w.heightMm),
-          t.hasSill,
-          t.hasRoller,
-          /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.depthCategory),
-          w.rollerCategory != null
-            ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
-            : null,
-          typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
-        ) * normalizeWindowQuantity(w.quantity)
-      )
-    }, 0)
-  }
-  const buffered = totalH * TIME_BUFFER
-  return Math.round(buffered * 10) / 10
+    )
+  }, 0)
+
+  return totalH * TIME_BUFFER
+}
+
+/** @param {unknown[]} lines */
+export function computeBufferedWorkHours(lines) {
+  return estimateBufferedWorkHours(lines)
 }

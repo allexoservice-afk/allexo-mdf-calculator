@@ -1,9 +1,5 @@
 import { isSimplifiedProductLine } from '../constants/calculatorTypes.js'
-import {
-  isAllowedRollerBoxHeightMm,
-  isAllowedWindowsillDepthMm,
-  normalizeStoredWindow,
-} from '../constants/sizeCategories.js'
+import { normalizeStoredWindow } from '../constants/sizeCategories.js'
 
 /** Мінімальна ширина / висота вікна, мм (включно). */
 export const MIN_WINDOW_SIDE_MM = 300
@@ -56,25 +52,8 @@ export function windowSidesMeetMinimum(widthMm, heightMm) {
  */
 export function lineWindowEligibleForAutoQuote(typeId, win) {
   const wm = Number(win.widthMm)
-  if (typeId === 'roller_box') {
-    const rh = Number(win.rollerBoxHeightMm ?? win.heightMm)
-    return (
-      Number.isFinite(wm) &&
-      Number.isFinite(rh) &&
-      wm >= MIN_WINDOW_SIDE_MM &&
-      rh >= MIN_SECONDARY_DIM_MM &&
-      !windowExceedsStandardMax(wm, rh)
-    )
-  }
-  if (typeId === 'windowsill') {
-    const d = Number(win.windowsillDepthMm ?? win.heightMm)
-    return (
-      Number.isFinite(wm) &&
-      Number.isFinite(d) &&
-      wm >= MIN_WINDOW_SIDE_MM &&
-      d >= MIN_SECONDARY_DIM_MM &&
-      !windowExceedsStandardMax(wm, d)
-    )
+  if (typeId === 'roller_box' || typeId === 'windowsill') {
+    return Number.isFinite(wm) && wm >= MIN_WINDOW_SIDE_MM && !windowExceedsStandardMax(wm, wm)
   }
   const hm = Number(win.heightMm)
   return windowEligibleForAutoQuote(wm, hm)
@@ -86,25 +65,8 @@ export function lineWindowEligibleForAutoQuote(typeId, win) {
  */
 export function lineWindowOversized(typeId, win) {
   const wm = Number(win.widthMm)
-  if (typeId === 'roller_box') {
-    const rh = Number(win.rollerBoxHeightMm ?? win.heightMm)
-    return (
-      Number.isFinite(wm) &&
-      Number.isFinite(rh) &&
-      wm >= MIN_WINDOW_SIDE_MM &&
-      rh >= MIN_SECONDARY_DIM_MM &&
-      windowExceedsStandardMax(wm, rh)
-    )
-  }
-  if (typeId === 'windowsill') {
-    const d = Number(win.windowsillDepthMm ?? win.heightMm)
-    return (
-      Number.isFinite(wm) &&
-      Number.isFinite(d) &&
-      wm >= MIN_WINDOW_SIDE_MM &&
-      d >= MIN_SECONDARY_DIM_MM &&
-      windowExceedsStandardMax(wm, d)
-    )
+  if (typeId === 'roller_box' || typeId === 'windowsill') {
+    return Number.isFinite(wm) && wm >= MIN_WINDOW_SIDE_MM && windowExceedsStandardMax(wm, wm)
   }
   const hm = Number(win.heightMm)
   return windowSidesMeetMinimum(wm, hm) && windowExceedsStandardMax(wm, hm)
@@ -116,13 +78,8 @@ export function lineWindowOversized(typeId, win) {
  */
 function simplifiedLineHasInvalidDims(typeId, w) {
   const wm = Number(w.widthMm)
-  if (typeId === 'roller_box') {
-    const rh = Number(w.rollerBoxHeightMm ?? w.heightMm)
-    return !Number.isFinite(wm) || wm < MIN_WINDOW_SIDE_MM || !isAllowedRollerBoxHeightMm(rh)
-  }
-  if (typeId === 'windowsill') {
-    const d = Number(w.windowsillDepthMm ?? w.heightMm)
-    return !Number.isFinite(wm) || wm < MIN_WINDOW_SIDE_MM || !isAllowedWindowsillDepthMm(d)
+  if (typeId === 'roller_box' || typeId === 'windowsill') {
+    return !Number.isFinite(wm) || wm < MIN_WINDOW_SIDE_MM
   }
   return false
 }

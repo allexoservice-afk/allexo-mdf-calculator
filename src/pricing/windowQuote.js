@@ -3,59 +3,45 @@
  * @module pricing/windowQuote
  */
 
-import { mmToSizeCategory } from '../constants/sizeCategories.js'
+import { normalizeMaterialId } from '../constants/materialTypes.js'
 import { windowProfileLengthMeters } from '../utils/mdfFormulas.js'
 
-/**
- * @typedef {import('../constants/sizeCategories.js').SizeCategoryId} SizeCategoryId
- */
+/** @type {Record<import('../constants/materialTypes.js').MaterialId, { slopes: number, sill: number, roller: number }>} */
+const _RATES = {
+  mdf: { slopes: 37, sill: 40, roller: 78 },
+  pvc: { slopes: 45, sill: 55, roller: 0 },
+}
 
-/** Базова ставка за погонний метр профілю (€/м), без ПДВ; коефіцієнти нижче множаться на цю базу. */
-const _BASE_PER_M = 53
-
-const _DEPTH_COEFF = /** @type {Record<SizeCategoryId, number>} */ ({
-  small: 1.0,
-  medium: 1.2,
-  large: 1.4,
-  custom: 1.7,
-})
-
-const _ROLLER_COEFF = /** @type {Record<SizeCategoryId, number>} */ ({
-  small: 1.3,
-  medium: 1.5,
-  large: 1.7,
-  custom: 2.0,
-})
-
-const _INSULATION = /** @type {Record<SizeCategoryId, number>} */ ({
-  small: 30,
-  medium: 50,
-  large: 70,
-  custom: 90,
-})
+/** @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId] */
+function _ratesFor(materialId) {
+  return _RATES[normalizeMaterialId(materialId)]
+}
 
 const _WINDOWSILL_WIDTH_ADDON_MM = 300
-const _WINDOWSILL_BASE_COEFF = 1.3
 
-const _DEPTH_HOURS = /** @type {Record<SizeCategoryId, number>} */ ({
-  small: 0,
-  medium: 0.3,
-  large: 0.6,
-  custom: 1,
-})
+/** @type {readonly number[]} */
+export const PRO_SLOPE_DEPTH_SURCHARGE_OPTIONS = Object.freeze([10, 15, 20])
 
-/** Надбавка за ролету/ізоляцію (частина фіксована за категорією короба). */
-const _ROLLER_HOURS = /** @type {Record<SizeCategoryId, number>} */ ({
-  small: 1,
-  medium: 1.5,
-  large: 2,
-  custom: 2.5,
-})
+/** @param {unknown} raw @returns {10 | 15 | 20} */
+export function normalizeSlopeDeepSurchargePct(raw) {
+  const n = Number(raw)
+  if (n === 10 || n === 15 || n === 20) return /** @type {10 | 15 | 20} */ (n)
+  return 15
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} win
+ */
+export function winSlopeQuoteArgs(win) {
+  return {
+    deep: Boolean(win?.slopeDeepOver25Cm),
+    pct: normalizeSlopeDeepSurchargePct(win?.slopeDeepSurchargePct),
+  }
+}
 
 /**
  * Час від розмірів вікна (год):
  * T = setup + L×perM + max(0, A − areaThreshold)×perM²
- * L — погонні метри профілю відкосів (ширина + 2×висота), A — площа отвору (м²).
  */
 const _TIME_SETUP_H = 0.5
 const _TIME_PER_PROFILE_M = 0.55
@@ -63,13 +49,10 @@ const _TIME_AREA_THRESHOLD_M2 = 2.5
 const _TIME_PER_M2_ABOVE = 0.2
 
 /** @param {number} value */
-function _roundUpToFiveEuros(value) {
-  return Math.ceil(value / 5) * 5
-}
-
-/** @param {Record<SizeCategoryId, number>} map @param {SizeCategoryId} key */
-function _pick(map, key) {
-  return map[key] ?? map.small
+function _exactEuros(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 0
+  return Math.round(n * 100) / 100
 }
 
 /** @param {number} h */
@@ -80,6 +63,17 @@ function _roundHours(h) {
 /** @param {number} widthMm @param {number} heightMm */
 function _windowAreaM2(widthMm, heightMm) {
   return (widthMm * heightMm) / 1e6
+}
+
+/**
+ * @param {boolean | null | undefined} deepOver25Cm
+ * @param {number | null | undefined} surchargePct
+ */
+function _normalizeSlopeSurchargePct(deepOver25Cm, surchargePct) {
+  if (!deepOver25Cm) return 0
+  const pct = Number(surchargePct)
+  if (pct === 10 || pct === 15 || pct === 20) return pct
+  return 15
 }
 
 /**
@@ -94,76 +88,81 @@ function _dimensionBaseHours(widthMm, heightMm) {
   return _TIME_SETUP_H + L * _TIME_PER_PROFILE_M + areaExtra
 }
 
-/** @param {number | null | undefined} windowsillDepthMm */
-function _windowsillDepthExtraHours(windowsillDepthMm) {
-  const depthMm = Number(windowsillDepthMm)
-  if (!Number.isFinite(depthMm)) return 0
-  const depthCm = Math.round(depthMm / 10)
-  const clamped = Math.min(40, Math.max(15, depthCm))
-  const steps = Math.floor((clamped - 15) / 5)
-  return steps * 0.08
-}
-
-/** @param {number | null | undefined} windowsillDepthMm */
-function _windowsillExtraPerMeter(windowsillDepthMm) {
-  // +5 €/m for every +5 cm depth step starting from 15 cm
-  const depthMm = Number(windowsillDepthMm)
-  if (!Number.isFinite(depthMm)) return 0
-  const depthCm = Math.round(depthMm / 10)
-  const clamped = Math.min(40, Math.max(15, depthCm))
-  const steps = Math.floor((clamped - 15) / 5)
-  return steps * 5
+/**
+ * Ціна відкосів, € без ПДВ.
+ * @param {number} widthMm
+ * @param {number} heightMm
+ * @param {boolean} [deepOver25Cm]
+ * @param {number | null | undefined} [deepSurchargePct] 10 або 15
+ * @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId]
+ */
+export function quoteSlopesRoundedEuros(
+  widthMm,
+  heightMm,
+  deepOver25Cm = false,
+  deepSurchargePct = 15,
+  materialId = 'mdf',
+) {
+  if (!Number.isFinite(widthMm) || !Number.isFinite(heightMm) || widthMm <= 0 || heightMm <= 0) return 0
+  const L = windowProfileLengthMeters(widthMm, heightMm)
+  let price = L * _ratesFor(materialId).slopes
+  if (normalizeMaterialId(materialId) === 'mdf') {
+    const pct = _normalizeSlopeSurchargePct(deepOver25Cm, deepSurchargePct)
+    if (pct > 0) price *= 1 + pct / 100
+  }
+  return _exactEuros(price)
 }
 
 /**
- * Ціна підвіконника (окремо), € без ПДВ, округлення вгору до 5€.
- * - ширина = widthMm + 30 см (для підвіконника разом з вікном)
- * - коефіцієнт завжди 1.5
- * - глибина додає +5 €/м за кожні +5 см (від 15 см)
- * @param {number} windowWidthMm
- * @param {number | null | undefined} windowsillDepthMm
+ * Ціна ролети по ширині вікна, € без ПДВ.
+ * @param {number} widthMm
+ * @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId]
  */
-export function quoteWindowsillAddonRoundedEuros(windowWidthMm, windowsillDepthMm) {
+export function quoteRollerRoundedEuros(widthMm, materialId = 'mdf') {
+  if (!Number.isFinite(widthMm) || widthMm <= 0) return 0
+  return _exactEuros((widthMm / 1000) * _ratesFor(materialId).roller)
+}
+
+/**
+ * Ціна підвіконника (разом з вікном): ширина + 30 см, € без ПДВ.
+ * @param {number} windowWidthMm
+ * @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId]
+ */
+export function quoteWindowsillAddonRoundedEuros(windowWidthMm, materialId = 'mdf') {
   if (!Number.isFinite(windowWidthMm) || windowWidthMm <= 0) return 0
   const widthM = (windowWidthMm + _WINDOWSILL_WIDTH_ADDON_MM) / 1000
-  const perM = _BASE_PER_M * _WINDOWSILL_BASE_COEFF + _windowsillExtraPerMeter(windowsillDepthMm)
-  return _roundUpToFiveEuros(widthM * perM)
+  return _exactEuros(widthM * _ratesFor(materialId).sill)
 }
 
 /**
- * Ціна за вікно в €, округлена вгору до кратних 5€.
+ * Ціна за вікно в € (сума позицій).
+ * @param {number} widthMm
+ * @param {number} heightMm
+ * @param {boolean} hasSill
+ * @param {boolean} hasRoller
+ * @param {boolean} [slopeDeepOver25Cm]
+ * @param {number | null | undefined} [slopeDeepSurchargePct]
+ * @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId]
  */
 export function quoteWindowRoundedEuros(
   widthMm,
   heightMm,
-  depthCategory,
   hasSill,
   hasRoller,
-  windowsillDepthMm,
-  rollerCategory,
+  slopeDeepOver25Cm = false,
+  slopeDeepSurchargePct = 15,
+  materialId = 'mdf',
 ) {
-  const widthM = widthMm / 1000
-  const heightM = heightMm / 1000
-  const d = _pick(_DEPTH_COEFF, depthCategory)
-
-  let price
-  if (!hasRoller) {
-    price = (2 * heightM + widthM) * _BASE_PER_M * d
-  } else {
-    const rollCat = rollerCategory ?? 'small'
-    const r = _pick(_ROLLER_COEFF, rollCat)
-    const ins = _pick(_INSULATION, rollCat)
-    const sidePrice = 2 * heightM * _BASE_PER_M * d
-    const topPrice = widthM * _BASE_PER_M * d * r
-    price = sidePrice + topPrice + ins + 10
-  }
-
-  if (hasSill) {
-    // підвіконник рахується окремо і додається до ціни відкосів
-    price += quoteWindowsillAddonRoundedEuros(widthMm, windowsillDepthMm)
-  }
-
-  return _roundUpToFiveEuros(price)
+  let price = quoteSlopesRoundedEuros(
+    widthMm,
+    heightMm,
+    slopeDeepOver25Cm,
+    slopeDeepSurchargePct,
+    materialId,
+  )
+  if (hasRoller) price += quoteRollerRoundedEuros(widthMm, materialId)
+  if (hasSill) price += quoteWindowsillAddonRoundedEuros(widthMm, materialId)
+  return price
 }
 
 /**
@@ -172,78 +171,54 @@ export function quoteWindowRoundedEuros(
  * @param {number} heightMm
  * @param {boolean} hasSill
  * @param {boolean} hasRoller
- * @param {SizeCategoryId} depthCategory
- * @param {SizeCategoryId | null | undefined} rollerCategory
- * @param {number | null | undefined} [windowsillDepthMm]
+ * @param {boolean} [slopeDeepOver25Cm]
  */
-export function quoteWindowHours(
-  widthMm,
-  heightMm,
-  hasSill,
-  hasRoller,
-  depthCategory,
-  rollerCategory,
-  windowsillDepthMm,
-) {
+export function quoteWindowHours(widthMm, heightMm, hasSill, hasRoller, slopeDeepOver25Cm = false) {
   let h = _dimensionBaseHours(widthMm, heightMm)
-  h += _pick(_DEPTH_HOURS, depthCategory ?? 'small')
+  if (slopeDeepOver25Cm) h += 0.45
   if (hasSill) {
     const sillM = (widthMm + _WINDOWSILL_WIDTH_ADDON_MM) / 1000
-    h += 0.25 + sillM * 0.2 + _windowsillDepthExtraHours(windowsillDepthMm)
+    h += 0.25 + sillM * 0.2
   }
   if (hasRoller) {
-    const rollCat = rollerCategory ?? 'small'
-    h += _pick(_ROLLER_HOURS, rollCat) * 0.45 + (widthMm / 1000) * 0.12
+    h += 1.1 + (widthMm / 1000) * 0.12
   }
   return _roundHours(h)
 }
 
 /**
- * Ціна лише короба ролети (без бокових відкосів), €, округлення як у повному вікні.
+ * Ціна лише короба ролети (без бокових відкосів), €.
  * @param {number} widthMm
- * @param {number} rollerBoxHeightMm
+ * @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId]
  */
-export function quoteRollerBoxOnlyRoundedEuros(widthMm, rollerBoxHeightMm) {
-  const widthM = widthMm / 1000
-  const cat = mmToSizeCategory(rollerBoxHeightMm)
-  const r = _pick(_ROLLER_COEFF, cat)
-  const ins = _pick(_INSULATION, cat)
-  const price = widthM * _BASE_PER_M * r + ins + 10
-  return _roundUpToFiveEuros(price)
+export function quoteRollerBoxOnlyRoundedEuros(widthMm, materialId = 'mdf') {
+  return quoteRollerRoundedEuros(widthMm, materialId)
 }
 
 /**
- * Ціна лише підвіконника, € (без ПДВ), за шириною в см і коефіцієнтом глибини.
- * widthCm = widthMm / 10, widthM = widthCm / 100, price = widthM × 53 × 1.5 (+ надбавка за глибину).
- * @param {number} widthMm ширина в мм (поле «Ширина», см × 10)
- * @param {number} windowsillDepthMm глибина в мм (15–40 см, крок 5 см)
+ * Ціна лише підвіконника, € (без ПДВ), за шириною в мм.
+ * @param {number} widthMm
+ * @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId]
  */
-export function quoteWindowsillOnlyRoundedEuros(widthMm, windowsillDepthMm) {
+export function quoteWindowsillOnlyRoundedEuros(widthMm, materialId = 'mdf') {
   if (!Number.isFinite(widthMm) || widthMm <= 0) return 0
-  const widthM = widthMm / 1000
-  const perM = _BASE_PER_M * _WINDOWSILL_BASE_COEFF + _windowsillExtraPerMeter(windowsillDepthMm)
-  return _roundUpToFiveEuros(widthM * perM)
+  return _exactEuros((widthMm / 1000) * _ratesFor(materialId).sill)
 }
 
 /**
  * Орієнтовний час на один «короб ролети» (год).
  * @param {number} widthMm
- * @param {number} rollerBoxHeightMm
  */
-export function quoteRollerBoxOnlyHours(widthMm, rollerBoxHeightMm) {
+export function quoteRollerBoxOnlyHours(widthMm) {
   const widthM = widthMm / 1000
-  const cat = mmToSizeCategory(rollerBoxHeightMm)
-  const h = 0.4 + widthM * 0.35 + _pick(_ROLLER_HOURS, cat) * 0.35
-  return _roundHours(h)
+  return _roundHours(0.4 + widthM * 0.35 + 0.35)
 }
 
 /**
  * Орієнтовний час на один підвіконник (год).
  * @param {number} widthMm
- * @param {number | null | undefined} windowsillDepthMm
  */
-export function quoteWindowsillOnlyHours(widthMm, windowsillDepthMm) {
+export function quoteWindowsillOnlyHours(widthMm) {
   const widthM = widthMm / 1000
-  const h = 0.35 + widthM * 0.3 + _windowsillDepthExtraHours(windowsillDepthMm)
-  return _roundHours(h)
+  return _roundHours(0.35 + widthM * 0.3)
 }

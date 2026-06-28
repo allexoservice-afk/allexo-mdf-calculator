@@ -6,6 +6,8 @@ import TypeVisual from './TypeVisual.vue'
 const props = defineProps({
   /** @type {import('vue').PropType<import('../constants/calculatorTypes.js').CalculatorTypeId>} */
   typeId: { type: String, required: true },
+  /** @type {import('vue').PropType<import('../constants/materialTypes.js').MaterialId>} */
+  materialId: { type: String, default: 'mdf' },
   visual: { type: String, required: true },
 })
 
@@ -13,9 +15,24 @@ const emit = defineEmits(['select'])
 
 const { t } = useLocale()
 
-const title = computed(() => t(`types.${props.typeId}.title`))
-const clientHint = computed(() => t(`types.${props.typeId}.hint`))
-const clientHintRoller = computed(() => t(`types.${props.typeId}.hintRoller`))
+const title = computed(() => {
+  if (props.materialId === 'pvc') {
+    const pvc = t(`types.${props.typeId}.title_pvc`)
+    if (pvc !== `types.${props.typeId}.title_pvc`) return pvc
+  }
+  return t(`types.${props.typeId}.title`)
+})
+const clientHint = computed(() => {
+  if (props.materialId === 'pvc') {
+    const pvc = t(`types.${props.typeId}.hint_pvc`)
+    if (pvc !== `types.${props.typeId}.hint_pvc`) return pvc
+  }
+  return t(`types.${props.typeId}.hint`)
+})
+const clientHintRoller = computed(() => {
+  if (props.materialId === 'pvc') return ''
+  return t(`types.${props.typeId}.hintRoller`)
+})
 
 const ariaDescription = computed(() => {
   const parts = [clientHint.value]

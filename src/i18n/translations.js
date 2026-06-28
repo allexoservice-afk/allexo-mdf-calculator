@@ -200,16 +200,25 @@ export const TRANSLATIONS = {
       emailSubject: 'ALLEXO · Відгук',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Мова інтерфейсу' },
+    material: {
+      switchAria: 'Матеріал обробки',
+      mdf: 'MDF',
+      pvc: 'PVC',
+    },
     card: { selectType: 'Обрати тип', ariaPrefix: 'Обрати тип:' },
     types: {
       no_sill: {
         title: 'Відкоси без підвіконника (вікна/двері)',
+        title_pvc: 'PVC відкоси без підвіконника',
         hint: 'Обробка бокових і верхньої частини вікна MDF',
+        hint_pvc: 'Обробка відкосів ПВХ (без підвіконника)',
         hintRoller: '',
       },
       with_sill: {
         title: 'Відкоси з підвіконником',
+        title_pvc: 'PVC відкоси з підвіконником',
         hint: 'Обробка відкосів + встановлення підвіконника',
+        hint_pvc: 'Обробка відкосів ПВХ + встановлення підвіконника',
         hintRoller: '',
       },
       no_sill_roller: {
@@ -229,7 +238,9 @@ export const TRANSLATIONS = {
       },
       windowsill: {
         title: 'Підвіконник',
+        title_pvc: 'Підвіконник PVC',
         hint: 'Встановлення підвіконника (без відкосів і короба ролети)',
+        hint_pvc: 'Встановлення підвіконника ПВХ (без відкосів)',
         hintRoller: '',
       },
     },
@@ -266,7 +277,13 @@ export const TRANSLATIONS = {
       errHeight: 'Вкажіть висоту в мм',
       errMinWindowSize: 'Мінімальний розмір вікна — 300 × 300 мм',
       minSizeHint: 'Мінімальний розмір: 300 × 300 мм',
-      minSizeHintSimplified: 'Ширина вікна від 300 мм; друга величина — від 100 мм',
+      minSizeHintSimplified: 'Ширина від 300 мм',
+      minOrderHint: 'Мінімальне замовлення — {amount}',
+      minOrderBelowNote:
+        'Сума цієї позиції нижча за мінімальне замовлення ({amount}). До мінімуму: {diff}.',
+      slopeDeepOver25Cm: 'Глибина відкосу понад 25 см',
+      slopeDeepSurchargePct: 'Надбавка до відкосів',
+      errSlopeSurcharge: 'Оберіть надбавку 10%, 15% або 20%',
       errCategory: 'Оберіть категорію',
       errRollerBoxHeight: 'Вкажіть висоту короба в мм',
       errRollerBoxSelect: 'Оберіть висоту короба зі списку',
@@ -349,6 +366,8 @@ export const TRANSLATIONS = {
       travelDistancePlaceholder: 'Наприклад 45',
       workSubtotal: 'Разом:',
       minOrderDiffPrefix: 'До мінімального замовлення:',
+      publicMinOrderNote: 'Мінімальне замовлення — {amount}.',
+      slopeDeepLine: 'Глибина відкосу > 25 см (+{pct}% до відкосів)',
       payableTotal: 'До оплати:',
       payableWorkTotal: 'Роботи до оплати:',
       discountLabel: 'Знижка:',
@@ -411,6 +430,7 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Глибина підвіконника: {n} мм',
       sillWidthLine: 'Ширина підвіконника: {n} мм',
       sillPriceLine: 'Ціна підвіконника:',
+      slopeDeepLine: 'Глибина відкосу > 25 см (+{pct}% до відкосів)',
       priceOnRequestShort: 'Вартість — після огляду / окремим прорахунком.',
       publicOfferFooter:
         'Підсумкові суми, мінімальне замовлення та знижки вказуються після офіційного прорахунку.',
@@ -637,16 +657,25 @@ export const TRANSLATIONS = {
       emailSubject: 'ALLEXO · Review',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Interface language' },
+    material: {
+      switchAria: 'Finishing material',
+      mdf: 'MDF',
+      pvc: 'PVC',
+    },
     card: { selectType: 'Select type', ariaPrefix: 'Select type:' },
     types: {
       no_sill: {
         title: 'Jambs without windowsill (windows/doors)',
+        title_pvc: 'PVC jambs without windowsill',
         hint: 'MDF finishing of the sides and top of the window',
+        hint_pvc: 'PVC jamb finishing (without windowsill)',
         hintRoller: '',
       },
       with_sill: {
         title: 'Jambs with windowsill',
+        title_pvc: 'PVC jambs with windowsill',
         hint: 'Jamb finishing + windowsill installation',
+        hint_pvc: 'PVC jamb finishing + windowsill installation',
         hintRoller: '',
       },
       no_sill_roller: {
@@ -666,7 +695,9 @@ export const TRANSLATIONS = {
       },
       windowsill: {
         title: 'Windowsill',
+        title_pvc: 'PVC windowsill',
         hint: 'Windowsill installation (no jambs or roller box)',
+        hint_pvc: 'PVC windowsill installation (no jambs)',
         hintRoller: '',
       },
     },
@@ -703,7 +734,13 @@ export const TRANSLATIONS = {
       errHeight: 'Enter height in mm',
       errMinWindowSize: 'Minimum window size is 300 × 300 mm',
       minSizeHint: 'Minimum size: 300 × 300 mm',
-      minSizeHintSimplified: 'Window width from 300 mm; second dimension from 100 mm',
+      minSizeHintSimplified: 'Width from 300 mm',
+      minOrderHint: 'Minimum order — {amount}',
+      minOrderBelowNote:
+        'This line is below the minimum order ({amount}). To reach the minimum: {diff}.',
+      slopeDeepOver25Cm: 'Slope depth over 25 cm',
+      slopeDeepSurchargePct: 'Slope surcharge',
+      errSlopeSurcharge: 'Choose 10%, 15%, or 20% surcharge',
       errCategory: 'Select a category',
       errRollerBoxHeight: 'Enter roller box height in mm',
       errRollerBoxSelect: 'Choose roller box height from the list',
@@ -786,6 +823,8 @@ export const TRANSLATIONS = {
       travelDistancePlaceholder: 'e.g. 45',
       workSubtotal: 'Total:',
       minOrderDiffPrefix: 'Up to the minimum order:',
+      publicMinOrderNote: 'Minimum order — {amount}.',
+      slopeDeepLine: 'Slope depth > 25 cm (+{pct}% on slopes)',
       payableTotal: 'Payable total:',
       payableWorkTotal: 'Payable work total:',
       discountLabel: 'Discount:',
@@ -848,6 +887,7 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Windowsill depth: {n} mm',
       sillWidthLine: 'Windowsill width: {n} mm',
       sillPriceLine: 'Windowsill price:',
+      slopeDeepLine: 'Slope depth > 25 cm (+{pct}% on slopes)',
       priceOnRequestShort: 'Price — after visit / separate quote.',
       publicOfferFooter:
         'Final totals, minimum order and discounts are provided in the official quote.',
@@ -1078,16 +1118,25 @@ export const TRANSLATIONS = {
       emailSubject: 'ALLEXO · Review',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Taal van de interface' },
+    material: {
+      switchAria: 'Materiaal afwerking',
+      mdf: 'MDF',
+      pvc: 'PVC',
+    },
     card: { selectType: 'Type kiezen', ariaPrefix: 'Type kiezen:' },
     types: {
       no_sill: {
         title: 'Omlijsting zonder vensterbank (ramen/deuren)',
+        title_pvc: 'PVC-omlijsting zonder vensterbank',
         hint: 'MDF-afwerking van de zijkanten en bovenkant van het raam',
+        hint_pvc: 'PVC-afwerking van de omlijsting (zonder vensterbank)',
         hintRoller: '',
       },
       with_sill: {
         title: 'Omlijsting met vensterbank',
+        title_pvc: 'PVC-omlijsting met vensterbank',
         hint: 'Afwerking omlijsting + plaatsing vensterbank',
+        hint_pvc: 'PVC-afwerking + plaatsing vensterbank',
         hintRoller: '',
       },
       no_sill_roller: {
@@ -1107,7 +1156,9 @@ export const TRANSLATIONS = {
       },
       windowsill: {
         title: 'Vensterbank',
+        title_pvc: 'PVC vensterbank',
         hint: 'Plaatsing van de vensterbank (zonder omlijsting en rolluikkast)',
+        hint_pvc: 'Plaatsing PVC vensterbank (zonder omlijsting)',
         hintRoller: '',
       },
     },
@@ -1144,7 +1195,13 @@ export const TRANSLATIONS = {
       errHeight: 'Voer de hoogte in mm in',
       errMinWindowSize: 'Minimale raamafmeting is 300 × 300 mm',
       minSizeHint: 'Minimale afmeting: 300 × 300 mm',
-      minSizeHintSimplified: 'Raambreedte vanaf 300 mm; tweede afmeting vanaf 100 mm',
+      minSizeHintSimplified: 'Breedte vanaf 300 mm',
+      minOrderHint: 'Minimumbestelling — {amount}',
+      minOrderBelowNote:
+        'Dit bedrag is lager dan het minimum ({amount}). Tot het minimum: {diff}.',
+      slopeDeepOver25Cm: 'Sponningdiepte meer dan 25 cm',
+      slopeDeepSurchargePct: 'Toeslag op sponningen',
+      errSlopeSurcharge: 'Kies 10%, 15% of 20% toeslag',
       errCategory: 'Kies een categorie',
       errRollerBoxHeight: 'Voer de hoogte van de kast in mm in',
       errRollerBoxSelect: 'Kies de hoogte van de kast uit de lijst',
@@ -1227,6 +1284,8 @@ export const TRANSLATIONS = {
       travelDistancePlaceholder: 'bv. 45',
       workSubtotal: 'Totaal:',
       minOrderDiffPrefix: 'Tot het minimumbestelbedrag:',
+      publicMinOrderNote: 'Minimumbestelling — {amount}.',
+      slopeDeepLine: 'Sponningdiepte > 25 cm (+{pct}% op sponningen)',
       payableTotal: 'Te betalen:',
       payableWorkTotal: 'Werk te betalen:',
       discountLabel: 'Korting:',
@@ -1289,6 +1348,7 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Diepte vensterbank: {n} mm',
       sillWidthLine: 'Breedte vensterbank: {n} mm',
       sillPriceLine: 'Prijs vensterbank:',
+      slopeDeepLine: 'Sponningdiepte > 25 cm (+{pct}% op sponningen)',
       priceOnRequestShort: 'Prijs — na bezoek / aparte offerte.',
       publicOfferFooter:
         'Eindtotalen, minimumbestelling en kortingen worden vermeld in de officiële offerte.',
@@ -1525,16 +1585,25 @@ export const TRANSLATIONS = {
       emailSubject: 'ALLEXO · Avis',
     },
     lang: { uk: 'UK', nl: 'NL', fr: 'FR', en: 'EN', switchAria: 'Langue de l’interface' },
+    material: {
+      switchAria: 'Matériau de finition',
+      mdf: 'MDF',
+      pvc: 'PVC',
+    },
     card: { selectType: 'Choisir le type', ariaPrefix: 'Choisir le type :' },
     types: {
       no_sill: {
         title: 'Tableaux sans appui de fenêtre (fenêtres/portes)',
+        title_pvc: 'Tableaux PVC sans appui',
         hint: 'Finition MDF des côtés et du haut de la fenêtre',
+        hint_pvc: 'Finition PVC des tableaux (sans appui)',
         hintRoller: '',
       },
       with_sill: {
         title: 'Tableaux avec appui de fenêtre',
+        title_pvc: 'Tableaux PVC avec appui',
         hint: 'Finition des tableaux + pose de l’appui',
+        hint_pvc: 'Finition PVC des tableaux + pose de l’appui',
         hintRoller: '',
       },
       no_sill_roller: {
@@ -1554,7 +1623,9 @@ export const TRANSLATIONS = {
       },
       windowsill: {
         title: 'Appui de fenêtre',
+        title_pvc: 'Appui PVC',
         hint: 'Pose de l’appui (sans tableaux ni coffre de volet)',
+        hint_pvc: 'Pose de l’appui PVC (sans tableaux)',
         hintRoller: '',
       },
     },
@@ -1591,7 +1662,13 @@ export const TRANSLATIONS = {
       errHeight: 'Indiquez la hauteur en mm',
       errMinWindowSize: 'Dimensions minimales de la fenêtre : 300 × 300 mm',
       minSizeHint: 'Dimensions minimales : 300 × 300 mm',
-      minSizeHintSimplified: 'Largeur de fenêtre à partir de 300 mm ; seconde dimension à partir de 100 mm',
+      minSizeHintSimplified: 'Largeur à partir de 300 mm',
+      minOrderHint: 'Commande minimum — {amount}',
+      minOrderBelowNote:
+        'Ce poste est en dessous du minimum ({amount}). Pour atteindre le minimum : {diff}.',
+      slopeDeepOver25Cm: 'Profondeur d’appui de plus de 25 cm',
+      slopeDeepSurchargePct: 'Majoration sur les tableaux',
+      errSlopeSurcharge: 'Choisissez une majoration de 10 %, 15 % ou 20 %',
       errCategory: 'Choisissez une catégorie',
       errRollerBoxHeight: 'Indiquez la hauteur du coffre en mm',
       errRollerBoxSelect: 'Choisissez la hauteur du coffre dans la liste',
@@ -1674,6 +1751,8 @@ export const TRANSLATIONS = {
       travelDistancePlaceholder: 'ex. 45',
       workSubtotal: 'Total :',
       minOrderDiffPrefix: 'Jusqu’au minimum de commande :',
+      publicMinOrderNote: 'Commande minimum — {amount}.',
+      slopeDeepLine: 'Profondeur tableau > 25 cm (+{pct} % sur les tableaux)',
       payableTotal: 'À payer :',
       payableWorkTotal: 'Travaux à payer :',
       discountLabel: 'Remise :',
@@ -1736,6 +1815,7 @@ export const TRANSLATIONS = {
       sillDepthLine: 'Profondeur de l’appui : {n} mm',
       sillWidthLine: 'Largeur de l’appui : {n} mm',
       sillPriceLine: 'Prix de l’appui :',
+      slopeDeepLine: 'Profondeur tableau > 25 cm (+{pct} % sur les tableaux)',
       priceOnRequestShort: 'Prix — après visite / devis séparé.',
       publicOfferFooter:
         'Les totaux finaux, le minimum de commande et les remises figurent dans le devis officiel.',
@@ -1829,7 +1909,11 @@ export function windowsCountPhrase(locale, n) {
   return n === 1 ? `${n} window` : `${n} windows`
 }
 
-/** @param {Locale} locale @param {import('../constants/calculatorTypes.js').CalculatorTypeId | string} typeId */
-export function typeTitle(locale, typeId) {
+/** @param {Locale} locale @param {import('../constants/calculatorTypes.js').CalculatorTypeId | string} typeId @param {unknown} [materialId] */
+export function typeTitle(locale, typeId, materialId) {
+  if (materialId === 'pvc') {
+    const pvc = translate(locale, `types.${typeId}.title_pvc`)
+    if (pvc !== `types.${typeId}.title_pvc`) return pvc
+  }
   return translate(locale, `types.${typeId}.title`)
 }

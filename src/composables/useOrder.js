@@ -1,6 +1,7 @@
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { normalizeStoredWindow } from '../constants/sizeCategories.js'
 import { isProUnlocked } from '../constants/proUnlock.js'
+import { normalizeMaterialId } from '../constants/materialTypes.js'
 
 /** @deprecated Legacy: was used for all users; public sessions no longer read/write this. */
 const LEGACY_ORDER_KEY = 'allexo-mdf-order'
@@ -19,17 +20,21 @@ const PRO_ORDER_KEY = 'allexo-mdf-order-pro'
  * @typedef {Object} OrderWindow
  * @property {number} widthMm
  * @property {number} heightMm
- * @property {SizeCategoryId} depthCategory
- * @property {number | null | undefined} windowsillDepthMm
- * @property {SizeCategoryId | null} rollerCategory
+ * @property {boolean} [slopeDeepOver25Cm]
+ * @property {10 | 15 | 20} [slopeDeepSurchargePct]
  * @property {number} profileLengthM
  * @property {number} quantity
+ */
+
+/**
+ * @typedef {import('../constants/materialTypes.js').MaterialId} MaterialId
  */
 
 /**
  * @typedef {Object} OrderLine
  * @property {string} key
  * @property {CalculatorTypeId} typeId
+ * @property {MaterialId} [materialId]
  * @property {OrderWindow[]} windows
  */
 
@@ -46,6 +51,7 @@ function migrateLine(line) {
     return {
       key,
       typeId: /** @type {CalculatorTypeId} */ (l.typeId),
+      materialId: normalizeMaterialId(l.materialId),
       windows: /** @type {OrderWindow[]} */ (windows),
     }
   }
@@ -82,6 +88,7 @@ function migrateLine(line) {
     return {
       key,
       typeId: /** @type {CalculatorTypeId} */ (l.typeId),
+      materialId: normalizeMaterialId(l.materialId),
       windows: [one],
     }
   }

@@ -3,6 +3,7 @@
  */
 import { CONTACT_EMAIL } from '../constants/contact.js'
 import { translate } from '../i18n/translations.js'
+import { formatEuroNumber } from './priceDisplay.js'
 import { collectClientLineItemsForPdf, computeBufferedWorkHours } from './proposalLineItems.js'
 import { buildWindowSchematicSvg } from './windowSchematicSvg.js'
 import { formatWorkTimePdfLines } from './workTimeDisplay.js'
@@ -22,7 +23,7 @@ function esc(s) {
 
 /** @param {number} amount */
 function formatEuroPlain(amount) {
-  return `${Math.round(Number(amount) || 0)}€`
+  return `${formatEuroNumber(amount)}€`
 }
 
 /**

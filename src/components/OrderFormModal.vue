@@ -1,17 +1,13 @@
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { getTypeById, isSimplifiedProductLine } from '../constants/calculatorTypes.js'
-import {
-  isValidSizeCategory,
-  normalizeWindowQuantity,
-  ROLLER_BOX_HEIGHT_MM_OPTIONS,
-  SIZE_CATEGORY_OPTIONS,
-  WINDOWSILL_DEPTH_MM_OPTIONS,
-  WINDOW_QUANTITIES,
-} from '../constants/sizeCategories.js'
+import { normalizeMaterialId } from '../constants/materialTypes.js'
+import { normalizeWindowQuantity, WINDOW_QUANTITIES } from '../constants/sizeCategories.js'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked } from '../constants/proUnlock.js'
 import {
+  PRO_SLOPE_DEPTH_SURCHARGE_OPTIONS,
+  normalizeSlopeDeepSurchargePct,
   quoteRollerBoxOnlyRoundedEuros,
   quoteWindowRoundedEuros,
   quoteWindowsillOnlyRoundedEuros,
@@ -29,6 +25,8 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   /** @type {import('vue').PropType<import('../constants/calculatorTypes.js').CalculatorTypeId | null>} */
   typeId: { type: String, default: null },
+  /** @type {import('vue').PropType<import('../constants/materialTypes.js').MaterialId>} */
+  materialId: { type: String, default: 'mdf' },
   /** @type {import('vue').PropType<import('../composables/useOrder.js').OrderLine | null>} */
   initialLine: { type: Object, default: null },
 })
@@ -38,10 +36,8 @@ const emit = defineEmits(['close', 'submit'])
 const { locale, t } = useLocale()
 
 const DEFAULTS_CLIENT = {
-  depthCategory: 'small',
-  windowsillDepthMm: 250,
-  rollerBoxHeightMm: 400,
-  rollerCategory: 'small',
+  slopeDeepOver25Cm: false,
+  slopeDeepSurchargePct: 15,
 }
 
 const proUnlocked = ref(false)
@@ -102,16 +98,8 @@ function populateFromInitialLine(line) {
     row.widthMm = win.widthMm != null ? String(win.widthMm) : ''
     row.heightMm = win.heightMm != null ? String(win.heightMm) : ''
     row.quantity = normalizeWindowQuantity(win.quantity)
-    row.depthCategory =
-      win.depthCategory && isValidSizeCategory(String(win.depthCategory))
-        ? win.depthCategory
-        : DEFAULTS_CLIENT.depthCategory
-    row.rollerCategory =
-      win.rollerCategory && isValidSizeCategory(String(win.rollerCategory))
-        ? win.rollerCategory
-        : DEFAULTS_CLIENT.rollerCategory
-    row.rollerBoxHeightMm = Number(win.rollerBoxHeightMm ?? win.heightMm) || DEFAULTS_CLIENT.rollerBoxHeightMm
-    row.sillDepthMm = Number(win.windowsillDepthMm ?? win.heightMm) || DEFAULTS_CLIENT.windowsillDepthMm
+    row.slopeDeepOver25Cm = Boolean(win.slopeDeepOver25Cm)
+    row.slopeDeepSurchargePct = normalizeSlopeDeepSurchargePct(win.slopeDeepSurchargePct)
     return row
   })
 }
@@ -139,17 +127,16 @@ function newWindowRow() {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     widthMm: '',
     heightMm: '',
-    rollerBoxHeightMm: DEFAULTS_CLIENT.rollerBoxHeightMm,
-    sillDepthMm: DEFAULTS_CLIENT.windowsillDepthMm,
     quantity: 1,
-    depthCategory: DEFAULTS_CLIENT.depthCategory,
-    rollerCategory: DEFAULTS_CLIENT.rollerCategory,
+    slopeDeepOver25Cm: DEFAULTS_CLIENT.slopeDeepOver25Cm,
+    slopeDeepSurchargePct: DEFAULTS_CLIENT.slopeDeepSurchargePct,
   })
 }
 
 const windows = ref([newWindowRow()])
 
-const currentType = computed(() => (props.typeId ? getTypeById(props.typeId) : null))
+const currentMaterial = computed(() => normalizeMaterialId(props.materialId))
+const isPvcMaterial = computed(() => currentMaterial.value === 'pvc')
 
 const isSimplifiedLine = computed(() => isSimplifiedProductLine(props.typeId))
 const isWithSillType = computed(() => props.typeId === 'with_sill')
@@ -162,19 +149,36 @@ const orderFormPriceDeps = computed(() =>
         w.id,
         w.widthMm,
         w.heightMm,
-        w.sillDepthMm,
-        w.rollerBoxHeightMm,
         w.quantity,
-        w.depthCategory,
-        w.rollerCategory,
+        w.slopeDeepOver25Cm,
+        w.slopeDeepSurchargePct,
       ].join('\u001f'),
     )
     .join('\u001e'),
 )
 
-const formTitle = computed(() => (props.typeId ? t(`types.${props.typeId}.title`) : ''))
-const formHint = computed(() => (props.typeId ? t(`types.${props.typeId}.hint`) : ''))
-const formHintRoller = computed(() => (props.typeId ? t(`types.${props.typeId}.hintRoller`) : ''))
+const currentType = computed(() => (props.typeId ? getTypeById(props.typeId) : null))
+
+const formTitle = computed(() => {
+  if (!props.typeId) return ''
+  if (isPvcMaterial.value) {
+    const pvc = t(`types.${props.typeId}.title_pvc`)
+    if (pvc !== `types.${props.typeId}.title_pvc`) return pvc
+  }
+  return t(`types.${props.typeId}.title`)
+})
+const formHint = computed(() => {
+  if (!props.typeId) return ''
+  if (isPvcMaterial.value) {
+    const pvc = t(`types.${props.typeId}.hint_pvc`)
+    if (pvc !== `types.${props.typeId}.hint_pvc`) return pvc
+  }
+  return t(`types.${props.typeId}.hint`)
+})
+const formHintRoller = computed(() => {
+  if (!props.typeId || isPvcMaterial.value) return ''
+  return t(`types.${props.typeId}.hintRoller`)
+})
 
 // Lock background scroll while modal is open.
 watch(
@@ -342,7 +346,6 @@ const windowErrors = computed(() => {
 
     // У режимі “Клієнт” показуємо лише ширину/висоту/кількість і підставляємо інші параметри автоматично.
     if (isClientMode.value) {
-      // Для “Підвіконник” та “Короб ролети” клієнт вводить тільки довжину (ширину).
       if (tid !== 'windowsill' && tid !== 'roller_box') {
         const hMm = parseMm(formW.heightMm)
         if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
@@ -351,36 +354,21 @@ const windowErrors = computed(() => {
       return e
     }
 
-    if (tid === 'roller_box') {
-      const rhMm = Number(formW.rollerBoxHeightMm)
-      if (!ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(rhMm)) {
-        e.rollerBoxHeightMm = fieldIssue(t('form.errRollerBoxSelect'), 'hint')
-      }
-    } else if (tid === 'windowsill') {
-      const dMm = Number(formW.sillDepthMm)
-      if (!WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)) {
-        e.sillDepthMm = fieldIssue(t('form.errSillDepthSelect'), 'hint')
-      }
-    } else {
-      const hMm = parseMm(formW.heightMm)
-      if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
-      else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = fieldIssue(t('form.errMinWindowSize'), 'error')
+    if (tid === 'roller_box' || tid === 'windowsill') {
+      return e
+    }
 
-      if (!isValidSizeCategory(String(formW.depthCategory))) {
-        e.depthCategory = fieldIssue(t('form.errCategory'), 'hint')
-      }
+    const hMm = parseMm(formW.heightMm)
+    if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
+    else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = fieldIssue(t('form.errMinWindowSize'), 'error')
 
-      const ty = currentType.value
-      if (ty?.hasSill) {
-        const dMm = Number(formW.sillDepthMm)
-        if (!WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)) {
-          e.sillDepthMm = fieldIssue(t('form.errSillDepthSelect'), 'hint')
-        }
-      }
-      if (ty?.hasRoller && !isValidSizeCategory(String(formW.rollerCategory))) {
-        e.rollerCategory = fieldIssue(t('form.errCategory'), 'hint')
+    if (formW.slopeDeepOver25Cm) {
+      const pct = Number(formW.slopeDeepSurchargePct)
+      if (!PRO_SLOPE_DEPTH_SURCHARGE_OPTIONS.includes(pct)) {
+        e.slopeDeepSurchargePct = fieldIssue(t('form.errSlopeSurcharge'), 'hint')
       }
     }
+
     return e
   })
 })
@@ -390,25 +378,8 @@ const isValid = computed(() => windowErrors.value.every((err) => Object.keys(err
 /** @param {Record<string, unknown>} formW */
 function formWindowIsOversized(formW) {
   const w = parseMm(formW.widthMm)
-  if (props.typeId === 'roller_box') {
-    const rhMm = Number(formW.rollerBoxHeightMm)
-    const rh = Number.isFinite(rhMm) ? rhMm : NaN
-    return (
-      Number.isFinite(w) &&
-      w >= MIN_WINDOW_SIDE_MM &&
-      ROLLER_BOX_HEIGHT_MM_OPTIONS.includes(rhMm) &&
-      windowExceedsStandardMax(w, rh)
-    )
-  }
-  if (props.typeId === 'windowsill') {
-    const dMm = Number(formW.sillDepthMm)
-    const d = Number.isFinite(dMm) ? dMm : NaN
-    return (
-      Number.isFinite(w) &&
-      w >= MIN_WINDOW_SIDE_MM &&
-      WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm) &&
-      windowExceedsStandardMax(w, d)
-    )
+  if (props.typeId === 'roller_box' || props.typeId === 'windowsill') {
+    return Number.isFinite(w) && w >= MIN_WINDOW_SIDE_MM && windowExceedsStandardMax(w, w)
   }
   const h = parseMm(formW.heightMm)
   return (
@@ -439,59 +410,40 @@ function buildSubmitPayload(extra = /** @type {Record<string, unknown>} */ ({}))
   const ty = getTypeById(props.typeId)
   return {
     typeId: props.typeId,
+    materialId: currentMaterial.value,
     uiMode: isClientMode.value ? 'client' : 'pro',
     ...(props.initialLine?.key ? { editKey: props.initialLine.key } : {}),
     ...extra,
     windows: windows.value.map((formW) => {
       const widthMm = parseMm(formW.widthMm)
       if (props.typeId === 'roller_box') {
-        const rollerBoxHeightMm = isClientMode.value
-          ? DEFAULTS_CLIENT.rollerBoxHeightMm
-          : Number(formW.rollerBoxHeightMm)
         return {
           widthMm,
-          rollerBoxHeightMm,
-          heightMm: rollerBoxHeightMm,
-          depthCategory: 'small',
-          windowsillCategory: null,
-          rollerCategory: null,
-          profileLengthM: windowProfileLengthMeters(widthMm, rollerBoxHeightMm),
+          heightMm: widthMm,
+          slopeDeepOver25Cm: false,
+          slopeDeepSurchargePct: 15,
+          profileLengthM: windowProfileLengthMeters(widthMm, widthMm),
           quantity: normalizeWindowQuantity(formW.quantity),
         }
       }
       if (props.typeId === 'windowsill') {
-        const windowsillDepthMm = isClientMode.value ? DEFAULTS_CLIENT.windowsillDepthMm : Number(formW.sillDepthMm)
         return {
           widthMm,
-          windowsillDepthMm,
-          heightMm: windowsillDepthMm,
-          depthCategory: 'small',
-          windowsillCategory: null,
-          rollerCategory: null,
-          profileLengthM: windowProfileLengthMeters(widthMm, windowsillDepthMm),
+          heightMm: widthMm,
+          slopeDeepOver25Cm: false,
+          slopeDeepSurchargePct: 15,
+          profileLengthM: windowProfileLengthMeters(widthMm, widthMm),
           quantity: normalizeWindowQuantity(formW.quantity),
         }
       }
       const heightMm = parseMm(formW.heightMm)
+      const deep = isProMode.value && !isPvcMaterial.value && Boolean(formW.slopeDeepOver25Cm)
+      const surchargePct = deep ? normalizeSlopeDeepSurchargePct(formW.slopeDeepSurchargePct) : 15
       return {
         widthMm,
         heightMm,
-        depthCategory: isClientMode.value
-          ? DEFAULTS_CLIENT.depthCategory
-          : isValidSizeCategory(String(formW.depthCategory))
-            ? formW.depthCategory
-            : 'small',
-        windowsillDepthMm: ty?.hasSill
-          ? (isClientMode.value ? DEFAULTS_CLIENT.windowsillDepthMm : Number(formW.sillDepthMm))
-          : null,
-        windowsillCategory: null,
-        rollerCategory: ty?.hasRoller
-          ? (isClientMode.value
-              ? DEFAULTS_CLIENT.rollerCategory
-              : isValidSizeCategory(String(formW.rollerCategory))
-                ? formW.rollerCategory
-                : 'small')
-          : null,
+        slopeDeepOver25Cm: deep,
+        slopeDeepSurchargePct: surchargePct,
         profileLengthM: windowProfileLengthMeters(widthMm, heightMm),
         quantity: normalizeWindowQuantity(formW.quantity),
       }
@@ -548,41 +500,20 @@ const windowPreviews = computed(() => {
     let unitEuros = 0
 
     if (tid === 'windowsill') {
-    const wMm = parseMm(formW.widthMm)
-    const dMm = Number(formW.sillDepthMm)
-      const depthOk =
-      Number.isFinite(dMm) && WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === dMm)
+      const wMm = parseMm(formW.widthMm)
       const widthOk = Number.isFinite(wMm) && wMm >= MIN_WINDOW_SIDE_MM
-      showPreview =
-        widthOk &&
-        depthOk &&
-        Number.isFinite(dMm) &&
-        !windowExceedsStandardMax(wMm, dMm)
-      oversized =
-        widthOk &&
-        depthOk &&
-        Number.isFinite(dMm) &&
-        windowExceedsStandardMax(wMm, dMm)
-      if (showPreview) unitEuros = quoteWindowsillOnlyRoundedEuros(wMm, dMm)
+      showPreview = widthOk && !windowExceedsStandardMax(wMm, wMm)
+      oversized = widthOk && windowExceedsStandardMax(wMm, wMm)
+      if (showPreview) unitEuros = quoteWindowsillOnlyRoundedEuros(wMm, currentMaterial.value)
     } else if (tid === 'roller_box') {
-    const wMm = parseMm(formW.widthMm)
-    const rhMm = Number(formW.rollerBoxHeightMm)
-    const rollerOk = ROLLER_BOX_HEIGHT_MM_OPTIONS.some((mm) => Number(mm) === rhMm)
+      const wMm = parseMm(formW.widthMm)
       const widthOk = Number.isFinite(wMm) && wMm >= MIN_WINDOW_SIDE_MM
-      showPreview =
-        widthOk &&
-        rollerOk &&
-        Number.isFinite(rhMm) &&
-        !windowExceedsStandardMax(wMm, rhMm)
-      oversized =
-        widthOk &&
-        rollerOk &&
-        Number.isFinite(rhMm) &&
-        windowExceedsStandardMax(wMm, rhMm)
-      if (showPreview) unitEuros = quoteRollerBoxOnlyRoundedEuros(wMm, rhMm)
+      showPreview = widthOk && !windowExceedsStandardMax(wMm, wMm)
+      oversized = widthOk && windowExceedsStandardMax(wMm, wMm)
+      if (showPreview) unitEuros = quoteRollerBoxOnlyRoundedEuros(wMm)
     } else {
-    const wMm = parseMm(formW.widthMm)
-    const hMm = parseMm(formW.heightMm)
+      const wMm = parseMm(formW.widthMm)
+      const hMm = parseMm(formW.heightMm)
       showPreview = windowEligibleForAutoQuote(wMm, hMm)
       oversized =
         Number.isFinite(wMm) &&
@@ -590,50 +521,31 @@ const windowPreviews = computed(() => {
         windowSidesMeetMinimum(wMm, hMm) &&
         windowExceedsStandardMax(wMm, hMm)
       if (showPreview) {
-        const depth = isClientMode.value
-          ? DEFAULTS_CLIENT.depthCategory
-          : isValidSizeCategory(String(formW.depthCategory))
-            ? formW.depthCategory
-            : 'small'
-        const ws = ty.hasSill
-          ? (isClientMode.value
-              ? DEFAULTS_CLIENT.windowsillDepthMm
-              : WINDOWSILL_DEPTH_MM_OPTIONS.some((mm) => Number(mm) === Number(formW.sillDepthMm))
-                ? Number(formW.sillDepthMm)
-                : DEFAULTS_CLIENT.windowsillDepthMm)
-          : null
-        const roller = ty.hasRoller
-          ? (isClientMode.value
-              ? DEFAULTS_CLIENT.rollerCategory
-              : isValidSizeCategory(String(formW.rollerCategory))
-                ? formW.rollerCategory
-                : 'small')
-          : null
+        const deep = isProMode.value && !isPvcMaterial.value && Boolean(formW.slopeDeepOver25Cm)
+        const surchargePct = deep ? normalizeSlopeDeepSurchargePct(formW.slopeDeepSurchargePct) : 15
         unitEuros = quoteWindowRoundedEuros(
           wMm,
           hMm,
-          /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (depth),
           ty.hasSill,
           ty.hasRoller,
-          ws != null ? Number(ws) : null,
-          roller != null ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (roller) : null,
+          deep,
+          surchargePct,
+          currentMaterial.value,
         )
       }
     }
+
+    const lineTotalEuros = unitEuros * qty
 
     return {
       showPreview,
       oversized,
       unitEuros,
-      lineTotalEuros: unitEuros * qty,
+      lineTotalEuros,
       qty,
     }
   })
 })
-
-function sizeLabel(id) {
-  return t(`sizes.${id}`)
-}
 </script>
 
 <template>
@@ -691,7 +603,7 @@ function sizeLabel(id) {
             </div>
 
             <div
-              v-if="isClientMode && (props.typeId === 'windowsill' || props.typeId === 'roller_box')"
+              v-if="isSimplifiedLine && (props.typeId === 'roller_box' || props.typeId === 'windowsill')"
               class="row row--dims row--single"
             >
               <label class="field">
@@ -747,80 +659,6 @@ function sizeLabel(id) {
                 >
               </label>
             </div>
-            <div v-else-if="isSimplifiedLine && props.typeId === 'roller_box'" class="row row--dims">
-              <label class="field">
-                <span class="field__label">{{ t('form.widthMm') }}</span>
-                <input
-                  v-model="windows[idx].widthMm"
-                  type="text"
-                  inputmode="decimal"
-                  class="field__input"
-                  :placeholder="t('form.placeholderWidth')"
-                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
-                  @keydown="focusNextFieldOnEnter"
-                />
-                <span
-                  v-if="windowErrors[idx]?.widthMm"
-                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
-                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
-                >
-              </label>
-              <label class="field">
-                <span class="field__label">{{ t('form.rollerBoxHeightCm') }}</span>
-                <select
-                  v-model.number="windows[idx].rollerBoxHeightMm"
-                  class="field__input"
-                  autocomplete="off"
-                  :class="fieldInputClass(windowErrors[idx]?.rollerBoxHeightMm)"
-                >
-                  <option v-for="mm in ROLLER_BOX_HEIGHT_MM_OPTIONS" :key="mm" :value="mm">
-                    {{ mm }} {{ t('common.mm') }}
-                  </option>
-                </select>
-                <span
-                  v-if="windowErrors[idx]?.rollerBoxHeightMm"
-                  :class="fieldFeedbackClass(windowErrors[idx]?.rollerBoxHeightMm)"
-                  >{{ windowErrors[idx]?.rollerBoxHeightMm?.msg }}</span
-                >
-              </label>
-            </div>
-            <div v-else-if="isSimplifiedLine && props.typeId === 'windowsill'" class="row row--dims">
-              <label class="field">
-                <span class="field__label">{{ t('form.widthMm') }}</span>
-                <input
-                  v-model="windows[idx].widthMm"
-                  type="text"
-                  inputmode="decimal"
-                  class="field__input"
-                  :placeholder="t('form.placeholderWidth')"
-                  :class="fieldInputClass(windowErrors[idx]?.widthMm)"
-                  @keydown="focusNextFieldOnEnter"
-                />
-                <span
-                  v-if="windowErrors[idx]?.widthMm"
-                  :class="fieldFeedbackClass(windowErrors[idx]?.widthMm)"
-                  >{{ windowErrors[idx]?.widthMm?.msg }}</span
-                >
-              </label>
-              <label class="field">
-                <span class="field__label">{{ t('form.sillDepthCm') }}</span>
-                <select
-                  v-model.number="windows[idx].sillDepthMm"
-                  class="field__input"
-                  autocomplete="off"
-                  :class="fieldInputClass(windowErrors[idx]?.sillDepthMm)"
-                >
-                  <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
-                    {{ mm }} {{ t('common.mm') }}
-                  </option>
-                </select>
-                <span
-                  v-if="windowErrors[idx]?.sillDepthMm"
-                  :class="fieldFeedbackClass(windowErrors[idx]?.sillDepthMm)"
-                  >{{ windowErrors[idx]?.sillDepthMm?.msg }}</span
-                >
-              </label>
-            </div>
             <div v-else class="row row--dims">
               <label class="field">
                 <span class="field__label">{{ t('form.widthMm') }}</span>
@@ -868,80 +706,40 @@ function sizeLabel(id) {
                 <option v-for="q in WINDOW_QUANTITIES" :key="q" :value="q">{{ q }}</option>
               </select>
             </label>
-            <p v-if="!isSimplifiedLine && !isClientMode" class="dims-hint">{{ t('form.minSizeHint') }}</p>
+            <p v-if="!isSimplifiedLine" class="dims-hint">{{ t('form.minSizeHint') }}</p>
             <p v-else class="dims-hint">{{ t('form.minSizeHintSimplified') }}</p>
 
-            <label v-if="!isSimplifiedLine && !isClientMode" class="field">
-              <span class="field__label">{{ t('form.depthMm') }}</span>
-              <select
-                v-model="windows[idx].depthCategory"
-                class="field__input"
-                :class="fieldInputClass(windowErrors[idx]?.depthCategory)"
-                @focus="onSelectFocus"
-                @change="onSelectChange"
-                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
-              >
-                <option
-                  v-for="opt in SIZE_CATEGORY_OPTIONS"
-                  :key="opt.id"
-                  :value="opt.id"
+            <template v-if="!isSimplifiedLine && isProMode && !isPvcMaterial">
+              <label class="field field--checkbox">
+                <input
+                  v-model="windows[idx].slopeDeepOver25Cm"
+                  type="checkbox"
+                  class="field__checkbox"
+                />
+                <span class="field__label field__label--inline">{{ t('form.slopeDeepOver25Cm') }}</span>
+              </label>
+              <label v-if="windows[idx].slopeDeepOver25Cm" class="field">
+                <span class="field__label">{{ t('form.slopeDeepSurchargePct') }}</span>
+                <select
+                  v-model.number="windows[idx].slopeDeepSurchargePct"
+                  class="field__input"
+                  :class="fieldInputClass(windowErrors[idx]?.slopeDeepSurchargePct)"
                 >
-                  {{ sizeLabel(opt.id) }}
-                </option>
-              </select>
-              <span
-                v-if="windowErrors[idx]?.depthCategory"
-                :class="fieldFeedbackClass(windowErrors[idx]?.depthCategory)"
-                >{{ windowErrors[idx]?.depthCategory?.msg }}</span
-              >
-            </label>
-
-            <label v-if="!isSimplifiedLine && !isClientMode && currentType.hasSill" class="field">
-              <span class="field__label">{{ t('form.sillDepthCm') }}</span>
-              <select
-                v-model.number="windows[idx].sillDepthMm"
-                class="field__input"
-                autocomplete="off"
-                :class="fieldInputClass(windowErrors[idx]?.sillDepthMm)"
-                @focus="onSelectFocus"
-                @change="onSelectChange"
-                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
-              >
-                <option v-for="mm in WINDOWSILL_DEPTH_MM_OPTIONS" :key="mm" :value="mm">
-                  {{ mm }} {{ t('common.mm') }}
-                </option>
-              </select>
-              <span
-                v-if="windowErrors[idx]?.sillDepthMm"
-                :class="fieldFeedbackClass(windowErrors[idx]?.sillDepthMm)"
-                >{{ windowErrors[idx]?.sillDepthMm?.msg }}</span
-              >
-            </label>
-
-            <label v-if="!isSimplifiedLine && !isClientMode && currentType.hasRoller" class="field">
-              <span class="field__label">{{ t('form.rollerMm') }}</span>
-              <select
-                v-model="windows[idx].rollerCategory"
-                class="field__input"
-                :class="fieldInputClass(windowErrors[idx]?.rollerCategory)"
-                @focus="onSelectFocus"
-                @change="onSelectChange"
-                @blur="($event) => ($event.target.dataset.allexoEnterArmed = '0')"
-              >
-                <option
-                  v-for="opt in SIZE_CATEGORY_OPTIONS"
-                  :key="opt.id"
-                  :value="opt.id"
+                  <option
+                    v-for="pct in PRO_SLOPE_DEPTH_SURCHARGE_OPTIONS"
+                    :key="pct"
+                    :value="pct"
+                  >
+                    +{{ pct }}%
+                  </option>
+                </select>
+                <span
+                  v-if="windowErrors[idx]?.slopeDeepSurchargePct"
+                  :class="fieldFeedbackClass(windowErrors[idx]?.slopeDeepSurchargePct)"
+                  >{{ windowErrors[idx]?.slopeDeepSurchargePct?.msg }}</span
                 >
-                  {{ sizeLabel(opt.id) }}
-                </option>
-              </select>
-              <span
-                v-if="windowErrors[idx]?.rollerCategory"
-                :class="fieldFeedbackClass(windowErrors[idx]?.rollerCategory)"
-                >{{ windowErrors[idx]?.rollerCategory?.msg }}</span
-              >
-            </label>
+              </label>
+            </template>
 
             <p v-if="!isClientMode && windowPreviews[idx]?.showPreview" class="window-preview-price">
               <template v-if="windowPreviews[idx].qty > 1">
@@ -953,7 +751,10 @@ function sizeLabel(id) {
                 {{ t('form.price') }} {{ formatEuroExclVat(windowPreviews[idx].unitEuros, locale) }}
               </template>
             </p>
-            <p v-else-if="windowPreviews[idx]?.oversized" class="window-preview-price window-preview-price--individual">
+            <p
+              v-else-if="!isClientMode && windowPreviews[idx]?.oversized"
+              class="window-preview-price window-preview-price--individual"
+            >
               {{ t('form.largeSizesInfo') }}
             </p>
             </div>
@@ -1317,6 +1118,24 @@ function sizeLabel(id) {
     display: block;
     margin: 0.2rem 0 0;
   }
+}
+
+.field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.field__checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.field__label--inline {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--allexo-text);
 }
 
 .window-preview-price {

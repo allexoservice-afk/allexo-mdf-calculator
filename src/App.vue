@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { CALCULATOR_TYPES } from './constants/calculatorTypes.js'
+import { MATERIAL_SWITCH_ORDER, normalizeMaterialId, typesForMaterial } from './constants/materialTypes.js'
 import { useOrder } from './composables/useOrder.js'
 import { useLocale } from './i18n/useLocale.js'
 import Hero from './components/Hero.vue'
@@ -12,20 +12,15 @@ import { CONTACT_EMAIL, CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constan
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
 import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
 import {
-  quoteRollerBoxOnlyRoundedEuros,
-  quoteWindowRoundedEuros,
-  quoteWindowsillOnlyRoundedEuros,
-} from './pricing/windowQuote.js'
-import { formatEuroExclVat } from './utils/priceDisplay.js'
-import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './utils/windowDimensions.js'
-import { getTypeById } from './constants/calculatorTypes.js'
-import { isProUnlocked } from './constants/proUnlock.js'
-import { useProManualDiscount } from './composables/useProManualDiscount.js'
-import {
   MIN_ORDER_EUR,
   discountEurosFor,
-  payableWorkEurosFor,
+  mdfSubtotalEurosForOrderLines,
+  payableWorkEurosForOrderLines,
 } from './pricing/orderDiscount.js'
+import { quoteLineWindowEuros } from './pricing/quoteLineWindow.js'
+import { formatEuroExclVat } from './utils/priceDisplay.js'
+import { isProUnlocked } from './constants/proUnlock.js'
+import { useProManualDiscount } from './composables/useProManualDiscount.js'
 import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 import { trackMetaViewContent } from './services/metaPixel.js'
 
@@ -52,6 +47,16 @@ const editingLine = computed(() => {
 const privacyOpen = ref(false)
 const quoteLeadOpen = ref(false)
 
+/** @type {import('vue').Ref<import('./constants/materialTypes.js').MaterialId>} */
+const selectedMaterial = ref('mdf')
+
+const calculatorTypes = computed(() => typesForMaterial(selectedMaterial.value))
+
+/** @param {import('./constants/materialTypes.js').MaterialId} material */
+function pickMaterial(material) {
+  selectedMaterial.value = normalizeMaterialId(material)
+}
+
 /** @param {import('./constants/calculatorTypes.js').CalculatorTypeId} id */
 function openForm(id) {
   editingLineKey.value = null
@@ -65,6 +70,7 @@ function openEditForm(key) {
   const line = lines.value.find((l) => l.key === key)
   if (!line) return
   editingLineKey.value = key
+  selectedMaterial.value = normalizeMaterialId(line.materialId)
   selectedTypeId.value = line.typeId
   trackMetaViewContent(line.typeId)
   formOpen.value = true
@@ -157,11 +163,10 @@ function openEmailFromSticky() {
 
   let body
   if (proActive.value) {
-    const totalRaw = orderTotalEuros.value
     const total = formatEuroExclVat(payableOrderTotalEuros.value, locale.value)
     const minLine =
-      totalRaw > 0 && totalRaw < MIN_ORDER_EUR
-        ? `\nМінімальне замовлення: ${formatEuroExclVat(MIN_ORDER_EUR, locale.value)} (без ПДВ)\nДо мінімального: ${formatEuroExclVat(minOrderDiffEuros.value, locale.value)}`
+      mdfOrderSubtotalEuros.value > 0 && mdfOrderSubtotalEuros.value < MIN_ORDER_EUR
+        ? `\n${t('form.minOrderHint').replace('{amount}', formatEuroExclVat(MIN_ORDER_EUR, locale.value))}`
         : ''
     body =
       `Доброго дня!\n\n` +
@@ -170,7 +175,6 @@ function openEmailFromSticky() {
       `Кількість позицій: ${count}\n` +
       `Тип робіт: ${types || '—'}\n\n` +
       `${minLine}\n\n` +
-      `Знижки: 3% від 1000€, 5% від 1500€, 7% від 2000€, 10% від 3000€.\n\n` +
       `Можете уточнити деталі?`
   } else {
     body = t('lead.requestNoPriceBody')
@@ -194,36 +198,7 @@ function windowsForLine(line) {
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowPriceEuros(line, win) {
-  if (!win) return 0
-  const tid = line.typeId
-  if (tid === 'roller_box') {
-    const wm = Number(win.widthMm)
-    const rh = Number(win.rollerBoxHeightMm ?? win.heightMm)
-    if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
-    return quoteRollerBoxOnlyRoundedEuros(wm, rh)
-  }
-  if (tid === 'windowsill') {
-    const wm = Number(win.widthMm)
-    const d = Number(win.windowsillDepthMm ?? win.heightMm)
-    if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
-    return quoteWindowsillOnlyRoundedEuros(wm, d)
-  }
-  const ty = getTypeById(tid)
-  if (!ty) return 0
-  const wm = Number(win.widthMm)
-  const hm = Number(win.heightMm)
-  if (!windowEligibleForAutoQuote(wm, hm)) return 0
-  return quoteWindowRoundedEuros(
-    wm,
-    hm,
-    /** @type {import('./constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
-    ty.hasSill,
-    ty.hasRoller,
-    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
-    win.rollerCategory != null
-      ? /** @type {import('./constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
-      : null,
-  )
+  return quoteLineWindowEuros(line, win)
 }
 
 /** Підсумок робіт без виїзду (той самий підхід, що й у summary). */
@@ -250,15 +225,22 @@ const showStickyTotal = computed(
   () => !isMobileLayout.value && Array.isArray(lines.value) && lines.value.length > 0,
 )
 
+/** @param {Record<string, unknown>} line */
+function lineSubtotalEuros(line) {
+  return windowsForLine(line).reduce(
+    (s, w) => s + windowPriceEuros(line, w) * normalizeWindowQuantity(w.quantity),
+    0,
+  )
+}
+
 const payableOrderTotalEuros = computed(() => {
-  const raw = orderTotalEuros.value
-  if (!(raw > 0)) return 0
-  const base = payableWorkEurosFor(raw)
+  const base = payableWorkEurosForOrderLines(lines.value, lineSubtotalEuros)
   const disc = discountEurosFor(base, manualDiscountPct.value, proActive.value)
   return base - disc
 })
-const minOrderDiffEuros = computed(() =>
-  orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR ? MIN_ORDER_EUR - orderTotalEuros.value : 0,
+
+const mdfOrderSubtotalEuros = computed(() =>
+  mdfSubtotalEurosForOrderLines(lines.value, lineSubtotalEuros),
 )
 </script>
 
@@ -309,11 +291,36 @@ const minOrderDiffEuros = computed(() =>
       </ul>
 
       <section id="calculator" class="calc">
+        <div
+          class="material-switch"
+          role="tablist"
+          :aria-label="t('material.switchAria')"
+        >
+          <button
+            v-for="code in MATERIAL_SWITCH_ORDER"
+            :key="code"
+            type="button"
+            role="tab"
+            class="material-switch__btn"
+            :class="{ 'material-switch__btn--active': selectedMaterial === code }"
+            :aria-selected="selectedMaterial === code"
+            @click="pickMaterial(code)"
+          >
+            {{ t(`material.${code}`) }}
+          </button>
+          <span
+            class="material-switch__slide"
+            :class="{ 'material-switch__slide--pvc': selectedMaterial === 'pvc' }"
+            aria-hidden="true"
+          />
+        </div>
+
         <div class="grid">
           <CalculatorCard
-            v-for="ty in CALCULATOR_TYPES"
+            v-for="ty in calculatorTypes"
             :key="ty.id"
             :type-id="ty.id"
+            :material-id="selectedMaterial"
             :visual="ty.visual"
             @select="openForm(ty.id)"
           />
@@ -396,6 +403,7 @@ const minOrderDiffEuros = computed(() =>
     <OrderFormModal
       :open="formOpen"
       :type-id="selectedTypeId"
+      :material-id="selectedMaterial"
       :initial-line="editingLine"
       @close="closeForm"
       @submit="onSubmit"
@@ -708,6 +716,56 @@ const minOrderDiffEuros = computed(() =>
 
 .calc {
   margin-top: 1.25rem;
+}
+
+.material-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  max-width: 280px;
+  margin: 0 auto 1.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--allexo-border);
+  border-radius: 999px;
+  background: var(--allexo-surface);
+  box-shadow: var(--shadow);
+}
+
+.material-switch__btn {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--allexo-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.material-switch__btn--active {
+  color: var(--allexo-teal);
+}
+
+.material-switch__slide {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: calc(50% - 0.2rem);
+  height: calc(100% - 0.4rem);
+  border-radius: 999px;
+  background: linear-gradient(145deg, #f0f6f6 0%, #e8f4f3 100%);
+  border: 1px solid rgba(17, 17, 17, 0.06);
+  transition: transform 0.22s ease;
+  pointer-events: none;
+}
+
+.material-switch__slide--pvc {
+  transform: translateX(100%);
 }
 
 .reviews {

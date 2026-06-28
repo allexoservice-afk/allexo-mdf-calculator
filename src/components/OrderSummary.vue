@@ -1,18 +1,18 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getTypeById, isSimplifiedProductLine } from '../constants/calculatorTypes.js'
+import { normalizeMaterialId } from '../constants/materialTypes.js'
 import { normalizeStoredWindow, normalizeWindowQuantity } from '../constants/sizeCategories.js'
 import { useLocale } from '../i18n/useLocale.js'
-import { sizeCategoryLabel, translate } from '../i18n/translations.js'
+import { translate } from '../i18n/translations.js'
 import {
   quoteRollerBoxOnlyHours,
-  quoteRollerBoxOnlyRoundedEuros,
   quoteWindowHours,
-  quoteWindowRoundedEuros,
-  quoteWindowsillAddonRoundedEuros,
   quoteWindowsillOnlyHours,
-  quoteWindowsillOnlyRoundedEuros,
+  winSlopeQuoteArgs,
+  normalizeSlopeDeepSurchargePct,
 } from '../pricing/windowQuote.js'
+import { quoteLineWindowEuros, quoteLineWindowsillAddonEuros } from '../pricing/quoteLineWindow.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
 import { formatWorkDaysApproxLabel, formatWorkHoursDisplay } from '../utils/workTimeDisplay.js'
 import EmailRequestModal from './EmailRequestModal.vue'
@@ -32,7 +32,8 @@ import {
   MIN_ORDER_EUR,
   discountEurosFor,
   effectiveDiscountPercent,
-  payableWorkEurosFor,
+  mdfSubtotalEurosForOrderLines,
+  payableWorkEurosForOrderLines,
 } from '../pricing/orderDiscount.js'
 import { preloadProposalPdfEngine } from '../utils/proposalPdf.js'
 
@@ -57,35 +58,33 @@ function formatWindowMm(mm) {
 }
 
 /** @param {Record<string, unknown>} win */
-function rollerBoxHeightLineSummary(win) {
-  const mm = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-  return translate(locale.value, 'summary.rollerBoxHeightLine').replace('{n}', String(mm))
-}
-
-/** @param {Record<string, unknown>} win */
-function sillDepthLineSummary(win) {
-  const mm = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-  return translate(locale.value, 'summary.sillDepthLine').replace('{n}', String(mm))
-}
-
-/** @param {Record<string, unknown>} win */
 function windowQty(win) {
   return normalizeWindowQuantity(win.quantity)
+}
+
+/** @param {Record<string, unknown>} line */
+function lineTypeTitle(line) {
+  const typeId = String(line.typeId ?? '')
+  if (normalizeMaterialId(line.materialId) === 'pvc') {
+    const pvc = t(`types.${typeId}.title_pvc`)
+    if (pvc !== `types.${typeId}.title_pvc`) return pvc
+  }
+  return t(`types.${typeId}.title`)
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function slopeDeepLineSummary(line, win) {
+  if (normalizeMaterialId(line.materialId) === 'pvc') return null
+  if (!win.slopeDeepOver25Cm) return null
+  const pct = normalizeSlopeDeepSurchargePct(win.slopeDeepSurchargePct)
+  return translate(locale.value, 'summary.slopeDeepLine').replace('{pct}', String(pct))
 }
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowEntryHeading(line, win) {
   const q = windowQty(win)
-  if (line.typeId === 'roller_box') {
+  if (line.typeId === 'roller_box' || line.typeId === 'windowsill') {
     const w = Math.round(Number(win.widthMm))
-    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-    const dims = `${w} ${t('common.mm')}`
-    if (q > 1) return `${dims} × ${q} ${t('summary.pcs')}`
-    return dims
-  }
-  if (line.typeId === 'windowsill') {
-    const w = Math.round(Number(win.widthMm))
-    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
     const dims = `${w} ${t('common.mm')}`
     if (q > 1) return `${dims} × ${q} ${t('summary.pcs')}`
     return dims
@@ -99,14 +98,8 @@ function windowEntryHeading(line, win) {
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowDimsLabel(line, win) {
-  if (line.typeId === 'roller_box') {
+  if (line.typeId === 'roller_box' || line.typeId === 'windowsill') {
     const w = Math.round(Number(win.widthMm))
-    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-    return `${w} ${t('common.mm')}`
-  }
-  if (line.typeId === 'windowsill') {
-    const w = Math.round(Number(win.widthMm))
-    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
     return `${w} ${t('common.mm')}`
   }
   const w = Math.round(Number(win.widthMm))
@@ -116,16 +109,6 @@ function windowDimsLabel(line, win) {
 
 /** Повні розміри для клієнтського підсумку (без Pro-розбивки). */
 function windowDimsLabelPublic(line, win) {
-  if (line.typeId === 'roller_box') {
-    const w = Math.round(Number(win.widthMm))
-    const hb = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm))
-    return `${w}×${hb} ${t('common.mm')}`
-  }
-  if (line.typeId === 'windowsill') {
-    const w = Math.round(Number(win.widthMm))
-    const d = Math.round(Number(win.windowsillDepthMm ?? win.heightMm))
-    return `${w}×${d} ${t('common.mm')}`
-  }
   return windowDimsLabel(line, win)
 }
 
@@ -190,11 +173,6 @@ const publicLeadTimeNoteDisplay = computed(() =>
   ),
 )
 
-/** @param {string | undefined} id */
-function catLabel(id) {
-  return sizeCategoryLabel(locale.value, String(id))
-}
-
 const _TIME_BUFFER_COEFF = 1.44
 
 /** @param {Record<string, unknown>} line */
@@ -231,46 +209,12 @@ function windowsForLine(line) {
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowPriceEuros(line, win) {
-  if (!win) return 0
-  const tid = line.typeId
-  if (tid === 'roller_box') {
-    const wm = Number(win.widthMm)
-    const rh = Number(win.rollerBoxHeightMm ?? win.heightMm)
-    if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
-    return quoteRollerBoxOnlyRoundedEuros(wm, rh)
-  }
-  if (tid === 'windowsill') {
-    const wm = Number(win.widthMm)
-    const d = Number(win.windowsillDepthMm ?? win.heightMm)
-    if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
-    return quoteWindowsillOnlyRoundedEuros(wm, d)
-  }
-  const ty = getTypeById(tid)
-  if (!ty) return 0
-  const wm = Number(win.widthMm)
-  const hm = Number(win.heightMm)
-  if (!windowEligibleForAutoQuote(wm, hm)) return 0
-  return quoteWindowRoundedEuros(
-    wm,
-    hm,
-    /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
-    ty.hasSill,
-    ty.hasRoller,
-    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
-    win.rollerCategory != null
-      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
-      : null,
-  )
+  return quoteLineWindowEuros(line, win)
 }
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
 function windowsillAddonPriceEuros(line, win) {
-  const ty = getTypeById(line.typeId)
-  if (!ty?.hasSill) return 0
-  const wm = Number(win.widthMm)
-  if (!Number.isFinite(wm) || wm <= 0) return 0
-  const d = typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null
-  return quoteWindowsillAddonRoundedEuros(wm, d)
+  return quoteLineWindowsillAddonEuros(line, win)
 }
 
 /** @param {Record<string, unknown>} win */
@@ -280,13 +224,6 @@ function windowsillAddonWidthMm(win) {
   return wMm + 300
 }
 
-/** @param {Record<string, unknown>} win */
-function windowsillDepthMm(win) {
-  const mm = Number(win.windowsillDepthMm)
-  if (!Number.isFinite(mm)) return null
-  return Math.round(mm)
-}
-
 /** @param {Record<string, unknown>} line */
 function lineSubtotalEuros(line) {
   return windowsForLine(line).reduce((s, w) => s + windowPriceEuros(line, w) * windowQty(w), 0)
@@ -294,8 +231,11 @@ function lineSubtotalEuros(line) {
 
 const orderTotalEuros = computed(() => props.lines.reduce((s, line) => s + lineSubtotalEuros(line), 0))
 
-const minOrderApplied = computed(() => orderTotalEuros.value > 0 && orderTotalEuros.value < MIN_ORDER_EUR)
-const payableWorkEuros = computed(() => payableWorkEurosFor(orderTotalEuros.value))
+const minOrderApplied = computed(
+  () => mdfSubtotalEuros.value > 0 && mdfSubtotalEuros.value < MIN_ORDER_EUR,
+)
+const mdfSubtotalEuros = computed(() => mdfSubtotalEurosForOrderLines(props.lines, lineSubtotalEuros))
+const payableWorkEuros = computed(() => payableWorkEurosForOrderLines(props.lines, lineSubtotalEuros))
 
 const discountPct = computed(() =>
   effectiveDiscountPercent(payableWorkEuros.value, manualDiscountPct.value, proActive.value),
@@ -310,31 +250,22 @@ function windowBaseHours(line, win) {
   const tid = line.typeId
   if (tid === 'roller_box') {
     if (!lineWindowEligibleForAutoQuote('roller_box', win)) return 0
-    return quoteRollerBoxOnlyHours(
-      Number(win.widthMm),
-      Number(win.rollerBoxHeightMm ?? win.heightMm),
-    )
+    return quoteRollerBoxOnlyHours(Number(win.widthMm))
   }
   if (tid === 'windowsill') {
     if (!lineWindowEligibleForAutoQuote('windowsill', win)) return 0
-    return quoteWindowsillOnlyHours(
-      Number(win.widthMm),
-      typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
-    )
+    return quoteWindowsillOnlyHours(Number(win.widthMm))
   }
   const t = getTypeById(tid)
   if (!t) return 0
   if (!windowEligibleForAutoQuote(Number(win.widthMm), Number(win.heightMm))) return 0
+  const slope = winSlopeQuoteArgs(win)
   return quoteWindowHours(
     Number(win.widthMm),
     Number(win.heightMm),
     t.hasSill,
     t.hasRoller,
-    /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.depthCategory),
-    win.rollerCategory != null
-      ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (win.rollerCategory)
-      : null,
-    typeof win.windowsillDepthMm === 'number' ? win.windowsillDepthMm : null,
+    slope.deep,
   )
 }
 
@@ -354,10 +285,7 @@ const orderTotalBaseHours = computed(() =>
           if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
           return (
             s +
-            quoteRollerBoxOnlyHours(
-              Number(w.widthMm),
-              Number(w.rollerBoxHeightMm ?? w.heightMm),
-            ) *
+            quoteRollerBoxOnlyHours(Number(w.widthMm)) *
               windowQty(w)
           )
         }, 0)
@@ -370,10 +298,7 @@ const orderTotalBaseHours = computed(() =>
           if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
           return (
             s +
-            quoteWindowsillOnlyHours(
-              Number(w.widthMm),
-              typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
-            ) *
+            quoteWindowsillOnlyHours(Number(w.widthMm)) *
               windowQty(w)
           )
         }, 0)
@@ -385,6 +310,7 @@ const orderTotalBaseHours = computed(() =>
       sum +
       windowsForLine(line).reduce((s, w) => {
         if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
+        const slope = winSlopeQuoteArgs(w)
         return (
           s +
           quoteWindowHours(
@@ -392,11 +318,7 @@ const orderTotalBaseHours = computed(() =>
             Number(w.heightMm),
             t.hasSill,
             t.hasRoller,
-            /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.depthCategory),
-            w.rollerCategory != null
-              ? /** @type {import('../constants/sizeCategories.js').SizeCategoryId} */ (w.rollerCategory)
-              : null,
-            typeof w.windowsillDepthMm === 'number' ? w.windowsillDepthMm : null,
+            slope.deep,
           ) *
             windowQty(w)
         )
@@ -574,7 +496,7 @@ function openContactEmailModal() {
       <ul class="list">
         <li v-for="line in lines" :key="line.key" class="line">
           <div class="line__main">
-            <h3 class="line__type">{{ t('types.' + line.typeId + '.title') }}</h3>
+            <h3 class="line__type">{{ lineTypeTitle(line) }}</h3>
 
             <div
               v-for="(win, wIdx) in windowsForLine(line)"
@@ -601,13 +523,14 @@ function openContactEmailModal() {
                   <dt>{{ t('summary.dtWidth') }}</dt>
                   <dd>{{ formatWindowMm(win.widthMm) }}</dd>
                 </div>
-                <p v-if="line.typeId === 'roller_box'" class="dims-explicit">{{ rollerBoxHeightLineSummary(win) }}</p>
-                <p v-else-if="line.typeId === 'windowsill'" class="dims-explicit">{{ sillDepthLineSummary(win) }}</p>
               </dl>
               <dl v-else-if="!isPublicMode" class="dims">
-                <div class="dims__row">
+                <div
+                  v-if="slopeDeepLineSummary(line, win)"
+                  class="dims__row"
+                >
                   <dt>{{ t('summary.dtDepth') }}</dt>
-                  <dd>{{ catLabel(win.depthCategory) }}</dd>
+                  <dd>{{ slopeDeepLineSummary(line, win) }}</dd>
                 </div>
                 <div
                   v-if="getTypeById(line.typeId)?.hasSill"
@@ -620,25 +543,6 @@ function openContactEmailModal() {
                     </template>
                     <template v-else>—</template>
                   </dd>
-                </div>
-                <div
-                  v-if="getTypeById(line.typeId)?.hasSill"
-                  class="dims__row"
-                >
-                  <dt>{{ t('summary.dtSillDepthCm') }}</dt>
-                  <dd>
-                    <template v-if="windowsillDepthMm(win) != null">
-                      {{ windowsillDepthMm(win) }} {{ t('common.mm') }}
-                    </template>
-                    <template v-else>—</template>
-                  </dd>
-                </div>
-                <div
-                  v-if="getTypeById(line.typeId)?.hasRoller && win.rollerCategory != null"
-                  class="dims__row"
-                >
-                  <dt>{{ t('summary.dtRoller') }}</dt>
-                  <dd>{{ catLabel(win.rollerCategory) }}</dd>
                 </div>
               </dl>
               <template
@@ -693,7 +597,7 @@ function openContactEmailModal() {
             <button
               type="button"
               class="line__edit"
-              :aria-label="t('summary.editAriaPrefix') + ' ' + t('types.' + line.typeId + '.title')"
+              :aria-label="t('summary.editAriaPrefix') + ' ' + lineTypeTitle(line)"
               @click="emit('edit', line.key)"
             >
               {{ t('summary.edit') }}
@@ -701,7 +605,7 @@ function openContactEmailModal() {
             <button
               type="button"
               class="line__remove"
-              :aria-label="t('summary.removeAriaPrefix') + ' ' + t('types.' + line.typeId + '.title')"
+              :aria-label="t('summary.removeAriaPrefix') + ' ' + lineTypeTitle(line)"
               @click="emit('remove', line.key)"
             >
               {{ t('summary.remove') }}
@@ -709,6 +613,10 @@ function openContactEmailModal() {
           </div>
         </li>
       </ul>
+
+      <p v-if="minOrderApplied" class="summary__min-order">
+        {{ t('summary.publicMinOrderNote').replace('{amount}', formatEuroExclVat(MIN_ORDER_EUR, locale)) }}
+      </p>
 
       <div v-if="isPublicMode" class="summary__quote-cta-wrap">
         <button type="button" class="summary__quote-cta" @click="emit('update:quoteOpen', true)">
@@ -769,10 +677,6 @@ function openContactEmailModal() {
               <dt>{{ t('summary.workSubtotal') }}</dt>
               <dd>{{ formatEuroExclVat(orderTotalEuros, locale) }}</dd>
             </div>
-            <div v-if="minOrderApplied" class="order-totals__row order-totals__row--muted">
-              <dt>{{ t('summary.minOrderDiffPrefix') }}</dt>
-              <dd>{{ formatEuroExclVat(MIN_ORDER_EUR - orderTotalEuros, locale) }}</dd>
-            </div>
             <div v-if="discountEuros > 0" class="order-totals__row order-totals__row--muted">
               <dt>
                 {{ t('summary.discountLabel') }}
@@ -818,7 +722,6 @@ function openContactEmailModal() {
         <ul class="order-totals__notes">
           <li>{{ t('summary.fastExecutionNoDismantle') }}</li>
           <li>{{ t('summary.turnkeyIncludes') }}</li>
-          <li>{{ t('summary.discountPolicy') }}</li>
         </ul>
       </div>
 
@@ -962,6 +865,14 @@ function openContactEmailModal() {
   color: var(--allexo-muted);
   font-size: 0.9rem;
   line-height: 1.45;
+}
+
+.summary__min-order {
+  margin: 0 0 1rem;
+  color: var(--allexo-teal);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 600;
 }
 
 .summary__clear {
