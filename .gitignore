@@ -8,6 +8,9 @@ dist
 .env
 .env.local
 
+# Оригінали фото галереї (локально; на сайт лише public/images/works/*.webp)
+source/works-original/
+
 # Wrangler (локальний деплой Cloudflare Pages)
 .wrangler/
 .dev.vars

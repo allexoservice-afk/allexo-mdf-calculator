@@ -3,8 +3,7 @@ import { computed, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
 import { LOCALE_SWITCH_ORDER } from '../i18n/translations.js'
-import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF, CONTACT_WHATSAPP_HREF } from '../constants/contact.js'
-import { trackMetaContact } from '../services/metaPixel.js'
+import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
 
 const { locale, setLocale, t } = useLocale()
 
@@ -19,10 +18,6 @@ function scrollToCalculator() {
   const el = document.getElementById('calculator')
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function onWhatsAppClick() {
-  trackMetaContact()
 }
 
 /** @param {import('../i18n/translations.js').Locale} code */
@@ -94,28 +89,33 @@ async function submitUnlock() {
       </div>
 
       <h1 class="header__title">{{ t('hero.title') }}</h1>
-      <p class="header__tag">{{ t('hero.subtitle') }}</p>
+      <p class="header__tag header__tag--desktop">{{ t('hero.subtitle') }}</p>
+      <ul class="header__benefits" :aria-label="t('hero.subtitle')">
+        <li>{{ t('hero.subtitleLine1') }}</li>
+        <li>{{ t('hero.subtitleLine2') }}</li>
+        <li>{{ t('hero.subtitleLine3') }}</li>
+      </ul>
       <button type="button" class="header__cta" @click="scrollToCalculator">
         {{ t('app.calcCta') }}
       </button>
+      <p class="header__trust">{{ t('hero.trustLine') }}</p>
     </div>
 
     <div class="hero-contacts" role="region" :aria-label="t('contacts.title')">
-      <a class="hero-contacts__link" :href="CONTACT_EMAIL_HREF" :aria-label="t('contacts.emailAria')">
+      <p class="hero-contacts__label">{{ t('contacts.title') }}</p>
+      <a
+        class="hero-contacts__link hero-contacts__link--email"
+        :href="CONTACT_EMAIL_HREF"
+        :aria-label="t('contacts.emailAria')"
+      >
         {{ t('contacts.emailDisplay') }}
       </a>
-      <a class="hero-contacts__link" :href="CONTACT_PHONE_HREF" :aria-label="t('contacts.phoneAria')">
-        {{ t('contacts.phoneDisplay') }}
-      </a>
       <a
-        class="hero-contacts__link hero-contacts__link--wa"
-        :href="CONTACT_WHATSAPP_HREF"
-        target="_blank"
-        rel="noopener noreferrer"
-        :aria-label="t('fab.waAria')"
-        @click="onWhatsAppClick"
+        class="hero-contacts__link hero-contacts__link--primary"
+        :href="CONTACT_PHONE_HREF"
+        :aria-label="t('contacts.phoneAria')"
       >
-        {{ t('getQuote.contactWhatsapp') }}
+        {{ t('contacts.phoneDisplay') }}
       </a>
     </div>
   </div>
@@ -207,7 +207,7 @@ async function submitUnlock() {
   }
 
   .header__brand {
-    margin-top: 0;
+    margin-top: -12px;
     margin-left: 0;
     transform: none;
     justify-self: start;
@@ -227,6 +227,10 @@ async function submitUnlock() {
   .header__cta {
     align-self: flex-start;
     margin-top: 16px;
+  }
+
+  .header__trust {
+    align-self: flex-start;
   }
 
   .hero-contacts {
@@ -251,9 +255,23 @@ async function submitUnlock() {
       text-decoration-color 0.25s ease;
   }
 
+  .hero-contacts__link--email {
+    font-size: 0.84rem;
+    font-weight: 500;
+    opacity: 0.72;
+    text-decoration: none;
+  }
+
+  .hero-contacts__link--primary {
+    font-size: 1.02rem;
+    font-weight: 700;
+    opacity: 1;
+  }
+
   .hero-contacts__link:hover {
     color: #fff;
     text-decoration-color: #c4a35a;
+    opacity: 1;
   }
 }
 
@@ -263,7 +281,8 @@ async function submitUnlock() {
     display: block;
     box-sizing: border-box;
     position: relative;
-    min-height: 360px;
+    min-height: 0;
+    padding-bottom: 0.25rem;
   }
 
   .hero-main {
@@ -271,8 +290,8 @@ async function submitUnlock() {
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    gap: 14px;
-    padding: 40px 0 0 106px;
+    gap: 4px;
+    padding: 0 0 0 106px;
     box-sizing: border-box;
   }
 
@@ -282,6 +301,7 @@ async function submitUnlock() {
 
   .header__brand {
     transform: none;
+    margin-top: 0;
   }
 
   .header__title {
@@ -301,28 +321,53 @@ async function submitUnlock() {
     align-self: flex-start;
   }
 
+  .header__trust {
+    margin-top: 0;
+    max-width: 32rem;
+  }
+
   .lang {
-    top: 40px;
+    top: 14px;
     right: 50px;
   }
 
   .hero-contacts {
     position: absolute;
+    top: auto;
     right: 50px;
-    bottom: 54px;
+    bottom: 8px;
     margin-top: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 0.15rem;
   }
+
+  .hero-contacts__link--email {
+    font-size: 0.84rem;
+    font-weight: 500;
+    opacity: 0.72;
+    text-decoration: none;
+  }
+
+  .hero-contacts__link--primary {
+    font-size: 1.02rem;
+    font-weight: 700;
+    opacity: 1;
+  }
 }
 
 .hero-logo {
   display: block;
   width: auto;
-  height: 110px;
+  height: 108px;
   object-fit: contain;
+}
+
+@media (min-width: 1024px) {
+  .hero-logo {
+    height: 74px;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -432,6 +477,13 @@ async function submitUnlock() {
     text-align: center;
   }
 
+  .hero-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
   .hero-layout {
     display: flex;
     flex-direction: column;
@@ -451,11 +503,19 @@ async function submitUnlock() {
   }
 
   .hero-contacts {
-    margin-top: 10px;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    width: 100%;
+    max-width: 340px;
+    border-top: 1px solid rgba(196, 163, 90, 0.35);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.05rem;
+    gap: 0.2rem;
+  }
+
+  .hero-contacts__label {
+    display: block;
   }
 
   .hero-contacts__link {
@@ -469,10 +529,26 @@ async function submitUnlock() {
     text-underline-offset: 3px;
   }
 
+  .hero-contacts__link--email {
+    font-size: 11px;
+    opacity: 0.62;
+    text-decoration: none;
+    order: 2;
+  }
+
+  .hero-contacts__link--primary {
+    font-size: 1.05rem;
+    font-weight: 700;
+    opacity: 1;
+    order: 1;
+    margin-bottom: 0.15rem;
+  }
+
   .hero-top {
     display: block;
     width: 100%;
-    margin-top: 1.25rem;
+    margin-top: 1rem;
+    margin-bottom: 0.35rem;
   }
 
   .header__brand {
@@ -521,22 +597,38 @@ async function submitUnlock() {
   }
 
   .header__title {
-    margin-top: 10px;
-    font-size: 18px;
+    margin-top: 0.75rem;
+    font-size: 19px;
     font-weight: 700;
-    line-height: 1.22;
-    max-width: 88%;
+    line-height: 1.28;
+    max-width: 92%;
     text-wrap: balance;
     overflow-wrap: break-word;
     hyphens: none;
   }
 
+  .header__tag--desktop {
+    display: none;
+  }
+
+  .header__benefits {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.65rem 0 0;
+    max-width: 92%;
+    font-size: 0.84rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .header__benefits li {
+    margin: 0;
+  }
+
   .header__tag {
-    margin-top: 4px;
-    font-size: 14px;
-    line-height: 1.35;
-    opacity: 0.9;
-    max-width: 88%;
+    display: none;
   }
 
   .header__cta {
@@ -544,19 +636,23 @@ async function submitUnlock() {
     max-width: 340px;
     height: 52px;
     min-height: 52px;
-    margin-top: 8px;
+    margin-top: 1.35rem;
     margin-inline: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 0 1.15rem;
   }
+
+  .header__trust {
+    display: none;
+  }
 }
 
 @media (max-width: 430px) {
   .header__title {
-    font-size: 17px;
-    max-width: 92%;
+    font-size: 18px;
+    max-width: 94%;
   }
 }
 
@@ -569,6 +665,23 @@ async function submitUnlock() {
   max-width: 32rem;
   text-wrap: balance;
   overflow-wrap: break-word;
+}
+
+.header__benefits {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-contacts__label {
+  display: none;
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(196, 163, 90, 0.88);
 }
 
 .header__cta {
@@ -606,6 +719,16 @@ async function submitUnlock() {
 .header__cta:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.9);
   outline-offset: 3px;
+}
+
+.header__trust {
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.01em;
+  max-width: 32rem;
+  text-wrap: balance;
 }
 
 .unlock-backdrop {

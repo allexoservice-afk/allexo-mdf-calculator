@@ -263,21 +263,6 @@ const mdfOrderSubtotalEuros = computed(() =>
 
       <WorksGallery />
 
-      <section class="reviews" :aria-label="t('reviews.aria')">
-        <div class="reviews__card">
-          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
-          <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
-            <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
-              <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
-              <blockquote class="reviews__item-quote">
-                {{ reviewQuoteText(rev) }}
-              </blockquote>
-              <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
-            </li>
-          </ul>
-        </div>
-      </section>
-
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
           <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
@@ -334,6 +319,21 @@ const mdfOrderSubtotalEuros = computed(() =>
             @edit="openEditForm"
             @clear="clearOrder"
           />
+        </div>
+      </section>
+
+      <section class="reviews" :aria-label="t('reviews.aria')">
+        <div class="reviews__card">
+          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
+          <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
+            <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
+              <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
+              <blockquote class="reviews__item-quote">
+                {{ reviewQuoteText(rev) }}
+              </blockquote>
+              <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
+            </li>
+          </ul>
         </div>
       </section>
     </main>
@@ -481,6 +481,21 @@ const mdfOrderSubtotalEuros = computed(() =>
       radial-gradient(640px 420px at 52% 48%, rgba(196, 163, 90, 0.04), transparent 68%),
       linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
   }
+
+  .hero {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .main {
+    padding-top: 1rem;
+  }
+
+  .about {
+    margin-bottom: 1.15rem;
+    padding-top: 1.1rem;
+    padding-bottom: 1.1rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -490,7 +505,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 
   .hero {
     padding-top: 18px;
-    padding-bottom: 14px;
+    padding-bottom: 1.35rem;
   }
 
   .main {
@@ -654,6 +669,44 @@ const mdfOrderSubtotalEuros = computed(() =>
   font-weight: 700;
   color: var(--allexo-accent);
   margin-right: 0.25rem;
+}
+
+@media (min-width: 769px) {
+  .steps {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 1rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .steps__item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-width: 0;
+    padding: 0.3rem 0.75rem;
+    line-height: 1.35;
+    position: relative;
+  }
+
+  .steps__item:not(:last-child) {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .steps__item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 22%;
+    right: 0;
+    bottom: 22%;
+    width: 1px;
+    background-color: var(--allexo-border);
+    pointer-events: none;
+  }
 }
 
 .about {

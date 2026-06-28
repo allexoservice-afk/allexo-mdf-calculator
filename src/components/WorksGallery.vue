@@ -1,8 +1,9 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
+import worksGallery from '../generated/works-gallery.json'
 
-const COUNT = 15
+const COUNT = worksGallery.count
 
 /** Публічні URL (файли в `public/images/works/`). */
 const ALL_THUMB = Array.from({ length: COUNT }, (_, i) => `/images/works/work${i + 1}-thumb.webp`)
