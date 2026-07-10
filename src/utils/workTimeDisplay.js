@@ -13,14 +13,22 @@ export function formatWorkHoursDisplay(h, locale) {
   return String(n)
 }
 
+/** @param {number} bufferedHours */
+export function approxWorkDays(bufferedHours) {
+  const hh = ceilWorkHours(bufferedHours)
+  if (hh <= 0) return 0
+  if (hh <= 9) return 1
+  if (hh <= 20) return 2
+  return Math.ceil((hh - 9) / 11) + 1
+}
+
 /** @param {number} bufferedHours @param {import('../i18n/translations.js').Locale} locale */
 export function formatWorkDaysApproxLabel(bufferedHours, locale) {
-  const hh = ceilWorkHours(bufferedHours)
-  if (hh <= 0) return ''
-  if (hh <= 8) return translate(locale, 'summary.workDays1to2')
-  if (hh <= 16) return translate(locale, 'summary.workDays1to2')
-  const minDays = Math.floor(hh / 8)
-  return translate(locale, 'summary.workDays2plus').replace('{n}', String(Math.max(minDays, 2)))
+  const days = approxWorkDays(bufferedHours)
+  if (days <= 0) return ''
+  if (days === 1) return translate(locale, 'summary.workDays1')
+  if (days === 2) return translate(locale, 'summary.workDays2')
+  return translate(locale, 'summary.workDaysN').replace('{n}', String(days))
 }
 
 /**

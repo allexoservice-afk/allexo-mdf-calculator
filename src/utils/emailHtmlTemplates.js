@@ -8,6 +8,7 @@ import {
 } from './proposalLineItems.js'
 import { buildProposalContentHtml, proposalPricingFromLead } from './proposalContentHtml.js'
 import { quoteReferenceFromLead } from './quoteReference.js'
+import { approxWorkDays } from './workTimeDisplay.js'
 
 const TEAL = '#0f3d3e'
 const GOLD = '#c4a35a'
@@ -131,12 +132,11 @@ function formatEuroAmount(amount) {
  * @param {number} totalHours
  */
 function clientWorkTimeText(locale, totalHours) {
-  if (!Number.isFinite(totalHours) || totalHours <= 0) {
-    return translate(locale, 'emailHtml.workTimeDay1')
-  }
-  if (totalHours <= 8) return translate(locale, 'emailHtml.workTimeDay1')
-  if (totalHours <= 16) return translate(locale, 'emailHtml.workTimeDays1_2')
-  return translate(locale, 'emailHtml.workTimeDaysSeveral')
+  const days = approxWorkDays(totalHours)
+  if (days <= 0) return translate(locale, 'emailHtml.workTimeDay1')
+  if (days === 1) return translate(locale, 'emailHtml.workTimeDay1')
+  if (days === 2) return translate(locale, 'emailHtml.workTimeDays2')
+  return translate(locale, 'emailHtml.workTimeDaysN').replace('{n}', String(days))
 }
 
 /**

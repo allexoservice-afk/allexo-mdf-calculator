@@ -9,14 +9,17 @@ import {
   quoteRollerBoxOnlyHours,
   quoteWindowHours,
   quoteWindowsillOnlyHours,
+  orderBufferedWorkHours,
   winSlopeQuoteArgs,
   normalizeSlopeDeepSurchargePct,
 } from '../pricing/windowQuote.js'
 import { quoteLineWindowEuros, quoteLineWindowsillAddonEuros } from '../pricing/quoteLineWindow.js'
 import { parseTravelKmInput, travelFareFromBrugge } from '../utils/travelFromBrugge.js'
-import { formatWorkDaysApproxLabel, formatWorkHoursDisplay } from '../utils/workTimeDisplay.js'
+import { approxWorkDays, formatWorkDaysApproxLabel, formatWorkHoursDisplay } from '../utils/workTimeDisplay.js'
 import EmailRequestModal from './EmailRequestModal.vue'
 import GetQuoteLeadModal from './GetQuoteLeadModal.vue'
+import MaterialsModal from './MaterialsModal.vue'
+import PdfPreviewModal from './PdfPreviewModal.vue'
 import WindowSchematicPreview from './WindowSchematicPreview.vue'
 import { formatEuroExclVat } from '../utils/priceDisplay.js'
 import {
@@ -36,6 +39,13 @@ import {
   payableWorkEurosForOrderLines,
 } from '../pricing/orderDiscount.js'
 import { preloadProposalPdfEngine } from '../utils/proposalPdf.js'
+import {
+  formatLinearMeters,
+  orderLinearMetersTotals,
+  windowSillLinearMetersTotal,
+  windowSlopesLinearMetersTotal,
+} from '../utils/linearMeters.js'
+import { orderMaterialStock } from '../utils/materialStock.js'
 
 const props = defineProps({
   lines: { type: Array, required: true },
@@ -51,6 +61,22 @@ const { manualDiscountPct, setManualDiscount, toggleManualDiscount, PRO_MANUAL_D
 const discountManualActive = computed(
   () => proActive.value && manualDiscountPct.value != null && manualDiscountPct.value > 0,
 )
+
+const discountOpen = ref(false)
+
+const discountCurrentLabel = computed(() =>
+  manualDiscountPct.value == null
+    ? t('summary.proDiscountAuto')
+    : `−${manualDiscountPct.value}%`,
+)
+
+const travelOpen = ref(false)
+
+const travelCurrentLabel = computed(() => {
+  const km = parseTravelKmInput(travelKmInput.value)
+  if (km == null || km <= 0) return '—'
+  return `${km} ${t('summary.kmUnit')}`
+})
 
 function formatWindowMm(mm) {
   if (mm == null || Number.isNaN(mm)) return '—'
@@ -158,12 +184,9 @@ const publicTotalWindowUnits = computed(() =>
   ),
 )
 
-const PUBLIC_WINDOWS_PER_WORKDAY = 5
-
 const publicLeadTimeDaysApprox = computed(() => {
-  const n = publicTotalWindowUnits.value
-  if (n <= 0) return 1
-  return Math.max(1, Math.ceil(n / PUBLIC_WINDOWS_PER_WORKDAY))
+  const days = approxWorkDays(orderTotalBufferedHours.value)
+  return days > 0 ? days : 1
 })
 
 const publicLeadTimeNoteDisplay = computed(() =>
@@ -173,9 +196,58 @@ const publicLeadTimeNoteDisplay = computed(() =>
   ),
 )
 
-const _TIME_BUFFER_COEFF = 1.44
+const orderWorkTime = computed(() => {
+  let perWindowTotal = 0
+  let quotedUnits = 0
 
-/** @param {Record<string, unknown>} line */
+  for (const line of props.lines) {
+    const tid = line.typeId
+    if (tid === 'roller_box') {
+      for (const w of windowsForLine(line)) {
+        if (!lineWindowEligibleForAutoQuote('roller_box', w)) continue
+        const h = quoteRollerBoxOnlyHours(Number(w.widthMm))
+        const qty = windowQty(w)
+        perWindowTotal += h * qty
+        quotedUnits += qty
+      }
+      continue
+    }
+    if (tid === 'windowsill') {
+      for (const w of windowsForLine(line)) {
+        if (!lineWindowEligibleForAutoQuote('windowsill', w)) continue
+        const h = quoteWindowsillOnlyHours(Number(w.widthMm))
+        const qty = windowQty(w)
+        perWindowTotal += h * qty
+        quotedUnits += qty
+      }
+      continue
+    }
+    const t = getTypeById(tid)
+    if (!t) continue
+    for (const w of windowsForLine(line)) {
+      if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) continue
+      const slope = winSlopeQuoteArgs(w)
+      const h = quoteWindowHours(
+        Number(w.widthMm),
+        Number(w.heightMm),
+        t.hasSill,
+        t.hasRoller,
+        slope.deep,
+      )
+      const qty = windowQty(w)
+      perWindowTotal += h * qty
+      quotedUnits += qty
+    }
+  }
+
+  return {
+    perWindowTotal,
+    quotedUnits,
+    buffered: orderBufferedWorkHours(perWindowTotal, quotedUnits),
+  }
+})
+
+const orderTotalBufferedHours = computed(() => orderWorkTime.value.buffered)
 function windowsForLine(line) {
   const tid = typeof line.typeId === 'string' ? line.typeId : undefined
   if (Array.isArray(line.windows) && line.windows.length > 0) {
@@ -224,6 +296,31 @@ function windowsillAddonWidthMm(win) {
   return wMm + 300
 }
 
+function formatLinearMetersLabel(m) {
+  if (m == null) return null
+  return `${formatLinearMeters(m)} ${t('common.linearMeter')}`
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowSlopesLinearLabel(line, win) {
+  return formatLinearMetersLabel(
+    windowSlopesLinearMetersTotal(line.typeId, win, windowQty(win)),
+  )
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowSillLinearLabel(line, win) {
+  return formatLinearMetersLabel(windowSillLinearMetersTotal(line.typeId, win, windowQty(win)))
+}
+
+const orderLinearTotals = computed(() =>
+  orderLinearMetersTotals(props.lines, windowsForLine, windowQty),
+)
+
+const orderMaterial = computed(() =>
+  orderMaterialStock(props.lines, windowsForLine, windowQty),
+)
+
 /** @param {Record<string, unknown>} line */
 function lineSubtotalEuros(line) {
   return windowsForLine(line).reduce((s, w) => s + windowPriceEuros(line, w) * windowQty(w), 0)
@@ -270,64 +367,10 @@ function windowBaseHours(line, win) {
 }
 
 /** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
-function windowBufferedHoursTotal(line, win) {
-  const base = windowBaseHours(line, win) * windowQty(win)
-  return base * _TIME_BUFFER_COEFF
+function windowDisplayHours(line, win) {
+  return windowBaseHours(line, win) * windowQty(win)
 }
 
-const orderTotalBaseHours = computed(() =>
-  props.lines.reduce((sum, line) => {
-    const tid = line.typeId
-    if (tid === 'roller_box') {
-      return (
-        sum +
-        windowsForLine(line).reduce((s, w) => {
-          if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-          return (
-            s +
-            quoteRollerBoxOnlyHours(Number(w.widthMm)) *
-              windowQty(w)
-          )
-        }, 0)
-      )
-    }
-    if (tid === 'windowsill') {
-      return (
-        sum +
-        windowsForLine(line).reduce((s, w) => {
-          if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
-          return (
-            s +
-            quoteWindowsillOnlyHours(Number(w.widthMm)) *
-              windowQty(w)
-          )
-        }, 0)
-      )
-    }
-    const t = getTypeById(tid)
-    if (!t) return sum
-    return (
-      sum +
-      windowsForLine(line).reduce((s, w) => {
-        if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
-        const slope = winSlopeQuoteArgs(w)
-        return (
-          s +
-          quoteWindowHours(
-            Number(w.widthMm),
-            Number(w.heightMm),
-            t.hasSill,
-            t.hasRoller,
-            slope.deep,
-          ) *
-            windowQty(w)
-        )
-      }, 0)
-    )
-  }, 0),
-)
-
-const orderTotalBufferedHours = computed(() => orderTotalBaseHours.value * _TIME_BUFFER_COEFF)
 const orderTotalHoursFormatted = computed(() =>
   formatWorkHoursDisplay(orderTotalBufferedHours.value, locale.value),
 )
@@ -338,7 +381,12 @@ const orderTotalWorkDaysFormatted = computed(() =>
 const copyNotice = ref('')
 const copyNoticeIsError = ref(false)
 const pdfLoading = ref(false)
+const pdfPreviewOpen = ref(false)
+const pdfPreviewBlob = ref(null)
+const pdfPreviewFilename = ref('')
+const pdfPreviewTitle = ref('')
 const emailRequestModalOpen = ref(false)
+const materialsModalOpen = ref(false)
 
 watch(
   () => props.lines.length,
@@ -403,7 +451,9 @@ async function buildProposalPdfFile() {
   return generateProposalPdfBlob(proposalPdfOptions())
 }
 
-async function downloadProposalPdfFile() {
+const pdfShareText = computed(() => translate(locale.value, 'emailHtml.clientSubject'))
+
+async function previewProposalPdfFile() {
   if (orderHasInvalidWindowDimensions(props.lines)) {
     showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
     return
@@ -411,9 +461,11 @@ async function downloadProposalPdfFile() {
   pdfLoading.value = true
   await nextTick()
   try {
-    const { downloadProposalPdf } = await import('../utils/proposalPdf.js')
-    await downloadProposalPdf(proposalPdfOptions())
-    showSummaryNotice(t('summary.pdfDownloaded'))
+    const { blob, filename } = await buildProposalPdfFile()
+    pdfPreviewBlob.value = blob
+    pdfPreviewFilename.value = filename
+    pdfPreviewTitle.value = t('summary.previewPdfTitle')
+    pdfPreviewOpen.value = true
   } catch (e) {
     console.error(e)
     showSummaryNotice(t('summary.pdfFailed'), 4000, true)
@@ -422,48 +474,11 @@ async function downloadProposalPdfFile() {
   }
 }
 
-async function shareProposalPdfFile() {
-  if (orderHasInvalidWindowDimensions(props.lines)) {
-    showSummaryNotice(t('summary.errMinDimensions'), 4000, true)
-    return
-  }
-  pdfLoading.value = true
-  await nextTick()
-  try {
-    const { shareProposalPdfBlob, downloadPdfBlob } = await import('../utils/shareProposalPdf.js')
-    let blob
-    let filename
-    try {
-      ;({ blob, filename } = await buildProposalPdfFile())
-    } catch (err) {
-      console.warn('PDF blob export failed for share, falling back to download', err)
-      const { saveProposalPdf } = await import('../utils/proposalPdf.js')
-      await saveProposalPdf(proposalPdfOptions())
-      showSummaryNotice(t('summary.pdfSavedAttach'), 4500)
-      return
-    }
-
-    const shareText = translate(locale.value, 'emailHtml.clientSubject')
-    const result = await shareProposalPdfBlob(blob, filename, {
-      title: 'ALLEXO',
-      text: shareText,
-    })
-
-    if (result.ok && !result.cancelled) {
-      showSummaryNotice(t('summary.pdfShareReady'))
-      return
-    }
-
-    if (result.reason === 'unsupported') {
-      downloadPdfBlob(blob, filename)
-      showSummaryNotice(t('summary.pdfSavedAttach'), 4500)
-    }
-  } catch (e) {
-    console.error(e)
-    showSummaryNotice(t('summary.pdfFailed'), 4000, true)
-  } finally {
-    pdfLoading.value = false
-  }
+function closePdfPreview() {
+  pdfPreviewOpen.value = false
+  pdfPreviewBlob.value = null
+  pdfPreviewFilename.value = ''
+  pdfPreviewTitle.value = ''
 }
 
 function openContactEmailModal() {
@@ -507,7 +522,7 @@ function openContactEmailModal() {
                 {{ t('summary.positionLabel').replace('{n}', String(globalWindowIndex(line.key, wIdx))) }}
               </span>
               <div class="window-entry__visual-wrap">
-                <WindowSchematicPreview :type-id="line.typeId" :win="win" />
+                <WindowSchematicPreview :type-id="line.typeId" :win="win" :material-id="line.materialId" />
                 <div class="window-entry__visual-meta">
                   <p class="window-entry__dims-short">
                     {{ windowDimsLabelPublic(line, win) }}
@@ -522,6 +537,13 @@ function openContactEmailModal() {
                 <div class="dims__row">
                   <dt>{{ t('summary.dtWidth') }}</dt>
                   <dd>{{ formatWindowMm(win.widthMm) }}</dd>
+                </div>
+                <div
+                  v-if="line.typeId === 'windowsill' && windowSillLinearLabel(line, win)"
+                  class="dims__row"
+                >
+                  <dt>{{ t('summary.dtSillLinearM') }}</dt>
+                  <dd>{{ windowSillLinearLabel(line, win) }}</dd>
                 </div>
               </dl>
               <dl v-else-if="!isPublicMode" class="dims">
@@ -543,6 +565,14 @@ function openContactEmailModal() {
                     </template>
                     <template v-else>—</template>
                   </dd>
+                </div>
+                <div v-if="windowSlopesLinearLabel(line, win)" class="dims__row">
+                  <dt>{{ t('summary.dtSlopesLinearM') }}</dt>
+                  <dd>{{ windowSlopesLinearLabel(line, win) }}</dd>
+                </div>
+                <div v-if="windowSillLinearLabel(line, win)" class="dims__row">
+                  <dt>{{ t('summary.dtSillLinearM') }}</dt>
+                  <dd>{{ windowSillLinearLabel(line, win) }}</dd>
                 </div>
               </dl>
               <template
@@ -577,12 +607,12 @@ function openContactEmailModal() {
               </p>
 
               <div
-                v-if="!isPublicMode && windowBufferedHoursTotal(line, win) > 0"
+                v-if="!isPublicMode && windowDisplayHours(line, win) > 0"
                 class="window-time"
               >
                 <p class="window-time__main">
                   {{ t('summary.windowTimeLabel') }}
-                  {{ formatWorkHoursDisplay(windowBufferedHoursTotal(line, win), locale) }}
+                  {{ formatWorkHoursDisplay(windowDisplayHours(line, win), locale) }}
                   {{ t('summary.hoursUnit') }}
                 </p>
                 <p class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
@@ -618,6 +648,10 @@ function openContactEmailModal() {
         {{ t('summary.publicMinOrderNote').replace('{amount}', formatEuroExclVat(MIN_ORDER_EUR, locale)) }}
       </p>
 
+      <p v-if="isPublicMode && showOrderTiming" class="summary__lead-time">
+        {{ publicLeadTimeNoteDisplay }}
+      </p>
+
       <div v-if="isPublicMode" class="summary__quote-cta-wrap">
         <button type="button" class="summary__quote-cta" @click="emit('update:quoteOpen', true)">
           {{ t('getQuote.title') }}
@@ -625,52 +659,35 @@ function openContactEmailModal() {
       </div>
 
       <template v-if="!isPublicMode">
-      <div class="travel-block">
-        <h3 class="travel-block__title">{{ t('summary.travelBlockTitle') }}</h3>
-        <label class="travel-block__field">
-          <span class="travel-block__label">{{ t('summary.travelDistanceLabel') }}</span>
-          <input
-            v-model="travelKmInput"
-            type="text"
-            class="travel-block__input"
-            inputmode="decimal"
-            autocomplete="off"
-            :placeholder="t('summary.travelDistancePlaceholder')"
-          />
-        </label>
-      </div>
-
       <div class="order-totals">
-        <div v-if="proActive" class="pro-discount" role="group" :aria-label="t('summary.proDiscountAria')">
-          <p class="pro-discount__label">{{ t('summary.proDiscountLabel') }}</p>
-          <div class="pro-discount__btns">
-            <button
-              v-for="pct in PRO_MANUAL_DISCOUNT_OPTIONS"
-              :key="pct"
-              type="button"
-              class="pro-discount__btn"
-              :class="{ 'pro-discount__btn--active': manualDiscountPct === pct }"
-              :aria-pressed="manualDiscountPct === pct"
-              @click="toggleManualDiscount(pct)"
-            >
-              −{{ pct }}%
-            </button>
-            <button
-              type="button"
-              class="pro-discount__btn pro-discount__btn--auto"
-              :class="{ 'pro-discount__btn--active': manualDiscountPct == null }"
-              :aria-pressed="manualDiscountPct == null"
-              @click="setManualDiscount(null)"
-            >
-              {{ t('summary.proDiscountAuto') }}
-            </button>
-          </div>
-        </div>
-
         <div class="order-totals__card">
           <p v-if="publicTotalWindowUnits > 0" class="order-totals__windows">
             {{ t('offer.totalWindows') }} {{ publicTotalWindowUnits }}
           </p>
+
+          <dl class="order-totals__rows">
+            <div v-if="orderLinearTotals.hasSlopes" class="order-totals__row order-totals__row--muted">
+              <dt>{{ t('summary.totalSlopesLinearM') }}</dt>
+              <dd>{{ formatLinearMetersLabel(orderLinearTotals.slopesM) }}</dd>
+            </div>
+            <div v-if="orderLinearTotals.hasSill" class="order-totals__row order-totals__row--muted">
+              <dt>{{ t('summary.totalSillLinearM') }}</dt>
+              <dd>{{ formatLinearMetersLabel(orderLinearTotals.sillM) }}</dd>
+            </div>
+          </dl>
+
+          <button
+            v-if="orderMaterial.hasSlopes || orderMaterial.hasSill || orderMaterial.hasTrim"
+            type="button"
+            class="order-totals__materials-btn"
+            @click="materialsModalOpen = true"
+          >
+            <span class="order-totals__materials-btn-icon" aria-hidden="true">▦</span>
+            <span>{{ t('summary.materialsBtn') }}</span>
+            <span class="order-totals__materials-btn-count">
+              {{ t('materials.barsBadge').replace('{n}', String(orderMaterial.totalBars)) }}
+            </span>
+          </button>
 
           <dl class="order-totals__rows">
             <div class="order-totals__row">
@@ -719,10 +736,72 @@ function openContactEmailModal() {
           </p>
         </div>
 
-        <ul class="order-totals__notes">
-          <li>{{ t('summary.fastExecutionNoDismantle') }}</li>
-          <li>{{ t('summary.turnkeyIncludes') }}</li>
-        </ul>
+        <div class="pro-topbar">
+          <div class="travel-block" :class="{ 'travel-block--open': travelOpen }">
+            <button
+              type="button"
+              class="travel-block__header"
+              :aria-expanded="travelOpen"
+              @click="travelOpen = !travelOpen"
+            >
+              <span class="travel-block__title">{{ t('summary.travelBlockTitle') }}</span>
+              <span class="travel-block__current">{{ travelCurrentLabel }}</span>
+              <span class="travel-block__chevron" aria-hidden="true">▾</span>
+            </button>
+            <label v-show="travelOpen" class="travel-block__field">
+              <span class="travel-block__label">{{ t('summary.travelDistanceLabel') }}</span>
+              <input
+                v-model="travelKmInput"
+                type="text"
+                class="travel-block__input"
+                inputmode="decimal"
+                autocomplete="off"
+                :placeholder="t('summary.travelDistancePlaceholder')"
+              />
+            </label>
+          </div>
+
+          <div
+            v-if="proActive"
+            class="pro-discount"
+            :class="{ 'pro-discount--open': discountOpen }"
+            role="group"
+            :aria-label="t('summary.proDiscountAria')"
+          >
+            <button
+              type="button"
+              class="pro-discount__header"
+              :aria-expanded="discountOpen"
+              @click="discountOpen = !discountOpen"
+            >
+              <span class="pro-discount__label">{{ t('summary.proDiscountLabel') }}</span>
+              <span class="pro-discount__current">{{ discountCurrentLabel }}</span>
+              <span class="pro-discount__chevron" aria-hidden="true">▾</span>
+            </button>
+            <div v-show="discountOpen" class="pro-discount__btns">
+              <button
+                v-for="pct in PRO_MANUAL_DISCOUNT_OPTIONS"
+                :key="pct"
+                type="button"
+                class="pro-discount__btn"
+                :class="{ 'pro-discount__btn--active': manualDiscountPct === pct }"
+                :aria-pressed="manualDiscountPct === pct"
+                @click="toggleManualDiscount(pct)"
+              >
+                −{{ pct }}%
+              </button>
+              <button
+                type="button"
+                class="pro-discount__btn pro-discount__btn--auto"
+                :class="{ 'pro-discount__btn--active': manualDiscountPct == null }"
+                :aria-pressed="manualDiscountPct == null"
+                @click="setManualDiscount(null)"
+              >
+                {{ t('summary.proDiscountAuto') }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="contact-section" aria-labelledby="contact-heading">
@@ -731,40 +810,47 @@ function openContactEmailModal() {
           <button type="button" class="contact-btn contact-btn--email" @click="openContactEmailModal">
             {{ t('summary.sendEmail') }}
           </button>
+          <button
+            type="button"
+            class="contact-util-btn contact-util-btn--pdf-preview"
+            :disabled="pdfLoading"
+            @click="previewProposalPdfFile"
+          >
+            <span class="contact-util-btn__icon" aria-hidden="true">👁</span>
+            {{ pdfLoading ? t('summary.pdfGenerating') : t('summary.previewPdf') }}
+          </button>
         </div>
 
-        <div class="contact-section__utils">
-          <button
-            type="button"
-            class="contact-util-btn contact-util-btn--pdf-share"
-            :disabled="pdfLoading"
-            @click="shareProposalPdfFile"
-          >
-            <span class="contact-util-btn__icon" aria-hidden="true">↗</span>
-            {{ pdfLoading ? t('summary.pdfGenerating') : t('summary.sharePdf') }}
-          </button>
-          <button
-            type="button"
-            class="contact-util-btn contact-util-btn--pdf"
-            :disabled="pdfLoading"
-            @click="downloadProposalPdfFile"
-          >
-            <span class="contact-util-btn__icon" aria-hidden="true">↓</span>
-            {{ pdfLoading ? t('summary.pdfGenerating') : t('summary.downloadPdf') }}
-          </button>
-          <p
-            v-if="copyNotice"
-            class="contact-util-feedback"
-            :class="{ 'contact-util-feedback--error': copyNoticeIsError }"
-            role="status"
-          >
-            {{ copyNotice }}
-          </p>
-        </div>
+        <p
+          v-if="copyNotice"
+          class="contact-util-feedback"
+          :class="{ 'contact-util-feedback--error': copyNoticeIsError }"
+          role="status"
+        >
+          {{ copyNotice }}
+        </p>
       </div>
       </template>
     </template>
   </section>
+
+  <PdfPreviewModal
+    :open="pdfPreviewOpen"
+    :blob="pdfPreviewBlob"
+    :filename="pdfPreviewFilename"
+    :title="pdfPreviewTitle"
+    allow-share
+    :share-text="pdfShareText"
+    @close="closePdfPreview"
+  />
+
+  <MaterialsModal
+    :open="materialsModalOpen"
+    :material="orderMaterial"
+    :linear-totals="orderLinearTotals"
+    :windows-count="publicTotalWindowUnits"
+    @close="materialsModalOpen = false"
+  />
 
   <EmailRequestModal
     :open="emailRequestModalOpen"
@@ -817,8 +903,6 @@ function openContactEmailModal() {
   }
 
   .summary__quote-cta,
-  .contact-btn,
-  .contact-util-btn,
   .line__actions {
     width: 100%;
     flex-direction: column;
@@ -873,6 +957,13 @@ function openContactEmailModal() {
   font-size: 0.9rem;
   line-height: 1.45;
   font-weight: 600;
+}
+
+.summary__lead-time {
+  margin: 0 0 1rem;
+  color: var(--allexo-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .summary__clear {
@@ -1100,26 +1191,78 @@ function openContactEmailModal() {
   color: var(--allexo-teal);
 }
 
+.pro-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.pro-topbar > .travel-block {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.pro-topbar > .pro-discount {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+
 .travel-block {
   margin-top: 1.25rem;
-  padding: 1rem;
+  padding: 0.35rem 0.9rem;
   background: rgba(17, 17, 17, 0.04);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
 }
 
+.travel-block__header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
 .travel-block__title {
-  margin: 0 0 0.65rem;
-  font-size: 0.95rem;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--allexo-muted);
+}
+
+.travel-block__current {
+  margin-left: auto;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--allexo-teal);
+}
+
+.travel-block__chevron {
+  font-size: 0.75rem;
+  color: var(--allexo-muted);
+  transition: transform 0.18s ease;
+}
+
+.travel-block--open .travel-block__chevron {
+  transform: rotate(180deg);
 }
 
 .travel-block__field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  max-width: 16rem;
+  padding: 0.15rem 0 0.6rem;
 }
 
 .travel-block__label {
@@ -1152,14 +1295,27 @@ function openContactEmailModal() {
 
 .pro-discount {
   margin: 0 0 1rem;
-  padding: 0.85rem 0.9rem;
+  padding: 0.35rem 0.9rem;
   background: rgba(17, 17, 17, 0.05);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius);
 }
 
+.pro-discount__header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
 .pro-discount__label {
-  margin: 0 0 0.55rem;
+  margin: 0;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1167,10 +1323,28 @@ function openContactEmailModal() {
   color: var(--allexo-muted);
 }
 
+.pro-discount__current {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--allexo-teal);
+}
+
+.pro-discount__chevron {
+  font-size: 0.75rem;
+  color: var(--allexo-muted);
+  transition: transform 0.18s ease;
+}
+
+.pro-discount--open .pro-discount__chevron {
+  transform: rotate(180deg);
+}
+
 .pro-discount__btns {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  padding: 0.15rem 0 0.6rem;
 }
 
 .pro-discount__btn {
@@ -1215,6 +1389,41 @@ function openContactEmailModal() {
 .order-totals__windows {
   margin: 0 0 0.75rem;
   font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--allexo-muted);
+}
+
+.order-totals__materials-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0.65rem 0 0.85rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--allexo-teal);
+  background: var(--allexo-bg);
+  border: 1px solid var(--allexo-teal);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+}
+
+.order-totals__materials-btn:hover {
+  background: var(--allexo-surface);
+}
+
+.order-totals__materials-btn-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.order-totals__materials-btn-count {
+  margin-left: auto;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--allexo-muted);
 }
@@ -1363,34 +1572,30 @@ function openContactEmailModal() {
 
 .contact-section__actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.contact-section__utils {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 .contact-util-btn {
-  padding: 0.35rem 0;
-  min-height: 2.25rem;
-  border: none;
-  background: transparent;
+  flex: 1 1 calc(50% - 0.25rem);
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius);
+  background: var(--allexo-surface);
   color: var(--allexo-teal);
   font: inherit;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
   -webkit-tap-highlight-color: transparent;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: center;
+  gap: 0.4rem;
 }
 
 .contact-util-btn:hover {
@@ -1403,15 +1608,9 @@ function openContactEmailModal() {
 }
 
 .contact-util-btn--pdf-share {
-  font-weight: 700;
   color: #fff;
   background: #111111;
-  padding: 0.55rem 0.85rem;
-  border-radius: var(--radius);
-  text-decoration: none;
-  width: 100%;
-  justify-content: center;
-  min-height: 2.5rem;
+  border-color: #111111;
   transition:
     background 0.18s,
     color 0.18s;
@@ -1420,14 +1619,11 @@ function openContactEmailModal() {
 .contact-util-btn--pdf-share:hover {
   color: #111111;
   background: var(--allexo-accent);
+  border-color: var(--allexo-accent);
 }
 
 .contact-util-btn--pdf-share:disabled {
   opacity: 0.65;
-}
-
-.contact-util-btn--pdf {
-  font-weight: 700;
 }
 
 .contact-util-btn__icon {
@@ -1454,16 +1650,16 @@ function openContactEmailModal() {
 }
 
 .contact-btn {
-  width: 100%;
-  padding: 0.95rem 1.25rem;
-  font-size: 1.05rem;
+  flex: 1 1 calc(50% - 0.25rem);
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.9rem;
   font-weight: 700;
   font-family: inherit;
   line-height: 1.3;
   border-radius: var(--radius);
   cursor: pointer;
-  border: 2px solid transparent;
-  box-shadow: var(--shadow);
+  border: 1px solid transparent;
 }
 
 .contact-btn--email {

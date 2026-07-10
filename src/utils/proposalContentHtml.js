@@ -98,7 +98,7 @@ export function buildProposalContentHtml(opts) {
     .map((item) => {
       const cost =
         item.lineTotalEur != null && item.lineTotalEur > 0 ? formatEuroPlain(item.lineTotalEur) : '—'
-      const svg = buildWindowSchematicSvg(item.typeId, item.win, mm)
+      const svg = buildWindowSchematicSvg(item.typeId, item.win, mm, item.materialId)
       const positionLabel =
         item.windowIndex > 0
           ? translate(locale, 'summary.positionLabel').replace('{n}', String(item.windowIndex))
@@ -123,12 +123,10 @@ ${positionLabel ? `<p style="position:absolute;top:8px;right:10px;margin:0;font-
       : ''
 
   const workHours = computeBufferedWorkHours(opts.lines)
-  const { hoursLine, daysLine } = formatWorkTimePdfLines(workHours, locale)
-  const workTimeBlock =
-    hoursLine && daysLine
-      ? `<p style="margin:8px 0 0;font-size:${footerFs};text-align:center;color:#1c2424;line-height:1.45;">${esc(hoursLine)}</p>
-<p style="margin:4px 0 0;font-size:${footerFs};text-align:center;color:#1c2424;line-height:1.45;">${esc(daysLine)}</p>`
-      : ''
+  const { daysLine } = formatWorkTimePdfLines(workHours, locale)
+  const workTimeBlock = daysLine
+    ? `<p style="margin:8px 0 0;font-size:${footerFs};text-align:center;color:#1c2424;line-height:1.45;">${esc(daysLine)}</p>`
+    : ''
 
   let travelBlock = ''
   if (travel && typeof travel === 'object') {

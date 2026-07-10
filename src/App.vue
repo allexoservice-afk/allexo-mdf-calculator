@@ -5,6 +5,7 @@ import { useOrder } from './composables/useOrder.js'
 import { useLocale } from './i18n/useLocale.js'
 import Hero from './components/Hero.vue'
 import WorksGallery from './components/WorksGallery.vue'
+import AboutMe from './components/AboutMe.vue'
 import CalculatorCard from './components/CalculatorCard.vue'
 import OrderFormModal from './components/OrderFormModal.vue'
 import OrderSummary from './components/OrderSummary.vue'
@@ -253,15 +254,9 @@ const mdfOrderSubtotalEuros = computed(() =>
     </header>
 
     <main class="main content-container">
-      <section class="about" :aria-label="t('about.aria')">
-        <h2 class="about__title">{{ t('about.title') }}</h2>
-        <div class="about__copy">
-          <p class="about__line">{{ t('about.line1') }}</p>
-          <p class="about__line about__line--secondary">{{ t('about.line2') }}</p>
-        </div>
-      </section>
-
       <WorksGallery />
+
+      <AboutMe />
 
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
@@ -490,12 +485,6 @@ const mdfOrderSubtotalEuros = computed(() =>
   .main {
     padding-top: 1rem;
   }
-
-  .about {
-    margin-bottom: 1.15rem;
-    padding-top: 1.1rem;
-    padding-bottom: 1.1rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -511,19 +500,6 @@ const mdfOrderSubtotalEuros = computed(() =>
   .main {
     padding-top: 1rem;
     padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
-  }
-
-  .about {
-    margin-bottom: 1.1rem;
-    padding: 0.9rem 0.9rem;
-  }
-
-  .about__title {
-    margin-bottom: 0.4rem;
-  }
-
-  .about__line + .about__line {
-    margin-top: 0.3rem;
   }
 
   .reviews {
@@ -575,26 +551,6 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 @media (min-width: 769px) {
-  .about {
-    margin: 0 0 1.75rem;
-    padding: 1.35rem 1.5rem 1.35rem 1.65rem;
-    box-shadow: 0 10px 36px rgba(17, 17, 17, 0.07);
-  }
-
-  .about__title {
-    margin-bottom: 0.65rem;
-    font-size: 0.82rem;
-  }
-
-  .about__line {
-    font-size: 1.08rem;
-    line-height: 1.4;
-  }
-
-  .about__line--secondary {
-    font-size: 1rem;
-  }
-
   .reviews {
     margin: 0.75rem 0 1.75rem;
   }
@@ -627,6 +583,10 @@ const mdfOrderSubtotalEuros = computed(() =>
   flex: 1;
   padding-top: 1.25rem;
   padding-bottom: 2rem;
+}
+
+.app:has(.sticky-total) .main {
+  padding-bottom: 7.5rem;
 }
 
 @media (min-width: 769px) {
@@ -707,64 +667,6 @@ const mdfOrderSubtotalEuros = computed(() =>
     background-color: var(--allexo-border);
     pointer-events: none;
   }
-}
-
-.about {
-  margin: 0 0 1.5rem;
-  padding: 1rem 1rem;
-  border: 1px solid var(--allexo-border);
-  border-radius: var(--radius-lg);
-  background: var(--allexo-surface);
-  box-shadow: var(--shadow);
-  max-width: none;
-  position: relative;
-}
-
-@media (max-width: 430px) {
-  .about {
-    padding: 0.85rem 0.9rem;
-  }
-}
-
-.about::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--allexo-accent);
-  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  opacity: 1;
-}
-
-.about__title {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--allexo-muted);
-}
-
-.about__line {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--allexo-teal);
-  line-height: 1.35;
-  text-wrap: balance;
-  overflow-wrap: break-word;
-}
-
-.about__line + .about__line {
-  margin-top: 0.35rem;
-}
-
-.about__line--secondary {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--allexo-muted);
 }
 
 .calc {

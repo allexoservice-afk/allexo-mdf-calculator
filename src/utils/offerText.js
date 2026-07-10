@@ -7,19 +7,21 @@ import {
   quoteRollerBoxOnlyHours,
   quoteWindowHours,
   quoteWindowsillOnlyHours,
+  orderBufferedWorkHours,
   winSlopeQuoteArgs,
   normalizeSlopeDeepSurchargePct,
 } from '../pricing/windowQuote.js'
 import { formatEuroExclVat } from './priceDisplay.js'
 import { lineWindowEligibleForAutoQuote, orderHasOversizedWindows, windowEligibleForAutoQuote } from './windowDimensions.js'
+import { formatLinearMeters, orderLinearMetersTotals, windowSillLinearMetersTotal, windowSlopesLinearMetersTotal } from './linearMeters.js'
+import { formatCutPiecesSummary, formatMmAsMeters, orderMaterialStock } from './materialStock.js'
+import { formatWorkDaysApproxLabel } from './workTimeDisplay.js'
 import { isProUnlocked } from '../constants/proUnlock.js'
 import {
   translate,
   typeTitle,
   windowsCountPhrase,
 } from '../i18n/translations.js'
-
-const _TIME_BUFFER_COEFF = 1.44
 
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
@@ -118,6 +120,14 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
         let winHead = `- ${itemTitle}: ${wMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
+        if (proPricing && L.typeId === 'windowsill') {
+          const sillM = windowSillLinearMetersTotal('windowsill', win, qty)
+          if (sillM != null) {
+            parts.push(
+              `- ${translate(locale, 'summary.dtSillLinearM')}: ${formatLinearMeters(sillM)} ${translate(locale, 'common.linearMeter')}`,
+            )
+          }
+        }
       } else {
         const hMm = Math.round(Number(win.heightMm))
         let winHead = `- ${translate(locale, 'offer.windowLine')} ${wMm} × ${hMm} ${translate(locale, 'common.mm')}`
@@ -139,6 +149,20 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
                 quoteLineWindowsillAddonEuros(L, win),
                 locale,
               )}`,
+            )
+          }
+        }
+        if (proPricing) {
+          const slopesM = windowSlopesLinearMetersTotal(String(L.typeId), win, qty)
+          if (slopesM != null) {
+            parts.push(
+              `- ${translate(locale, 'summary.dtSlopesLinearM')}: ${formatLinearMeters(slopesM)} ${translate(locale, 'common.linearMeter')}`,
+            )
+          }
+          const sillM = windowSillLinearMetersTotal(String(L.typeId), win, qty)
+          if (sillM != null) {
+            parts.push(
+              `- ${translate(locale, 'summary.dtSillLinearM')}: ${formatLinearMeters(sillM)} ${translate(locale, 'common.linearMeter')}`,
             )
           }
         }
@@ -190,58 +214,106 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
       ),
     0,
   )
-  const totalH = lines.reduce((sum, line) => {
-    const L = /** @type {Record<string, unknown>} */ (line)
-    const tid = L.typeId
-    if (tid === 'roller_box') {
-      return (
-        sum +
-        windowsForLine(L).reduce((s, w) => {
-          if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-          return (
-            s +
-            quoteRollerBoxOnlyHours(Number(w.widthMm)) *
-              normalizeWindowQuantity(w.quantity)
-          )
-        }, 0)
-      )
-    }
-    if (tid === 'windowsill') {
-      return (
-        sum +
-        windowsForLine(L).reduce((s, w) => {
-          if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
-          return (
-            s +
-            quoteWindowsillOnlyHours(Number(w.widthMm)) *
-              normalizeWindowQuantity(w.quantity)
-          )
-        }, 0)
-      )
-    }
-    const t = getTypeById(tid)
-    if (!t) return sum
-    return (
-      sum +
-      windowsForLine(L).reduce((s, w) => {
-        if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
+  const totalH = lines.reduce(
+    (acc, line) => {
+      const L = /** @type {Record<string, unknown>} */ (line)
+      const tid = L.typeId
+      if (tid === 'roller_box') {
+        windowsForLine(L).forEach((w) => {
+          if (!lineWindowEligibleForAutoQuote('roller_box', w)) return
+          const qty = normalizeWindowQuantity(w.quantity)
+          acc.hours += quoteRollerBoxOnlyHours(Number(w.widthMm)) * qty
+          acc.units += qty
+        })
+        return acc
+      }
+      if (tid === 'windowsill') {
+        windowsForLine(L).forEach((w) => {
+          if (!lineWindowEligibleForAutoQuote('windowsill', w)) return
+          const qty = normalizeWindowQuantity(w.quantity)
+          acc.hours += quoteWindowsillOnlyHours(Number(w.widthMm)) * qty
+          acc.units += qty
+        })
+        return acc
+      }
+      const t = getTypeById(tid)
+      if (!t) return acc
+      windowsForLine(L).forEach((w) => {
+        if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return
         const slope = winSlopeQuoteArgs(w)
-        const h =
+        const qty = normalizeWindowQuantity(w.quantity)
+        acc.hours +=
           quoteWindowHours(
             Number(w.widthMm),
             Number(w.heightMm),
             t.hasSill,
             t.hasRoller,
             slope.deep,
-          ) * normalizeWindowQuantity(w.quantity)
-        return s + h
-      }, 0)
-    )
-  }, 0)
+          ) * qty
+        acc.units += qty
+      })
+      return acc
+    },
+    { hours: 0, units: 0 },
+  )
 
   parts.push(`${translate(locale, 'offer.totalWindows')} ${totalWin}`)
 
   if (proPricing) {
+    const linearTotals = orderLinearMetersTotals(lines, windowsForLine, (w) =>
+      normalizeWindowQuantity(w.quantity),
+    )
+    if (linearTotals.hasSlopes) {
+      parts.push(
+        `${translate(locale, 'summary.totalSlopesLinearM')}: ${formatLinearMeters(linearTotals.slopesM)} ${translate(locale, 'common.linearMeter')}`,
+      )
+    }
+    if (linearTotals.hasSill) {
+      parts.push(
+        `${translate(locale, 'summary.totalSillLinearM')}: ${formatLinearMeters(linearTotals.sillM)} ${translate(locale, 'common.linearMeter')}`,
+      )
+    }
+    const material = orderMaterialStock(lines, windowsForLine, (w) =>
+      normalizeWindowQuantity(w.quantity),
+    )
+    const pieceLabel = (count, meters) =>
+      translate(locale, 'materials.pieceLine').replace('{n}', String(count)).replace('{m}', meters)
+    if (material.hasSlopes) {
+      parts.push(
+        `${translate(locale, 'summary.dtStockSlopes')}: ${translate(locale, 'summary.stockBarsLine').replace('{n}', String(material.slopes.bars))}`,
+      )
+      const cuts = formatCutPiecesSummary(material.slopes.pieces, pieceLabel)
+      if (cuts) parts.push(`  ${translate(locale, 'materials.cutListTitle')}: ${cuts}`)
+      if (material.slopes.wasteMm > 0) {
+        parts.push(
+          `  ${translate(locale, 'materials.wasteLine').replace('{n}', formatMmAsMeters(material.slopes.wasteMm))}`,
+        )
+      }
+    }
+    if (material.hasSill) {
+      parts.push(
+        `${translate(locale, 'summary.dtStockSill')}: ${translate(locale, 'summary.stockBarsLine').replace('{n}', String(material.sill.bars))}`,
+      )
+      const cuts = formatCutPiecesSummary(material.sill.pieces, pieceLabel)
+      if (cuts) parts.push(`  ${translate(locale, 'materials.cutListTitle')}: ${cuts}`)
+      if (material.sill.wasteMm > 0) {
+        parts.push(
+          `  ${translate(locale, 'materials.wasteLine').replace('{n}', formatMmAsMeters(material.sill.wasteMm))}`,
+        )
+      }
+    }
+    if (material.hasTrim) {
+      parts.push(
+        `${translate(locale, 'summary.dtStockTrim')}: ${translate(locale, 'summary.stockBarsLine').replace('{n}', String(material.trim.bars))}`,
+      )
+      const cuts = formatCutPiecesSummary(material.trim.pieces, pieceLabel)
+      if (cuts) parts.push(`  ${translate(locale, 'materials.cutListTitle')}: ${cuts}`)
+      if (material.trim.wasteMm > 0) {
+        parts.push(
+          `  ${translate(locale, 'materials.wasteLine').replace('{n}', formatMmAsMeters(material.trim.wasteMm))}`,
+        )
+      }
+    }
     parts.push('')
     parts.push(`${translate(locale, 'summary.workSubtotal')} ${formatEuroExclVat(totalEur, locale)}`)
 
@@ -289,12 +361,21 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
   }
 
   parts.push('')
-  const bufferedH = totalH * _TIME_BUFFER_COEFF
-  parts.push(
-    `${translate(locale, 'offer.estHours')} ${formatHoursForOffer(bufferedH)} ${translate(locale, 'offer.hoursSuffix')}`,
-  )
+  const bufferedH = orderBufferedWorkHours(totalH.hours, totalH.units)
+  if (options?.forceClientProposalPricing === true) {
+    const daysLabel = formatWorkDaysApproxLabel(bufferedH, locale)
+    if (daysLabel) {
+      parts.push(
+        `${translate(locale, 'offer.estWorkDays')} ${translate(locale, 'summary.workDaysApproxPrefix')} ${daysLabel}`,
+      )
+    }
+  } else {
+    parts.push(
+      `${translate(locale, 'offer.estHours')} ${formatHoursForOffer(bufferedH)} ${translate(locale, 'offer.hoursSuffix')}`,
+    )
+    parts.push(translate(locale, 'offer.leadTime'))
+  }
   parts.push(translate(locale, 'offer.includes'))
-  parts.push(translate(locale, 'offer.leadTime'))
 
   if (orderHasOversizedWindows(lines)) {
     parts.push('')

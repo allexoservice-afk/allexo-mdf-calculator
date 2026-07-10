@@ -14,7 +14,8 @@
     "test:supabase": "node scripts/test-supabase-lead.mjs",
     "optimize:work-images": "node scripts/generate-work-images.mjs",
     "generate:work-images": "node scripts/generate-work-images.mjs",
-    "export:brand-logos": "node scripts/export-brand-logos.mjs"
+    "export:brand-logos": "node scripts/export-brand-logos.mjs",
+    "generate:og-image": "node scripts/generate-og-image.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
