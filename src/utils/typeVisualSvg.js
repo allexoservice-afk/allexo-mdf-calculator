@@ -57,48 +57,50 @@ function verticalDimension(x, y1, y2, label) {
 
 /**
  * @param {string} variant
+ * @param {string} [frameFill] Колір рамки/відкосів (MDF — золото, PVC — білий)
  * @returns {string}
  */
-export function typeVisualInnerMarkup(variant) {
+export function typeVisualInnerMarkup(variant, frameFill = GOLD) {
+  const F = frameFill
   switch (variant) {
     case 'no-sill':
-      return `<path fill="${GOLD}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 86 16 L 78 24 L 38 24 Z"/>
-<path fill="${GOLD}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 38 24 L 38 64 L 30 64 Z"/>
-<path fill="${GOLD}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 86 16 L 86 64 L 78 64 L 78 24 Z"/>
+      return `<path fill="${F}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 86 16 L 78 24 L 38 24 Z"/>
+<path fill="${F}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 38 24 L 38 64 L 30 64 Z"/>
+<path fill="${F}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 86 16 L 86 64 L 78 64 L 78 24 Z"/>
 <rect x="38" y="24" width="40" height="40" fill="${GLASS}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="58" y1="24" x2="58" y2="64" stroke="${STROKE}" stroke-width="0.75" opacity="0.24"/>`
 
     case 'with-sill':
-      return `<path fill="${GOLD}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 86 16 L 78 24 L 38 24 Z"/>
-<path fill="${GOLD}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 38 24 L 38 64 L 30 64 Z"/>
-<path fill="${GOLD}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 86 16 L 86 64 L 78 64 L 78 24 Z"/>
+      return `<path fill="${F}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 86 16 L 78 24 L 38 24 Z"/>
+<path fill="${F}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 30 16 L 38 24 L 38 64 L 30 64 Z"/>
+<path fill="${F}" stroke="${STROKE}" stroke-width="1" stroke-linejoin="miter" stroke-miterlimit="8" d="M 86 16 L 86 64 L 78 64 L 78 24 Z"/>
 <rect x="38" y="24" width="40" height="40" fill="${GLASS}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="58" y1="24" x2="58" y2="64" stroke="${STROKE}" stroke-width="0.75" opacity="0.24"/>
 <rect x="25" y="64" width="66" height="2.5" fill="${SILL}" stroke="${STROKE}" stroke-width="1"/>`
 
     case 'roller':
-      return `<rect x="22" y="4" width="72" height="14" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
+      return `<rect x="22" y="4" width="72" height="14" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="26" y1="7.5" x2="90" y2="7.5" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
 <line x1="26" y1="11" x2="90" y2="11" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
 <line x1="26" y1="14.5" x2="90" y2="14.5" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
-<rect x="30" y="18" width="8" height="40" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
-<rect x="78" y="18" width="8" height="40" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
+<rect x="30" y="18" width="8" height="40" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
+<rect x="78" y="18" width="8" height="40" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
 <rect x="38" y="18" width="40" height="40" fill="${GLASS}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="58" y1="18" x2="58" y2="58" stroke="${STROKE}" stroke-width="0.75" opacity="0.24"/>`
 
     case 'sill-roller':
-      return `<rect x="22" y="4" width="72" height="14" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
+      return `<rect x="22" y="4" width="72" height="14" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="26" y1="7.5" x2="90" y2="7.5" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
 <line x1="26" y1="11" x2="90" y2="11" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
 <line x1="26" y1="14.5" x2="90" y2="14.5" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
-<rect x="30" y="18" width="8" height="40" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
-<rect x="78" y="18" width="8" height="40" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
+<rect x="30" y="18" width="8" height="40" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
+<rect x="78" y="18" width="8" height="40" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
 <rect x="38" y="18" width="40" height="40" fill="${GLASS}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="58" y1="18" x2="58" y2="58" stroke="${STROKE}" stroke-width="0.75" opacity="0.24"/>
 <rect x="25" y="58" width="66" height="2.5" fill="${SILL}" stroke="${STROKE}" stroke-width="1"/>`
 
     case 'roller-box-only':
-      return `<rect x="22" y="8" width="72" height="14" fill="${GOLD}" stroke="${STROKE}" stroke-width="1"/>
+      return `<rect x="22" y="8" width="72" height="14" fill="${F}" stroke="${STROKE}" stroke-width="1"/>
 <line x1="26" y1="11.5" x2="90" y2="11.5" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
 <line x1="26" y1="15" x2="90" y2="15" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
 <line x1="26" y1="18.5" x2="90" y2="18.5" stroke="${STROKE}" stroke-width="0.6" opacity="0.36"/>
@@ -122,10 +124,12 @@ export function typeVisualInnerMarkup(variant) {
  *   widthLabel?: string
  *   heightLabel?: string
  *   displayWidth?: number
+ *   frameFill?: string
  * }} [opts]
  */
 export function buildTypeVisualSvg(variant, opts = {}) {
   const displayWidth = opts.displayWidth ?? 130
+  const frameFill = opts.frameFill || GOLD
   const totalViewH = VIEW_H + VIEW_PAD_TOP
   const displayHeight = Math.round((displayWidth * totalViewH) / VIEW_W)
   const artRight = ART_X + TYPE_VISUAL_WIDTH
@@ -137,6 +141,6 @@ export function buildTypeVisualSvg(variant, opts = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${-VIEW_PAD_TOP} ${VIEW_W} ${totalViewH}" width="${displayWidth}" height="${displayHeight}" overflow="visible" role="img" aria-hidden="true">
 ${widthDim}
 ${heightDim}
-<g transform="translate(${ART_X} ${ART_Y})">${typeVisualInnerMarkup(variant)}</g>
+<g transform="translate(${ART_X} ${ART_Y})">${typeVisualInnerMarkup(variant, frameFill)}</g>
 </svg>`
 }

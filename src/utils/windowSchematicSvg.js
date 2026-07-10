@@ -14,8 +14,9 @@ function dimLabel(n, mmLabel) {
  * @param {string} typeId
  * @param {Record<string, unknown>} win
  * @param {string} mmLabel
+ * @param {string} [materialId]
  */
-export function buildWindowSchematicSvg(typeId, win, mmLabel = 'mm') {
+export function buildWindowSchematicSvg(typeId, win, mmLabel = 'mm', materialId = 'mdf') {
   const labelW = Math.round(Number(win.widthMm) || 0)
   const labelH = Math.round(Number(win.heightMm) || 0)
   const boxH = Math.round(Number(win.rollerBoxHeightMm ?? win.heightMm) || 0)
@@ -42,6 +43,7 @@ export function buildWindowSchematicSvg(typeId, win, mmLabel = 'mm') {
     widthLabel,
     heightLabel,
     displayWidth: 130,
+    frameFill: materialId === 'pvc' ? '#ffffff' : undefined,
   })
 }
 

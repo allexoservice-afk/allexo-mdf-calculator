@@ -291,7 +291,7 @@ async function submitUnlock() {
     align-items: flex-start;
     text-align: left;
     gap: 4px;
-    padding: 0 0 0 106px;
+    padding: 0;
     box-sizing: border-box;
   }
 
@@ -328,13 +328,13 @@ async function submitUnlock() {
 
   .lang {
     top: 14px;
-    right: 50px;
+    right: 0;
   }
 
   .hero-contacts {
     position: absolute;
     top: auto;
-    right: 50px;
+    right: 0;
     bottom: 8px;
     margin-top: 0;
     display: flex;

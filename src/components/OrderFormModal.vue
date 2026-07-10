@@ -15,6 +15,11 @@ import {
 import { formatEuroExclVat } from '../utils/priceDisplay.js'
 import { windowProfileLengthMeters } from '../utils/mdfFormulas.js'
 import {
+  formatLinearMeters,
+  windowSillLinearMetersTotal,
+  windowSlopesLinearMetersTotal,
+} from '../utils/linearMeters.js'
+import {
   MIN_WINDOW_SIDE_MM,
   windowEligibleForAutoQuote,
   windowExceedsStandardMax,
@@ -537,12 +542,40 @@ const windowPreviews = computed(() => {
 
     const lineTotalEuros = unitEuros * qty
 
+    let slopesLinearTotal = null
+    let sillLinearTotal = null
+    if (tid === 'windowsill') {
+      const wMm = parseMm(formW.widthMm)
+      if (Number.isFinite(wMm) && wMm >= MIN_WINDOW_SIDE_MM) {
+        sillLinearTotal = windowSillLinearMetersTotal(tid, { widthMm: wMm }, qty)
+      }
+    } else if (tid !== 'roller_box') {
+      const wMm = parseMm(formW.widthMm)
+      const hMm = parseMm(formW.heightMm)
+      if (windowSidesMeetMinimum(wMm, hMm)) {
+        slopesLinearTotal = windowSlopesLinearMetersTotal(
+          tid,
+          { widthMm: wMm, heightMm: hMm },
+          qty,
+        )
+        if (ty.hasSill) {
+          sillLinearTotal = windowSillLinearMetersTotal(
+            tid,
+            { widthMm: wMm, heightMm: hMm },
+            qty,
+          )
+        }
+      }
+    }
+
     return {
       showPreview,
       oversized,
       unitEuros,
       lineTotalEuros,
       qty,
+      slopesLinearTotal,
+      sillLinearTotal,
     }
   })
 })
@@ -752,7 +785,23 @@ const windowPreviews = computed(() => {
               </template>
             </p>
             <p
-              v-else-if="!isClientMode && windowPreviews[idx]?.oversized"
+              v-if="!isClientMode && (windowPreviews[idx]?.slopesLinearTotal != null || windowPreviews[idx]?.sillLinearTotal != null)"
+              class="window-preview-linear"
+            >
+              <template v-if="windowPreviews[idx].slopesLinearTotal != null">
+                {{ t('summary.dtSlopesLinearM') }}: {{ formatLinearMeters(windowPreviews[idx].slopesLinearTotal) }}
+                {{ t('common.linearMeter') }}
+              </template>
+              <template v-if="windowPreviews[idx].slopesLinearTotal != null && windowPreviews[idx].sillLinearTotal != null">
+                ·
+              </template>
+              <template v-if="windowPreviews[idx].sillLinearTotal != null">
+                {{ t('summary.dtSillLinearM') }}: {{ formatLinearMeters(windowPreviews[idx].sillLinearTotal) }}
+                {{ t('common.linearMeter') }}
+              </template>
+            </p>
+            <p
+              v-if="!isClientMode && windowPreviews[idx]?.oversized"
               class="window-preview-price window-preview-price--individual"
             >
               {{ t('form.largeSizesInfo') }}
@@ -1145,6 +1194,16 @@ const windowPreviews = computed(() => {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--allexo-teal);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.window-preview-linear {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--allexo-muted);
+  line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
 }

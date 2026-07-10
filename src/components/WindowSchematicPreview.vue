@@ -6,11 +6,14 @@ import { buildWindowSchematicSvg } from '../utils/windowSchematicSvg.js'
 const props = defineProps({
   typeId: { type: String, required: true },
   win: { type: Object, required: true },
+  materialId: { type: String, default: 'mdf' },
 })
 
 const { t } = useLocale()
 
-const svgHtml = computed(() => buildWindowSchematicSvg(props.typeId, props.win, t('common.mm')))
+const svgHtml = computed(() =>
+  buildWindowSchematicSvg(props.typeId, props.win, t('common.mm'), props.materialId),
+)
 </script>
 
 <template>

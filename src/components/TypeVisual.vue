@@ -1,10 +1,19 @@
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   variant: {
     type: String,
     required: true,
   },
+  /** @type {import('vue').PropType<import('../constants/materialTypes.js').MaterialId>} */
+  materialId: {
+    type: String,
+    default: 'mdf',
+  },
 })
+
+const frameFill = computed(() => (props.materialId === 'pvc' ? '#ffffff' : '#c4a35a'))
 </script>
 
 <template>
@@ -21,7 +30,7 @@ defineProps({
     <g v-if="variant === 'no-sill'">
       <path
         vector-effect="non-scaling-stroke"
-        fill="#c4a35a"
+        :fill="frameFill"
         stroke="#0f3d3e"
         stroke-width="1"
         stroke-linejoin="miter"
@@ -30,7 +39,7 @@ defineProps({
       />
       <path
         vector-effect="non-scaling-stroke"
-        fill="#c4a35a"
+        :fill="frameFill"
         stroke="#0f3d3e"
         stroke-width="1"
         stroke-linejoin="miter"
@@ -39,7 +48,7 @@ defineProps({
       />
       <path
         vector-effect="non-scaling-stroke"
-        fill="#c4a35a"
+        :fill="frameFill"
         stroke="#0f3d3e"
         stroke-width="1"
         stroke-linejoin="miter"
@@ -71,7 +80,7 @@ defineProps({
     <g v-else-if="variant === 'with-sill'">
       <path
         vector-effect="non-scaling-stroke"
-        fill="#c4a35a"
+        :fill="frameFill"
         stroke="#0f3d3e"
         stroke-width="1"
         stroke-linejoin="miter"
@@ -80,7 +89,7 @@ defineProps({
       />
       <path
         vector-effect="non-scaling-stroke"
-        fill="#c4a35a"
+        :fill="frameFill"
         stroke="#0f3d3e"
         stroke-width="1"
         stroke-linejoin="miter"
@@ -89,7 +98,7 @@ defineProps({
       />
       <path
         vector-effect="non-scaling-stroke"
-        fill="#c4a35a"
+        :fill="frameFill"
         stroke="#0f3d3e"
         stroke-width="1"
         stroke-linejoin="miter"
@@ -120,30 +129,30 @@ defineProps({
     </g>
 
     <g v-else-if="variant === 'roller'">
-      <rect x="22" y="4" width="72" height="14" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="22" y="4" width="72" height="14" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="7.5" x2="90" y2="7.5" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="11" x2="90" y2="11" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="14.5" x2="90" y2="14.5" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
-      <rect x="30" y="18" width="8" height="40" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
-      <rect x="78" y="18" width="8" height="40" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="30" y="18" width="8" height="40" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="78" y="18" width="8" height="40" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <rect x="38" y="18" width="40" height="40" fill="#e8f4f3" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <line x1="58" y1="18" x2="58" y2="58" stroke="#0f3d3e" stroke-width="0.75" opacity="0.24" vector-effect="non-scaling-stroke" />
     </g>
 
     <g v-else-if="variant === 'sill-roller'">
-      <rect x="22" y="4" width="72" height="14" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="22" y="4" width="72" height="14" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="7.5" x2="90" y2="7.5" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="11" x2="90" y2="11" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="14.5" x2="90" y2="14.5" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
-      <rect x="30" y="18" width="8" height="40" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
-      <rect x="78" y="18" width="8" height="40" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="30" y="18" width="8" height="40" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="78" y="18" width="8" height="40" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <rect x="38" y="18" width="40" height="40" fill="#e8f4f3" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <line x1="58" y1="18" x2="58" y2="58" stroke="#0f3d3e" stroke-width="0.75" opacity="0.24" vector-effect="non-scaling-stroke" />
       <rect x="25" y="58" width="66" height="2.5" fill="#1a5c5e" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
     </g>
 
     <g v-else-if="variant === 'roller-box-only'">
-      <rect x="22" y="8" width="72" height="14" fill="#c4a35a" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
+      <rect x="22" y="8" width="72" height="14" :fill="frameFill" stroke="#0f3d3e" stroke-width="1" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="11.5" x2="90" y2="11.5" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="15" x2="90" y2="15" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />
       <line x1="26" y1="18.5" x2="90" y2="18.5" stroke="#0f3d3e" stroke-width="0.6" opacity="0.36" vector-effect="non-scaling-stroke" />

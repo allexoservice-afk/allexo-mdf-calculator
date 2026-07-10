@@ -41,12 +41,28 @@ export function winSlopeQuoteArgs(win) {
 
 /**
  * Час від розмірів вікна (год):
- * T = setup + L×perM + max(0, A − areaThreshold)×perM²
+ * L×0,45 (відкоси) + підвіконник + ролета + глибина + перехід між вікнами.
+ * Setup на замовлення та буфер — окремо (orderBufferedWorkHours).
  */
-const _TIME_SETUP_H = 0.5
-const _TIME_PER_PROFILE_M = 0.55
-const _TIME_AREA_THRESHOLD_M2 = 2.5
-const _TIME_PER_M2_ABOVE = 0.2
+export const TIME_SLOPES_PER_LM = 0.45
+export const TIME_PER_WINDOW_HANDLING_H = 0.2
+export const TIME_ORDER_SETUP_H = 0.75
+export const TIME_DEEP_SLOPE_H = 0.35
+export const TIME_SILL_BASE_H = 0.3
+export const TIME_SILL_PER_LM = 0.15
+export const TIME_ROLLER_BASE_H = 0.9
+export const TIME_ROLLER_PER_LM = 0.1
+export const TIME_BUFFER_COEFF = 1.15
+
+/** @param {number} sillLengthM */
+function _sillWorkHours(sillLengthM) {
+  return TIME_SILL_BASE_H + sillLengthM * TIME_SILL_PER_LM
+}
+
+/** @param {number} widthM */
+function _rollerWorkHours(widthM) {
+  return TIME_ROLLER_BASE_H + widthM * TIME_ROLLER_PER_LM
+}
 
 /** @param {number} value */
 function _exactEuros(value) {
@@ -61,8 +77,9 @@ function _roundHours(h) {
 }
 
 /** @param {number} widthMm @param {number} heightMm */
-function _windowAreaM2(widthMm, heightMm) {
-  return (widthMm * heightMm) / 1e6
+function _slopesWorkHours(widthMm, heightMm) {
+  const L = windowProfileLengthMeters(widthMm, heightMm)
+  return L * TIME_SLOPES_PER_LM
 }
 
 /**
@@ -74,18 +91,6 @@ function _normalizeSlopeSurchargePct(deepOver25Cm, surchargePct) {
   const pct = Number(surchargePct)
   if (pct === 10 || pct === 15 || pct === 20) return pct
   return 15
-}
-
-/**
- * Базовий час монтажу відкосів за розміром (без підвіконника, ролети, глибини).
- * @param {number} widthMm
- * @param {number} heightMm
- */
-function _dimensionBaseHours(widthMm, heightMm) {
-  const L = windowProfileLengthMeters(widthMm, heightMm)
-  const A = _windowAreaM2(widthMm, heightMm)
-  const areaExtra = Math.max(0, A - _TIME_AREA_THRESHOLD_M2) * _TIME_PER_M2_ABOVE
-  return _TIME_SETUP_H + L * _TIME_PER_PROFILE_M + areaExtra
 }
 
 /**
@@ -174,15 +179,16 @@ export function quoteWindowRoundedEuros(
  * @param {boolean} [slopeDeepOver25Cm]
  */
 export function quoteWindowHours(widthMm, heightMm, hasSill, hasRoller, slopeDeepOver25Cm = false) {
-  let h = _dimensionBaseHours(widthMm, heightMm)
-  if (slopeDeepOver25Cm) h += 0.45
+  let h = _slopesWorkHours(widthMm, heightMm)
+  if (slopeDeepOver25Cm) h += TIME_DEEP_SLOPE_H
   if (hasSill) {
     const sillM = (widthMm + _WINDOWSILL_WIDTH_ADDON_MM) / 1000
-    h += 0.25 + sillM * 0.2
+    h += _sillWorkHours(sillM)
   }
   if (hasRoller) {
-    h += 1.1 + (widthMm / 1000) * 0.12
+    h += _rollerWorkHours(widthMm / 1000)
   }
+  h += TIME_PER_WINDOW_HANDLING_H
   return _roundHours(h)
 }
 
@@ -211,7 +217,7 @@ export function quoteWindowsillOnlyRoundedEuros(widthMm, materialId = 'mdf') {
  */
 export function quoteRollerBoxOnlyHours(widthMm) {
   const widthM = widthMm / 1000
-  return _roundHours(0.4 + widthM * 0.35 + 0.35)
+  return _roundHours(_rollerWorkHours(widthM) + TIME_PER_WINDOW_HANDLING_H)
 }
 
 /**
@@ -220,5 +226,28 @@ export function quoteRollerBoxOnlyHours(widthMm) {
  */
 export function quoteWindowsillOnlyHours(widthMm) {
   const widthM = widthMm / 1000
-  return _roundHours(0.35 + widthM * 0.3)
+  return _roundHours(_sillWorkHours(widthM) + TIME_PER_WINDOW_HANDLING_H)
+}
+
+/**
+ * Базовий час замовлення (setup + сума годин по вікнах, без буфера).
+ * @param {number} perWindowHoursTotal
+ * @param {number} quotedWindowUnits
+ */
+export function orderBaseWorkHours(perWindowHoursTotal, quotedWindowUnits) {
+  if (!Number.isFinite(perWindowHoursTotal) || perWindowHoursTotal <= 0 || quotedWindowUnits <= 0) {
+    return 0
+  }
+  return _roundHours(TIME_ORDER_SETUP_H + perWindowHoursTotal)
+}
+
+/**
+ * Орієнтовний час замовлення з буфером (год).
+ * @param {number} perWindowHoursTotal
+ * @param {number} quotedWindowUnits
+ */
+export function orderBufferedWorkHours(perWindowHoursTotal, quotedWindowUnits) {
+  const base = orderBaseWorkHours(perWindowHoursTotal, quotedWindowUnits)
+  if (base <= 0) return 0
+  return _roundHours(base * TIME_BUFFER_COEFF)
 }

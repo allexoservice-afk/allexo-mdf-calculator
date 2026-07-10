@@ -83,18 +83,21 @@ function normalizePdfBlob(raw) {
  * @param {HTMLElement} element
  * @param {string} filename
  */
-/**
- * @param {Parameters<typeof buildProposalPdfHtml>[0]} opts
- * @returns {HTMLElement}
- */
-function mountProposalPdfHost(opts) {
-  const html = buildProposalPdfHtml(opts)
+function mountPdfHost(html) {
   const host = document.createElement('div')
   host.innerHTML = html
   host.style.cssText =
     'position:fixed;left:0;top:0;width:680px;opacity:0;pointer-events:none;z-index:-1;overflow:hidden;'
   document.body.appendChild(host)
   return /** @type {HTMLElement} */ (host.firstElementChild || host)
+}
+
+/**
+ * @param {Parameters<typeof buildProposalPdfHtml>[0]} opts
+ * @returns {HTMLElement}
+ */
+function mountProposalPdfHost(opts) {
+  return mountPdfHost(buildProposalPdfHtml(opts))
 }
 
 async function renderProposalPdfBlob(element, filename) {
@@ -110,6 +113,27 @@ async function renderProposalPdfBlob(element, filename) {
   const blob = normalizePdfBlob(raw)
   if (!blob.size) throw new Error('Empty PDF')
   return blob
+}
+
+/**
+ * @param {string} html
+ * @param {string} filename
+ * @returns {Promise<{ blob: Blob, filename: string }>}
+ */
+export async function generatePdfBlobFromHtml(html, filename) {
+  await yieldToMain()
+  preloadProposalPdfEngine()
+
+  const element = mountPdfHost(html)
+
+  try {
+    await yieldToMain()
+    const blob = await renderProposalPdfBlob(element, filename)
+    return { blob, filename }
+  } finally {
+    const host = element.parentElement
+    if (host?.parentNode) host.parentNode.removeChild(host)
+  }
 }
 
 /**

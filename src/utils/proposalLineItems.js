@@ -8,14 +8,13 @@ import {
   quoteRollerBoxOnlyHours,
   quoteWindowHours,
   quoteWindowsillOnlyHours,
+  orderBufferedWorkHours,
   winSlopeQuoteArgs,
   normalizeSlopeDeepSurchargePct,
 } from '../pricing/windowQuote.js'
 import { quoteLineWindowEuros } from '../pricing/quoteLineWindow.js'
 import { lineWindowEligibleForAutoQuote, windowEligibleForAutoQuote } from './windowDimensions.js'
 import { translate, typeTitle } from '../i18n/translations.js'
-
-const TIME_BUFFER = 1.44
 
 /** @param {Record<string, unknown>} line */
 function windowsForLine(line) {
@@ -115,13 +114,14 @@ export function collectClientLineItems(lines, locale) {
 export function collectClientLineItemsForPdf(lines, locale) {
   if (!Array.isArray(lines) || !lines.length) return []
 
-  /** @type {Array<{ title: string, size: string, quantity: number, lineTotalEur: number | null, typeId: string, win: Record<string, unknown>, windowIndex: number }>} */
+  /** @type {Array<{ title: string, size: string, quantity: number, lineTotalEur: number | null, typeId: string, materialId: string, win: Record<string, unknown>, windowIndex: number }>} */
   const items = []
   let windowIndex = 0
 
   for (const raw of lines) {
     const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
     const tid = typeof line.typeId === 'string' ? line.typeId : ''
+    const materialId = typeof line.materialId === 'string' ? line.materialId : 'mdf'
     const title = tid ? typeTitle(locale, tid, line.materialId) : '—'
     for (const win of windowsForLine(line)) {
       windowIndex += 1
@@ -134,6 +134,7 @@ export function collectClientLineItemsForPdf(lines, locale) {
         quantity: qty,
         lineTotalEur: lineTotal,
         typeId: tid,
+        materialId,
         win: /** @type {Record<string, unknown>} */ (win),
         windowIndex,
       })
@@ -178,50 +179,50 @@ export function collectOwnerLineItems(lines, locale) {
 export function estimateBufferedWorkHours(lines) {
   if (!Array.isArray(lines) || !lines.length) return 0
 
-  const totalH = lines.reduce((sum, raw) => {
-    const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
-    const tid = line.typeId
-    if (tid === 'roller_box') {
-      return (
-        sum +
-        windowsForLine(line).reduce((s, w) => {
-          if (!lineWindowEligibleForAutoQuote('roller_box', w)) return s
-          return s + quoteRollerBoxOnlyHours(Number(w.widthMm)) * normalizeWindowQuantity(w.quantity)
-        }, 0)
-      )
-    }
-    if (tid === 'windowsill') {
-      return (
-        sum +
-        windowsForLine(line).reduce((s, w) => {
-          if (!lineWindowEligibleForAutoQuote('windowsill', w)) return s
-          return s + quoteWindowsillOnlyHours(Number(w.widthMm)) * normalizeWindowQuantity(w.quantity)
-        }, 0)
-      )
-    }
-    const t = getTypeById(tid)
-    if (!t) return sum
-    return (
-      sum +
-      windowsForLine(line).reduce((s, w) => {
-        if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return s
+  const totals = lines.reduce(
+    (acc, raw) => {
+      const line = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : {}
+      const tid = line.typeId
+      if (tid === 'roller_box') {
+        windowsForLine(line).forEach((w) => {
+          if (!lineWindowEligibleForAutoQuote('roller_box', w)) return
+          const qty = normalizeWindowQuantity(w.quantity)
+          acc.hours += quoteRollerBoxOnlyHours(Number(w.widthMm)) * qty
+          acc.units += qty
+        })
+        return acc
+      }
+      if (tid === 'windowsill') {
+        windowsForLine(line).forEach((w) => {
+          if (!lineWindowEligibleForAutoQuote('windowsill', w)) return
+          const qty = normalizeWindowQuantity(w.quantity)
+          acc.hours += quoteWindowsillOnlyHours(Number(w.widthMm)) * qty
+          acc.units += qty
+        })
+        return acc
+      }
+      const t = getTypeById(tid)
+      if (!t) return acc
+      windowsForLine(line).forEach((w) => {
+        if (!windowEligibleForAutoQuote(Number(w.widthMm), Number(w.heightMm))) return
         const slope = winSlopeQuoteArgs(w)
-        return (
-          s +
+        const qty = normalizeWindowQuantity(w.quantity)
+        acc.hours +=
           quoteWindowHours(
             Number(w.widthMm),
             Number(w.heightMm),
             t.hasSill,
             t.hasRoller,
             slope.deep,
-          ) *
-            normalizeWindowQuantity(w.quantity)
-        )
-      }, 0)
-    )
-  }, 0)
+          ) * qty
+        acc.units += qty
+      })
+      return acc
+    },
+    { hours: 0, units: 0 },
+  )
 
-  return totalH * TIME_BUFFER
+  return orderBufferedWorkHours(totals.hours, totals.units)
 }
 
 /** @param {unknown[]} lines */

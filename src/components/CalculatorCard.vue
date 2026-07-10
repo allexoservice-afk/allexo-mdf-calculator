@@ -49,7 +49,7 @@ const ariaDescription = computed(() => {
     @click="emit('select')"
   >
     <div class="card__visual">
-      <TypeVisual :variant="visual" />
+      <TypeVisual :variant="visual" :material-id="materialId" />
     </div>
     <h2 class="card__title">{{ title }}</h2>
     <p class="card__hint">{{ clientHint }}</p>
