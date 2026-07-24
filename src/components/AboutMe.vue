@@ -4,8 +4,8 @@ import AboutCardIcon from './AboutCardIcon.vue'
 
 const { t } = useLocale()
 
-/** Коли з’явиться фото — поклади файл і вкажи шлях, напр. `/images/about/oleksandr.jpg` */
-const PHOTO_SRC = null
+/** Поки порожньо — показується placeholder. Коли буде фото: імпорт і шлях сюди. */
+const PHOTO_SRC = ''
 
 const specialty = [
   { key: 'main1', icon: 'reveal-mdf' },
@@ -114,8 +114,8 @@ const why = [
 .about__photo {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  max-height: 22rem;
+  aspect-ratio: 4 / 3;
+  max-height: 15rem;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--allexo-border);
@@ -128,7 +128,7 @@ const why = [
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center 18%;
 }
 
 .about__photo-placeholder {
@@ -190,13 +190,13 @@ const why = [
 .about__cards {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
 .about-card {
   margin: 0;
-  padding: 0.55rem 0.65rem 0.6rem;
+  padding: 0.5rem 0.6rem 0.55rem;
   background: #fff;
   border: 1px solid var(--allexo-border);
   border-radius: 12px;
@@ -205,7 +205,7 @@ const why = [
 }
 
 .about-card__title {
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.35rem;
   font-size: 0.66rem;
   font-weight: 750;
   letter-spacing: 0.07em;
@@ -232,7 +232,7 @@ const why = [
   gap: 0.4rem;
   min-width: 0;
   min-height: 0;
-  padding: 0.4rem 0.45rem;
+  padding: 0.38rem 0.42rem;
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.25;
@@ -242,14 +242,14 @@ const why = [
 }
 
 .about-card__item :deep(.aci) {
-  width: 1.7rem;
-  height: 1.7rem;
-  flex: 0 0 1.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 1.6rem;
 }
 
 .about-card__item :deep(.aci svg) {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .about-card__label {
@@ -265,51 +265,62 @@ const why = [
   }
 }
 
+/* Desktop: фото по висоті рівне блоку з текстом і картками */
 @media (min-width: 900px) {
   .about__panel {
-    grid-template-columns: minmax(13.5rem, 0.42fr) minmax(0, 1fr);
-    gap: 1rem;
+    display: flex;
     align-items: stretch;
+    gap: 1.25rem;
   }
 
   .about__photo {
+    flex: 0 0 clamp(17rem, 24vw, 20.5rem);
+    width: clamp(17rem, 24vw, 20.5rem);
+    max-width: 20.5rem;
     aspect-ratio: auto;
     max-height: none;
     height: auto;
     align-self: stretch;
   }
 
-  .about__side {
-    gap: 0.7rem;
+  .about__photo-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
     height: 100%;
+    object-fit: cover;
+    object-position: center 16%;
   }
 
-  .about__intro {
-    flex: 0 0 auto;
+  .about__photo-placeholder {
+    position: absolute;
+    inset: 0;
   }
 
-  .about__cards {
+  .about__side {
     flex: 1 1 auto;
+    gap: 0.65rem;
+    min-width: 0;
   }
 
   .about__lead {
-    font-size: 0.86rem;
-    line-height: 1.45;
+    font-size: 0.88rem;
+    line-height: 1.5;
   }
 
   .about-card {
-    padding: 0.6rem 0.7rem 0.65rem;
+    padding: 0.55rem 0.65rem 0.58rem;
   }
 
   .about-card__item {
-    padding: 0.42rem 0.5rem;
+    padding: 0.4rem 0.48rem;
     font-size: 0.72rem;
   }
 }
 
 @media (max-width: 639px) {
   .about__photo {
-    max-height: 16rem;
+    max-height: 14rem;
     aspect-ratio: 4 / 3;
   }
 

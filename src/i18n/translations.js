@@ -37,6 +37,7 @@ export const TRANSLATIONS = {
       subtitleLine2: 'Професійний монтаж',
       subtitleLine3: 'Готовність 1–3 дні',
       trustLine: 'Безкоштовний розрахунок за кілька хвилин',
+      calcHook: 'Отримайте орієнтовний розрахунок за 2 хвилини',
     },
     pro: {
       unlockTitle: 'Pro доступ',
@@ -217,6 +218,7 @@ export const TRANSLATIONS = {
       prevPhoto: 'Попереднє фото',
       nextPhoto: 'Наступне фото',
       lightboxPhotoHint: 'Натисніть на фото, щоб переглянути наступне',
+      viewAll: 'Переглянути всі роботи',
       ctaQ: 'Сподобалось?',
       ctaSubtitle: 'Розрахуйте вартість вашого замовлення',
     },
@@ -224,7 +226,7 @@ export const TRANSLATIONS = {
       aria: 'Про ALLEXO',
       hello: 'Привіт, я <strong>Oleksandr.</strong>',
       engagement:
-        'ALLEXO спеціалізується на професійному внутрішньому оздобленні після встановлення вікон та дверей. Ми виготовляємо й монтуємо відкоси, підвіконня, короби для ролет та інші елементи за індивідуальними розмірами.',
+        'ALLEXO — спеціаліст з професійного внутрішнього оздоблення після встановлення вікон та дверей.',
       intro1: 'Олександр — самозайнятий майстер з оздоблення вікон (ALLEXO).',
       intro3:
         'Понад 3 роки — у провідній бельгійській компанії з повним циклом віконно-дверних робіт: від демонтажу до фінішної обробки. Там набув досвід за бельгійськими стандартами якості.',
@@ -609,6 +611,7 @@ export const TRANSLATIONS = {
       subtitleLine2: 'Professional installation',
       subtitleLine3: 'Ready in 1–3 days',
       trustLine: 'Free quote within minutes',
+      calcHook: 'Get an approximate quote in 2 minutes',
     },
     pro: {
       unlockTitle: 'Pro access',
@@ -782,6 +785,7 @@ export const TRANSLATIONS = {
       prevPhoto: 'Previous photo',
       nextPhoto: 'Next photo',
       lightboxPhotoHint: 'Tap the photo to see the next one',
+      viewAll: 'View all works',
       ctaQ: 'Like it?',
       ctaSubtitle: 'Calculate your order price',
     },
@@ -789,7 +793,7 @@ export const TRANSLATIONS = {
       aria: 'About ALLEXO',
       hello: 'Hello, I’m <strong>Oleksandr.</strong>',
       engagement:
-        'ALLEXO specialises in professional interior finishing after window and door installation. We manufacture and install reveals, window sills, roller shutter boxes and other elements to custom sizes.',
+        'ALLEXO — specialist in professional interior finishing after window and door installation.',
       intro1: 'Oleksandr — self-employed window finishing specialist (ALLEXO).',
       intro3:
         'Over 3 years with a leading Belgian company handling the full window and door cycle — from removal to final finishing. There I gained experience to Belgian quality standards.',
@@ -1175,6 +1179,7 @@ export const TRANSLATIONS = {
       subtitleLine2: 'Professionele plaatsing',
       subtitleLine3: 'Klaar in 1–3 dagen',
       trustLine: 'Gratis offerte binnen enkele minuten',
+      calcHook: 'Ontvang een oriënterende berekening in 2 minuten',
     },
     pro: {
       unlockTitle: 'Pro-toegang',
@@ -1351,6 +1356,7 @@ export const TRANSLATIONS = {
       prevPhoto: 'Vorige foto',
       nextPhoto: 'Volgende foto',
       lightboxPhotoHint: 'Tik op de foto om de volgende te zien',
+      viewAll: 'Bekijk alle werken',
       ctaQ: 'Bevalt het?',
       ctaSubtitle: 'Bereken de prijs van je bestelling',
     },
@@ -1358,7 +1364,7 @@ export const TRANSLATIONS = {
       aria: 'Over ALLEXO',
       hello: 'Hallo, ik ben <strong>Oleksandr.</strong>',
       engagement:
-        'ALLEXO is gespecialiseerd in professionele binnenafwerking na plaatsing van ramen en deuren. Wij maken en plaatsen dagkanten, vensterbanken, rolluikkasten en andere elementen op maat.',
+        'ALLEXO — specialist in professionele binnenafwerking na plaatsing van ramen en deuren.',
       intro1: 'Oleksandr — zelfstandige specialist in raamafwerking (ALLEXO).',
       intro3:
         'Meer dan 3 jaar bij een toonaangevend Belgisch bedrijf met het volledige gamma: van démontage tot finale afwerking. Daar deed ik ervaring op met Belgische kwaliteitsnormen.',
@@ -1744,6 +1750,7 @@ export const TRANSLATIONS = {
       subtitleLine2: 'Pose professionnelle',
       subtitleLine3: 'Prêt en 1–3 jours',
       trustLine: 'Devis gratuit en quelques minutes',
+      calcHook: 'Obtenez une estimation en 2 minutes',
     },
     pro: {
       unlockTitle: 'Accès Pro',
@@ -1926,6 +1933,7 @@ export const TRANSLATIONS = {
       prevPhoto: 'Photo précédente',
       nextPhoto: 'Photo suivante',
       lightboxPhotoHint: 'Appuyez sur la photo pour voir la suivante',
+      viewAll: 'Voir toutes les réalisations',
       ctaQ: 'Ça vous plaît ?',
       ctaSubtitle: 'Calculez le prix de votre commande',
     },
@@ -1933,7 +1941,7 @@ export const TRANSLATIONS = {
       aria: 'À propos d’ALLEXO',
       hello: 'Bonjour, je suis <strong>Oleksandr.</strong>',
       engagement:
-        'ALLEXO est spécialisé dans la finition intérieure professionnelle après pose de fenêtres et portes. Nous fabriquons et installons tableaux, appuis, caissons de volets et autres éléments sur mesure.',
+        'ALLEXO — spécialiste de la finition intérieure professionnelle après pose de fenêtres et portes.',
       intro1: 'Oleksandr — indépendant spécialisé en finition de fenêtres (ALLEXO).',
       intro3:
         'Plus de 3 ans dans une entreprise belge reconnue pour tout le cycle fenêtres et portes — du démontage à la finition complète. J’y ai acquis une expérience selon les standards de qualité belges.',

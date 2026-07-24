@@ -247,14 +247,14 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 <template>
   <div class="app">
-    <header class="header">
+    <header class="header site-header">
       <Hero />
     </header>
 
-    <main class="main content-container page-rail">
-      <AboutMe />
-
+    <main class="main site-container">
       <WorksGallery />
+
+      <AboutMe />
 
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
@@ -332,7 +332,7 @@ const mdfOrderSubtotalEuros = computed(() =>
     </main>
 
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
-      <div class="sticky-total__inner content-container page-rail">
+      <div class="sticky-total__inner site-container">
         <p class="sticky-total__sum">
           <template v-if="proActive">
             {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
@@ -370,7 +370,7 @@ const mdfOrderSubtotalEuros = computed(() =>
     </div>
 
     <footer class="footer">
-      <div class="footer__inner content-container page-rail">
+      <div class="footer__inner site-container">
         <p class="footer__copy">{{ t('app.footer') }}</p>
         <p class="footer__contacts">
           <a
@@ -407,9 +407,9 @@ const mdfOrderSubtotalEuros = computed(() =>
 </template>
 
 <style scoped>
-.content-container {
-  /* Horizontal edges: global .page-rail (main.css) */
-  overflow-x: clip;
+.site-header {
+  width: 100%;
+  max-width: 100%;
 }
 
 .app {
@@ -522,11 +522,10 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 .main {
   flex: 1;
-  /* Horizontal inset comes only from .content-container — do not zero it */
+  /* Horizontal inset + max-width — лише з .site-container (не max-width: 100%) */
   padding-top: 0;
   padding-bottom: var(--space-10);
   min-width: 0;
-  max-width: 100%;
   overflow-x: clip;
 }
 

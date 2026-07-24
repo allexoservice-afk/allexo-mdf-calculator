@@ -234,32 +234,30 @@ onBeforeUnmount(() => {
   <section
     v-if="visiblePairs.length"
     class="works"
-    aria-labelledby="works-title"
+    :aria-label="t('works.title')"
   >
-    <div class="works__head">
-      <h2 id="works-title" class="works__title">{{ t('works.title') }}</h2>
-    </div>
-
-    <div class="works__grid">
-      <button
-        v-for="(pair, idx) in visiblePairs"
-        :key="pair.thumb"
-        type="button"
-        class="works__card"
-        :aria-label="`${t('works.openPreview')} ${idx + 1}`"
-        @click="openLightbox(idx)"
-      >
-        <img
-          :src="pair.thumb"
-          alt=""
-          width="320"
-          height="240"
-          loading="lazy"
-          decoding="async"
-          fetchpriority="low"
-          @error="onThumbError(pair.thumb)"
-        />
-      </button>
+    <div class="works__showcase">
+      <div class="works__row">
+        <button
+          v-for="(pair, idx) in visiblePairs.slice(0, 6)"
+          :key="pair.thumb"
+          type="button"
+          class="works__card"
+          :aria-label="`${t('works.openPreview')} ${idx + 1}`"
+          @click="openLightbox(idx)"
+        >
+          <img
+            :src="pair.thumb"
+            alt=""
+            width="720"
+            height="450"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="low"
+            @error="onThumbError(pair.thumb)"
+          />
+        </button>
+      </div>
     </div>
 
     <Teleport to="body">
@@ -379,30 +377,17 @@ onBeforeUnmount(() => {
   overflow-x: clip;
 }
 
-.works__head {
-  margin: 0 0 0.75rem;
+/* Один ряд — 6 фото (на вузьких екранах горизонтальний скрол) */
+.works__showcase {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  min-width: 0;
 }
 
-.works__title {
-  margin: 0 0 0.3rem;
-  font-size: 1.05rem;
-  font-weight: 750;
-  color: var(--allexo-olive);
-  letter-spacing: -0.01em;
-}
-
-.works__subtitle {
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: var(--allexo-muted);
-  max-width: 36rem;
-}
-
-/* Однакова сітка — підходить і для портретних, і для альбомних фото */
-.works__grid {
+.works__row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.65rem;
   width: 100%;
 }
@@ -411,25 +396,26 @@ onBeforeUnmount(() => {
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 1;
+  min-width: 0;
+  aspect-ratio: 16 / 10;
   padding: 0;
-  border: 1px solid rgba(61, 66, 67, 0.1);
-  border-radius: var(--radius);
+  border: 1px solid rgba(61, 66, 67, 0.08);
+  border-radius: 12px;
   overflow: hidden;
   background: #f0efec;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(26, 25, 23, 0.04);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
   -webkit-tap-highlight-color: transparent;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+    transform 250ms ease,
+    box-shadow 250ms ease,
+    border-color 250ms ease;
 }
 
 .works__card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(61, 66, 67, 0.16);
-  box-shadow: 0 8px 20px rgba(26, 25, 23, 0.08);
+  transform: scale(1.03);
+  border-color: rgba(61, 66, 67, 0.14);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
 }
 
 .works__card:focus-visible {
@@ -447,59 +433,54 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width: 640px) {
-  .works__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.55rem;
+  .works__row {
+    gap: 0.75rem;
+  }
+
+  .works__card {
+    border-radius: 14px;
   }
 }
 
 @media (min-width: 960px) {
   .works {
-    margin: 0.35rem 0 calc(var(--section-y-lg) * 0.85);
+    margin: 0.5rem 0 calc(var(--section-y-lg) * 0.85);
   }
 
-  .works__head {
-    margin-bottom: 0.85rem;
-  }
-
-  .works__title {
-    font-size: 1.08rem;
-  }
-
-  .works__subtitle {
-    font-size: 0.86rem;
-  }
-
-  .works__grid {
-    /* 3 колонки → 6 фото = рівно 3×2 (без сироти 4+2) */
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.55rem;
-  }
-
-  .works__card {
-    border-radius: var(--radius-lg);
+  .works__row {
+    gap: 0.85rem;
   }
 }
 
-@media (max-width: 639px) {
+@media (max-width: 719px) {
   .works {
     margin: 0.35rem 0 calc(var(--section-y) + 0.35rem);
+    overflow-x: visible;
   }
 
-  .works__head {
-    margin-bottom: 0.75rem;
+  .works__showcase {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
-  .works__title {
-    font-size: 0.98rem;
-  }
-
-  .works__subtitle {
-    font-size: 0.78rem;
-  }
-
-  .works__grid {
+  .works__row {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
     gap: 0.55rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .works__card {
+    flex: 0 0 auto;
+    width: min(38vw, 9.5rem);
+    border-radius: 12px;
+  }
+
+  .works__card:hover {
+    transform: none;
   }
 }
 

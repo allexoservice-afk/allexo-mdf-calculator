@@ -3,7 +3,7 @@
  *
  * Джерело:  source/works-original/  (будь-які .jpg / .jpeg / .png / .webp / .heic / .heif)
  * Результат: public/images/works/
- *   work1-thumb.webp … work50-thumb.webp  (ширина 320px, WebP quality 75)
+ *   work1-thumb.webp … work50-thumb.webp  (ширина 720px, WebP quality 80)
  *   work1-large.webp … work50-large.webp   (ширина max 1600px, WebP quality 85)
  *
  * Файли в originals сортуються за іменем; перші до 50 отримують номери work1 … work50.
@@ -22,8 +22,8 @@ const sourceDir = path.join(rootDir, 'source', 'works-original')
 const outputDir = path.join(rootDir, 'public', 'images', 'works')
 
 const MAX = 50
-const THUMB_WIDTH = 320
-const THUMB_WEBP_Q = 75
+const THUMB_WIDTH = 720
+const THUMB_WEBP_Q = 80
 const LARGE_WIDTH = 1600
 const LARGE_WEBP_Q = 85
 
