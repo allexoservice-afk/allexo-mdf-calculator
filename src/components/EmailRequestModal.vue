@@ -405,7 +405,7 @@ async function onSubmit() {
 .field__input:focus {
   outline: none;
   border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
+  box-shadow: 0 0 0 3px var(--allexo-focus-ring);
 }
 
 .field__input--error {
@@ -428,7 +428,7 @@ async function onSubmit() {
   font-weight: 700;
   font-family: inherit;
   color: #fff;
-  background: #111111;
+  background: var(--allexo-teal);
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
@@ -439,8 +439,8 @@ async function onSubmit() {
 }
 
 .btn-submit:hover:not(:disabled) {
-  background: var(--allexo-accent);
-  color: #111111;
+  background: var(--allexo-teal-light);
+  color: #fff;
 }
 
 .btn-submit:disabled {

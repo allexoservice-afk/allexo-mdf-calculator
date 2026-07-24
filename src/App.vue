@@ -248,15 +248,13 @@ const mdfOrderSubtotalEuros = computed(() =>
 <template>
   <div class="app">
     <header class="header">
-      <div class="header__inner content-container hero">
-        <Hero />
-      </div>
+      <Hero />
     </header>
 
-    <main class="main content-container">
-      <WorksGallery />
-
+    <main class="main content-container page-rail">
       <AboutMe />
+
+      <WorksGallery />
 
       <ul class="steps" :aria-label="t('app.stepsAria')">
         <li class="steps__item">
@@ -334,7 +332,7 @@ const mdfOrderSubtotalEuros = computed(() =>
     </main>
 
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
-      <div class="sticky-total__inner content-container">
+      <div class="sticky-total__inner content-container page-rail">
         <p class="sticky-total__sum">
           <template v-if="proActive">
             {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
@@ -372,7 +370,7 @@ const mdfOrderSubtotalEuros = computed(() =>
     </div>
 
     <footer class="footer">
-      <div class="footer__inner content-container">
+      <div class="footer__inner content-container page-rail">
         <p class="footer__copy">{{ t('app.footer') }}</p>
         <p class="footer__contacts">
           <a
@@ -410,12 +408,8 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 <style scoped>
 .content-container {
-  width: 100%;
-  max-width: 1400px;
-  margin-inline: auto;
-  padding-left: max(1.25rem, env(safe-area-inset-left));
-  padding-right: max(1.25rem, env(safe-area-inset-right));
-  box-sizing: border-box;
+  /* Horizontal edges: global .page-rail (main.css) */
+  overflow-x: clip;
 }
 
 .app {
@@ -425,98 +419,45 @@ const mdfOrderSubtotalEuros = computed(() =>
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 .header {
-  background:
-    radial-gradient(380px 240px at 6% 22%, rgba(196, 163, 90, 0.11), transparent 72%),
-    radial-gradient(720px 420px at 14% 8%, rgba(196, 163, 90, 0.07), transparent 62%),
-    linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
-  color: #fff;
+  background: var(--allexo-bg);
+  color: var(--allexo-text);
   padding: 0;
   position: relative;
-  overflow: clip;
+  overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
+  border-bottom: none;
+  box-shadow: none;
 }
 
 .header::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: #c4a35a;
-  opacity: 0.25;
-  pointer-events: none;
-}
-
-.header__inner {
-  /* inherits container sizing via .content-container */
-}
-
-.hero {
-  padding-top: 40px;
-  padding-bottom: 40px;
-  position: relative;
-}
-
-@media (min-width: 769px) {
-  .hero {
-    padding-top: 38px;
-    padding-bottom: 38px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .header {
-    background:
-      linear-gradient(128deg, rgba(196, 163, 90, 0.045) 0%, transparent 44%),
-      radial-gradient(440px 300px at 8% 28%, rgba(196, 163, 90, 0.15), transparent 72%),
-      radial-gradient(880px 500px at 16% 10%, rgba(196, 163, 90, 0.095), transparent 62%),
-      radial-gradient(640px 420px at 52% 48%, rgba(196, 163, 90, 0.04), transparent 68%),
-      linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
-  }
-
-  .hero {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-
-  .main {
-    padding-top: 1rem;
-  }
+  display: none;
 }
 
 @media (max-width: 768px) {
   .app {
-    overflow-x: hidden;
-  }
-
-  .hero {
-    padding-top: 18px;
-    padding-bottom: 1.35rem;
-  }
-
-  .main {
-    padding-top: 1rem;
-    padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
+    overflow-x: clip;
   }
 
   .reviews {
-    margin: 0.4rem 0 1.1rem;
+    margin: 0 0 var(--section-y);
   }
 
   .reviews__card {
-    padding: 0.85rem 0.85rem;
+    padding: var(--card-pad);
   }
 
   .reviews__list {
-    margin-top: 0.65rem;
-    gap: 0.65rem;
+    margin-top: var(--space-3);
+    gap: var(--space-3);
   }
 
   .reviews__item {
-    padding: 0.7rem 0.8rem;
+    padding: 0.7rem 0.85rem;
   }
 
   .reviews__item-quote {
@@ -530,14 +471,14 @@ const mdfOrderSubtotalEuros = computed(() =>
   }
 
   .steps {
-    margin-bottom: 1.1rem;
+    margin-bottom: var(--section-y);
     padding: 0.75rem 0.85rem;
   }
 
   .calc {
     position: relative;
     z-index: auto;
-    margin-top: 1.1rem;
+    margin-top: var(--section-y);
   }
 
   #summary {
@@ -552,11 +493,11 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 @media (min-width: 769px) {
   .reviews {
-    margin: 0.75rem 0 1.75rem;
+    margin: 0 0 var(--section-y-lg);
   }
 
   .reviews__card {
-    padding: 1.4rem 1.55rem;
+    padding: var(--card-pad) 1.35rem;
     box-shadow: 0 10px 36px rgba(17, 17, 17, 0.07);
   }
 
@@ -581,8 +522,12 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 .main {
   flex: 1;
-  padding-top: 1.25rem;
-  padding-bottom: 2rem;
+  /* Horizontal inset comes only from .content-container — do not zero it */
+  padding-top: 0;
+  padding-bottom: var(--space-10);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .app:has(.sticky-total) .main {
@@ -593,16 +538,28 @@ const mdfOrderSubtotalEuros = computed(() =>
   .app:has(.sticky-total) .main {
     padding-bottom: 6.25rem;
   }
+
+  .main {
+    padding-top: 0;
+    padding-bottom: var(--space-10);
+  }
 }
 
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
   .main {
-    padding: 1.5rem 1.25rem 2.5rem;
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding-top: 0;
+    padding-bottom: max(var(--space-8), env(safe-area-inset-bottom));
   }
 }
 
 .steps {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--section-y);
   padding: 0.85rem 1rem;
   list-style: none;
   background: var(--allexo-surface);
@@ -627,7 +584,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 .steps__label {
   font-weight: 700;
-  color: var(--allexo-accent);
+  color: var(--allexo-green);
   margin-right: 0.25rem;
 }
 
@@ -635,18 +592,21 @@ const mdfOrderSubtotalEuros = computed(() =>
   .steps {
     display: flex;
     align-items: stretch;
-    margin-bottom: 1rem;
+    margin-bottom: var(--section-y);
     padding: 0.45rem 0.55rem;
   }
 
   .steps__item {
     flex: 1;
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: baseline;
     justify-content: center;
+    align-content: center;
     text-align: center;
     min-width: 0;
-    padding: 0.3rem 0.75rem;
+    min-height: 2.75rem;
+    padding: 0.35rem 0.7rem;
     line-height: 1.35;
     position: relative;
   }
@@ -670,7 +630,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .calc {
-  margin-top: 1.25rem;
+  margin-top: var(--section-y);
 }
 
 .material-switch {
@@ -679,7 +639,7 @@ const mdfOrderSubtotalEuros = computed(() =>
   grid-template-columns: 1fr 1fr;
   gap: 0;
   max-width: 280px;
-  margin: 0 auto 1.25rem;
+  margin: 0 auto var(--section-y);
   padding: 0.2rem;
   border: 1px solid var(--allexo-border);
   border-radius: 999px;
@@ -703,7 +663,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .material-switch__btn--active {
-  color: var(--allexo-teal);
+  color: var(--allexo-green);
 }
 
 .material-switch__slide {
@@ -713,7 +673,7 @@ const mdfOrderSubtotalEuros = computed(() =>
   width: calc(50% - 0.2rem);
   height: calc(100% - 0.4rem);
   border-radius: 999px;
-  background: linear-gradient(145deg, #f0f6f6 0%, #e8f4f3 100%);
+  background: var(--allexo-green-soft);
   border: 1px solid rgba(17, 17, 17, 0.06);
   transition: transform 0.22s ease;
   pointer-events: none;
@@ -724,11 +684,11 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .reviews {
-  margin: 0.5rem 0 1.35rem;
+  margin: 0 0 var(--section-y-lg);
 }
 
 .reviews__card {
-  padding: 1rem 1rem;
+  padding: var(--card-pad);
   background: var(--allexo-surface);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
@@ -739,7 +699,7 @@ const mdfOrderSubtotalEuros = computed(() =>
   margin: 0;
   font-size: 1rem;
   font-weight: 850;
-  color: var(--allexo-teal);
+  color: var(--allexo-olive);
 }
 
 .reviews__list {
@@ -799,8 +759,8 @@ const mdfOrderSubtotalEuros = computed(() =>
   padding-top: 0.65rem;
   padding-bottom: 0.65rem;
   border: 1px solid var(--allexo-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-md);
 }
@@ -809,7 +769,7 @@ const mdfOrderSubtotalEuros = computed(() =>
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--allexo-teal);
+  color: var(--allexo-graphite);
 }
 
 .sticky-total__exvat {
@@ -838,7 +798,7 @@ const mdfOrderSubtotalEuros = computed(() =>
   padding: 0.55rem 0.9rem;
   border-radius: var(--radius);
   border: 1px solid var(--allexo-border);
-  background: #111111;
+  background: var(--allexo-btn);
   color: #fff;
   font: inherit;
   font-weight: 700;
@@ -856,23 +816,23 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .sticky-total__btn--primary:hover {
-  background: var(--allexo-accent);
-  color: #111111;
-  border-color: var(--allexo-accent);
+  background: var(--allexo-btn-hover);
+  color: #fff;
+  border-color: var(--allexo-btn-hover);
 }
 
 .sticky-total__btn--ghost,
 .sticky-total__btn--secondary {
   background: var(--allexo-surface);
   color: var(--allexo-text);
-  border-color: var(--allexo-accent);
+  border-color: var(--allexo-border);
 }
 
 .sticky-total__btn--ghost:hover,
 .sticky-total__btn--secondary:hover {
-  background: var(--allexo-surface);
-  color: var(--allexo-accent);
-  border-color: var(--allexo-accent);
+  background: var(--allexo-bg);
+  color: var(--allexo-green);
+  border-color: var(--allexo-green);
 }
 
 @media (max-width: 430px) {
@@ -931,7 +891,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 .grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: 1fr;
 }
 
@@ -948,7 +908,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .footer {
-  padding: max(1rem, env(safe-area-inset-bottom)) 0;
+  padding: var(--section-y) 0 max(var(--section-y), env(safe-area-inset-bottom));
   text-align: center;
   font-size: 0.8rem;
   color: var(--allexo-muted);
@@ -968,7 +928,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 .footer__link {
   display: inline-block;
-  color: var(--allexo-teal);
+  color: var(--allexo-green);
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -979,7 +939,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .footer__link:hover {
-  color: var(--allexo-teal-light);
+  color: var(--allexo-btn-hover);
 }
 
 .footer__sep {
@@ -1024,7 +984,7 @@ const mdfOrderSubtotalEuros = computed(() =>
     transform: translateY(-2px);
   }
   40% {
-    box-shadow: 0 0 0 6px rgba(196, 163, 90, 0.18);
+    box-shadow: 0 0 0 6px var(--allexo-focus-ring);
   }
   100% {
     transform: translateY(0);

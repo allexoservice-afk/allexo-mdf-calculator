@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="260mm" height="90mm" viewBox="0 0 2600 900" fill="none">
+  <title>ALLEXO back print — graphite tee</title>
+  <text x="1300" y="320" text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', Times, serif"
+    font-size="280" font-weight="700" letter-spacing="0.1em" fill="#C5A267">ALLEXO</text>
+  <line x1="580" y1="420" x2="2020" y2="420"
+    stroke="#C5A267" stroke-width="10" stroke-linecap="round"/>
+  <text x="1300" y="620" text-anchor="middle"
+    font-family="Arial, Helvetica, 'DM Sans', sans-serif"
+    font-size="118" font-weight="600" letter-spacing="0.42em" fill="#F2E8D5">RAAMAFWERKING</text>
+</svg>

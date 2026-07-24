@@ -1,24 +1,22 @@
-ALLEXO — теми оформлення сайту
-==============================
+ALLEXO — official design system
+===============================
 
-Варіант 0 (оригінал) — teal
-  Файл: variant-0-teal.css (довідка)
-  База: src/assets/main.css
-  Увімкнення: applyColorTheme('teal') або кнопка «↩ Teal (оригінал)»
+SOURCE OF TRUTH
+  Screenshot master (dark hero + cream + gold + olive)
+  Tokens: src/assets/main.css (:root)
+  Spec:   brand/DESIGN_SYSTEM.txt
 
-Варіант 1 — BLACK + GOLD + WARM BEIGE (основний дизайн у main.css)  ★ ЗБЕРЕЖЕНИЙ
-  Файл: variant-1-logo.css
-  Підключення: src/assets/logo-theme.css → @import
-  Увімкнення: applyColorTheme('logo') або кнопка «◆ Чорний + золото»
-  Ключ sessionStorage: allexo-theme-preview
+COLOURS
+  Hero dark   #1A1C1B
+  Page bg     #F7F3EA
+  Cards       #FFFFFF
+  Text        #2D2D2D
+  Muted       #666666
+  Olive       #3F4B3F  (icons, badges, filled buttons)
+  Gold        #C8A96A  (subtitle, outline CTA, lang underline)
 
-Як повернути варіант 1 після нових експериментів:
-  1. Скопіювати variant-1-logo.css → logo-theme.css (або залишити @import)
-  2. У App.vue: applyColorTheme('logo')
-  3. Не чіпати структуру шаблонів — лише кольори в theme-файлах
+Archive only (do not use for new work)
+  variant-0-teal.css — optional html[data-theme="teal"]
+  variant-1-logo.css — historical snapshot
 
-Нові варіанти:
-  Створюйте variant-2-*.css, підключайте в main.js замість logo-theme.css
-  НЕ перезаписуйте variant-1-logo.css
-
-Логотипи для друку: brand/
+Logos: brand/

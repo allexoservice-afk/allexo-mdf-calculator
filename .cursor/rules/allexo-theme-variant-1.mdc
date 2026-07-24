@@ -1,33 +1,30 @@
 ---
-description: ALLEXO збережений варіант 1 теми (чорний + золото) — як повернутись після змін
+description: ALLEXO official screenshot design — dark hero + cream + gold + deep teal
 alwaysApply: true
 ---
 
-# ALLEXO — Варіант 1 (чорний + золото)
+# ALLEXO — Official design system
 
-Користувач зберіг **варіант 1** — **тільки шапка** (чорний фон, золото ALLEXO, білий текст). Решта сайту — teal з `main.css`. **Не перезаписуйте** `variant-1-logo.css` без запиту.
+Master: approved mobile screenshot. Tokens: `src/assets/main.css` · Spec: `brand/DESIGN_SYSTEM.txt`
 
-**Поточний фокус:** зміни лише в шапці (`Hero.vue`, `.header` у `App.vue`, `variant-1-logo.css`). Не чіпати калькулятор, картки, sticky, footer, модалки — якщо користувач явно не попросить.
+## Colours
 
-## Файли
+| Role | Hex |
+|------|-----|
+| Hero dark | `#0B0F12` |
+| Page bg | `#F9F6F0` |
+| Cards | `#FFFFFF` |
+| Text | `#1A2A2A` |
+| Deep teal | `#133433` |
+| Gold | `#C5A267` |
+| Contact mint | `#5A9A9C` |
 
-| Варіант | Опис | Файл |
-|--------|------|------|
-| 0 | Оригінал teal | `src/assets/main.css` |
-| **1** | **Чорний + золото** | **`src/assets/themes/variant-1-logo.css`** |
+## Rules
 
-- Активне підключення: `src/assets/logo-theme.css` → `@import` variant-1
-- Перемикач у UI: `App.vue` → `applyColorTheme('logo' | 'teal')`, кнопка `.theme-preview-toggle`
-- Session: `allexo-theme-preview`
-
-## Повернення до варіанту 1
-
-1. Відновити `variant-1-logo.css` у `logo-theme.css` (import або копія)
-2. `applyColorTheme('logo')` — `document.documentElement.dataset.theme = 'logo'`
-3. **Не змінювати структуру** (сітка, компоненти, responsive) — лише CSS-змінні та theme-файли
-
-## Нові експерименти
-
-- Створюй `variant-2-*.css`, не редагуй `variant-1-logo.css`
-- Документація: `src/assets/themes/README.txt`
-- Логотипи: `brand/`
+- Match the screenshot exactly — do not invent a new style
+- Logo: gold serif A + ALLEXO + RAAMAFWERKING tag
+- Hero: dark, gold outline CTA, mint contact icons
+- About: teal badges + white cards with 2-col divider grids
+- Soft shadows, radius ~12–16px
+- Keep calculator logic; UI only
+---

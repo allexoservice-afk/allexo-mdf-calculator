@@ -1,0 +1,31 @@
+ALLEXO — Official design system (screenshot master)
+==================================================
+Pixel reference: approved mobile screenshot.
+Do not invent alternate styles.
+
+COLOURS
+----------------------------------------------------------------
+Hero / dark surfaces     #0B0F12
+Page background          #F9F6F0
+Cards / inputs           #FFFFFF
+Primary text             #1A2A2A
+Muted text               #5A6A6A
+Deep teal (icons/badges) #133433
+Muted gold               #C5A267
+Contact icon mint        #5A9A9C
+Borders                  #E4E0D8
+Grid dividers            #EBE7E0
+
+UI
+----------------------------------------------------------------
+Card radius: 16px
+Button radius: 10px
+Shadows: soft only
+Hero: dark, left-aligned on mobile; gold CTA outline; mint contact icons
+Logo: gold serif A + ALLEXO + RAAMAFWERKING tag
+About cards: 2-col grids with inset dividers, icon left of label
+
+FILES
+----------------------------------------------------------------
+Tokens: src/assets/main.css
+This doc: brand/DESIGN_SYSTEM.txt

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="85mm" height="55mm" viewBox="0 0 850 550" fill="none">
+  <rect width="850" height="550" fill="#0B0F12"/>
+  <text x="425" y="215" text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', Times, serif"
+    font-size="78" font-weight="700" letter-spacing="0.12em" fill="#C5A267">ALLEXO</text>
+  <text x="425" y="268" text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="22" font-weight="500" letter-spacing="0.35em" fill="#F5F2EB">RAAMAFWERKING</text>
+  <line x1="220" y1="320" x2="630" y2="320" stroke="#C5A267" stroke-width="2.5" stroke-linecap="round"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="500" fill="#F2E8D5">
+    <text x="120" y="420" text-anchor="start">info@allexo.be</text>
+    <text x="425" y="420" text-anchor="middle">+32 493 86 07 53</text>
+    <text x="730" y="420" text-anchor="end">Brugge, Belgium</text>
+  </g>
+</svg>

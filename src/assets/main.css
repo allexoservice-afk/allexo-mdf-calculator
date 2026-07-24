@@ -1,28 +1,72 @@
 :root {
-  --allexo-teal: #111111;
-  --allexo-teal-light: #2a2a2a;
-  --allexo-accent: #c4a35a;
-  --allexo-accent-soft: #d4b76a;
-  --allexo-bg: #f5f1ea;
+  /* ALLEXO — screenshot master (pixel reference) */
+  --allexo-hero: #3d4243;
+  --allexo-bg: #faf9f6;
+  --allexo-bg-alt: #f4f3ef;
   --allexo-surface: #ffffff;
-  --allexo-text: #111111;
-  --allexo-muted: #6b6560;
-  --allexo-border: #e5ddd0;
+  --allexo-text: #1a2a2a;
+  --allexo-muted: #5a6a6a;
+  --allexo-olive: #133433;
+  --allexo-teal-deep: #133433;
+  --allexo-icon: #2c3033;
+  --allexo-gold: #c5a059;
+  --allexo-gold-soft: #e8dcc0;
+  --allexo-icon-mint: #5a9a9c;
+  --allexo-border: #e5e3de;
+  --allexo-divider: #eceae6;
   --allexo-danger: #b42318;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Page grid — one container for every section */
+  --page-max: 1320px;
+  --page-pad: 1.375rem; /* ~22px mobile */
+  --section-y: 1.5rem;
+  --section-y-lg: 2rem;
+  --card-pad: 1.05rem;
+
   --radius: 12px;
   --radius-lg: 16px;
-  --shadow: 0 1px 3px rgba(17, 17, 17, 0.06);
-  --shadow-md: 0 8px 22px rgba(17, 17, 17, 0.08);
+  --radius-btn: 10px;
+  --radius-pill: 999px;
+
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.07);
+
+  --ease: 0.2s ease;
+  --icon-sm: 1.1rem;
+  --icon-md: 1.35rem;
+
+  /* Compatibility aliases */
+  --allexo-graphite: var(--allexo-hero);
+  --allexo-green: var(--allexo-olive);
+  --allexo-green-soft: #e6eceb;
+  --allexo-btn: var(--allexo-olive);
+  --allexo-btn-hover: #1c4544;
+  --allexo-primary: var(--allexo-olive);
+  --allexo-primary-hover: var(--allexo-btn-hover);
+  --allexo-teal: var(--allexo-olive);
+  --allexo-teal-light: var(--allexo-btn-hover);
+  --allexo-accent: var(--allexo-gold);
+  --allexo-accent-soft: var(--allexo-gold-soft);
+  --allexo-header: var(--allexo-hero);
+  --allexo-hero-bg: var(--allexo-hero);
+  --allexo-focus-ring: rgba(19, 52, 51, 0.22);
+
   font-family:
+    'DM Sans',
     ui-sans-serif,
     system-ui,
     -apple-system,
-    'DM Sans',
-    'Inter',
-    'Manrope',
     'Segoe UI',
-    Roboto,
-    Arial,
     sans-serif;
   line-height: 1.55;
   font-weight: 400;
@@ -53,6 +97,7 @@ body {
   overscroll-behavior-x: none;
   width: 100%;
   max-width: 100%;
+  background-color: var(--allexo-bg);
 }
 
 #app {
@@ -62,10 +107,85 @@ body {
   max-width: 100%;
 }
 
+/**
+ * Єдина горизонтальна сітка сторінки.
+ * Шапка (ALLEXO / мови), hero, about, галерея, калькулятор — один лівий і правий край.
+ */
+.page-rail {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-left: max(var(--page-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-pad), env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-pad: 1.75rem; /* 28px tablet */
+    --section-y: 1.65rem;
+    --section-y-lg: 2.1rem;
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --page-pad: 2.25rem; /* 36px desktop */
+    --section-y: 1.75rem;
+    --section-y-lg: 2.5rem; /* ~40px between major blocks */
+    --card-pad: 1.15rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --page-pad: 2.5rem; /* 40px wide desktop */
+  }
+}
+
 button {
   font-family: inherit;
 }
 
 input {
   font-family: inherit;
+}
+
+a {
+  color: var(--allexo-olive);
+}
+
+.allexo-card {
+  background: var(--allexo-surface);
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.btn-brand {
+  background: var(--allexo-olive);
+  color: #fff;
+  border: 1px solid var(--allexo-olive);
+  border-radius: var(--radius-btn);
+  transition: background var(--ease), border-color var(--ease);
+}
+
+.btn-brand:hover {
+  background: var(--allexo-btn-hover);
+  border-color: var(--allexo-btn-hover);
+  color: #fff;
+}
+
+.btn-gold-outline {
+  background: transparent;
+  color: var(--allexo-gold);
+  border: 1px solid var(--allexo-gold);
+  border-radius: var(--radius-btn);
+  transition: background var(--ease), color var(--ease);
+}
+
+.btn-gold-outline:hover {
+  background: var(--allexo-gold);
+  color: var(--allexo-hero);
 }

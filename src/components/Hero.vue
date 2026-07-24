@@ -59,64 +59,58 @@ async function submitUnlock() {
 </script>
 
 <template>
-  <div class="header__text">
-    <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-      <template v-for="(code, idx) in LOCALE_SWITCH_ORDER" :key="code">
-        <span v-if="idx > 0" class="lang__sep" aria-hidden="true">|</span>
-        <button
-          type="button"
-          class="lang__btn"
-          :class="{ 'lang__btn--active': locale === code }"
-          @click="pickLang(code)"
-        >
-          {{ t(`lang.${code}`) }}
+  <div class="hero-shell">
+    <div class="hero-topbar">
+      <div class="hero-topbar__inner page-rail">
+        <button type="button" class="hero-brand" @click="onBrandTap" aria-label="ALLEXO">
+          ALLEXO
         </button>
-      </template>
-    </nav>
-
-    <div class="hero-main">
-      <div class="hero-top">
-        <button type="button" class="header__brand" @click="onBrandTap" aria-label="ALLEXO">
-          <img
-            src="/allexo-header-logo-transparent.png"
-            alt="ALLEXO"
-            class="hero-logo"
-            width="1067"
-            height="500"
-            decoding="async"
-          />
-        </button>
+        <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+          <template v-for="(code, i) in LOCALE_SWITCH_ORDER" :key="code">
+            <span v-if="i > 0" class="lang__sep" aria-hidden="true">|</span>
+            <button
+              type="button"
+              class="lang__btn"
+              :class="{ 'lang__btn--active': locale === code }"
+              @click="pickLang(code)"
+            >
+              {{ t(`lang.${code}`) }}
+            </button>
+          </template>
+        </nav>
       </div>
-
-      <h1 class="header__title">{{ t('hero.title') }}</h1>
-      <p class="header__tag header__tag--desktop">{{ t('hero.subtitle') }}</p>
-      <ul class="header__benefits" :aria-label="t('hero.subtitle')">
-        <li>{{ t('hero.subtitleLine1') }}</li>
-        <li>{{ t('hero.subtitleLine2') }}</li>
-        <li>{{ t('hero.subtitleLine3') }}</li>
-      </ul>
-      <button type="button" class="header__cta" @click="scrollToCalculator">
-        {{ t('app.calcCta') }}
-      </button>
-      <p class="header__trust">{{ t('hero.trustLine') }}</p>
     </div>
 
-    <div class="hero-contacts" role="region" :aria-label="t('contacts.title')">
-      <p class="hero-contacts__label">{{ t('contacts.title') }}</p>
-      <a
-        class="hero-contacts__link hero-contacts__link--email"
-        :href="CONTACT_EMAIL_HREF"
-        :aria-label="t('contacts.emailAria')"
-      >
-        {{ t('contacts.emailDisplay') }}
-      </a>
-      <a
-        class="hero-contacts__link hero-contacts__link--primary"
-        :href="CONTACT_PHONE_HREF"
-        :aria-label="t('contacts.phoneAria')"
-      >
-        {{ t('contacts.phoneDisplay') }}
-      </a>
+    <div class="hero-body page-rail">
+      <div class="hero-main">
+        <div class="hero-copy">
+          <h1 class="hero-title">{{ t('hero.title') }}</h1>
+          <p class="hero-benefits">{{ t('hero.subtitle') }}</p>
+        </div>
+
+        <div class="hero-actions">
+          <button type="button" class="hero-cta" @click="scrollToCalculator">
+            {{ t('app.calcCta') }}
+          </button>
+
+          <div class="hero-contacts" role="region" :aria-label="t('contacts.title')">
+            <a
+              class="hero-contacts__email"
+              :href="CONTACT_EMAIL_HREF"
+              :aria-label="t('contacts.emailAria')"
+            >
+              {{ t('contacts.emailDisplay') }}
+            </a>
+            <a
+              class="hero-contacts__phone"
+              :href="CONTACT_PHONE_HREF"
+              :aria-label="t('contacts.phoneAria')"
+            >
+              {{ t('contacts.phoneDisplay') }}
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -160,575 +154,313 @@ async function submitUnlock() {
 </template>
 
 <style scoped>
-.header__text {
-  flex: 1;
+.hero-shell {
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
 }
 
-.hero-main {
-  display: contents;
+.hero-topbar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: var(--allexo-hero);
+  color: #fff;
 }
 
-.hero-top {
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: start;
+.hero-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
 }
 
-.header__brand {
+.hero-body {
+  padding-top: 0;
+  padding-bottom: calc(var(--section-y-lg) + 1.35rem);
+}
+
+.hero-brand {
   margin: 0;
   padding: 0;
   border: none;
   background: transparent;
+  color: #fff;
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', Times, serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   cursor: pointer;
-  line-height: 0;
-  display: inline-flex;
-  align-items: flex-start;
-  grid-area: 1 / 1;
-  justify-self: start;
-  align-self: start;
-  margin-top: -16px;
-  margin-left: 35%;
-  transform: translateX(-50%);
-}
-
-@media (min-width: 769px) {
-  .header__text {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-  }
-
-  .hero-top {
-    display: block;
-    width: 100%;
-  }
-
-  .header__brand {
-    margin-top: -12px;
-    margin-left: 0;
-    transform: none;
-    justify-self: start;
-    align-self: start;
-    display: inline-flex;
-  }
-
-  .header__title {
-    margin-top: 20px;
-    max-width: 32rem;
-  }
-
-  .header__tag {
-    max-width: 30rem;
-  }
-
-  .header__cta {
-    align-self: flex-start;
-    margin-top: 16px;
-  }
-
-  .header__trust {
-    align-self: flex-start;
-  }
-
-  .hero-contacts {
-    margin-top: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.2rem;
-  }
-
-  .hero-contacts__link {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.92rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    text-decoration: underline;
-    text-decoration-color: #c4a35a;
-    text-underline-offset: 4px;
-    white-space: nowrap;
-    transition:
-      color 0.25s ease,
-      text-decoration-color 0.25s ease;
-  }
-
-  .hero-contacts__link--email {
-    font-size: 0.84rem;
-    font-weight: 500;
-    opacity: 0.72;
-    text-decoration: none;
-  }
-
-  .hero-contacts__link--primary {
-    font-size: 1.02rem;
-    font-weight: 700;
-    opacity: 1;
-  }
-
-  .hero-contacts__link:hover {
-    color: #fff;
-    text-decoration-color: #c4a35a;
-    opacity: 1;
-  }
-}
-
-@media (min-width: 1024px) {
-  .header__text {
-    width: 100%;
-    display: block;
-    box-sizing: border-box;
-    position: relative;
-    min-height: 0;
-    padding-bottom: 0.25rem;
-  }
-
-  .hero-main {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-    gap: 4px;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  .hero-top {
-    width: auto;
-  }
-
-  .header__brand {
-    transform: none;
-    margin-top: 0;
-  }
-
-  .header__title {
-    margin-top: 0;
-    max-width: 32rem;
-  }
-
-  .header__tag {
-    margin-top: 0;
-    max-width: 30rem;
-  }
-
-  .header__cta {
-    margin-top: 0;
-    width: auto;
-    max-width: 360px;
-    align-self: flex-start;
-  }
-
-  .header__trust {
-    margin-top: 0;
-    max-width: 32rem;
-  }
-
-  .lang {
-    top: 14px;
-    right: 0;
-  }
-
-  .hero-contacts {
-    position: absolute;
-    top: auto;
-    right: 0;
-    bottom: 8px;
-    margin-top: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.15rem;
-  }
-
-  .hero-contacts__link--email {
-    font-size: 0.84rem;
-    font-weight: 500;
-    opacity: 0.72;
-    text-decoration: none;
-  }
-
-  .hero-contacts__link--primary {
-    font-size: 1.02rem;
-    font-weight: 700;
-    opacity: 1;
-  }
-}
-
-.hero-logo {
-  display: block;
-  width: auto;
-  height: 108px;
-  object-fit: contain;
-}
-
-@media (min-width: 1024px) {
-  .hero-logo {
-    height: 74px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .hero-logo {
-    height: 95px;
-  }
+  -webkit-tap-highlight-color: transparent;
 }
 
 .lang {
-  position: absolute;
-  top: -28px;
-  right: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.25rem 0.15rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  z-index: 2;
+  gap: 0.12rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-right: -0.12rem;
 }
 
-@media (min-width: 769px) {
-  .lang {
-    top: 0;
-    right: 0;
-  }
+.lang__sep {
+  color: rgba(255, 255, 255, 0.35);
+  user-select: none;
+  padding: 0 0.18rem;
+  font-weight: 400;
 }
 
 .lang__btn {
   margin: 0;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0.35rem 0.45rem;
+  min-height: 1.5rem;
+  padding: 0.08rem 0.12rem;
   border: none;
   background: transparent;
-  color: inherit;
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
   font: inherit;
-  opacity: 0.52;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
   position: relative;
-  transition: opacity 0.25s ease;
+}
+
+.lang__btn:last-child {
+  padding-right: 0;
 }
 
 .lang__btn:hover {
-  opacity: 0.78;
+  color: #fff;
 }
 
 .lang__btn--active {
-  opacity: 1;
-  color: #c4a35a;
-  text-decoration: none;
+  color: #fff;
 }
 
 .lang__btn--active::after {
   content: '';
   position: absolute;
-  left: 0.4rem;
-  right: 0.4rem;
-  bottom: 0.28rem;
-  height: 1px;
-  background: #c4a35a;
+  left: 0.05rem;
+  right: 0.05rem;
+  bottom: 0.05rem;
+  height: 1.5px;
+  background: #fff;
 }
 
-.lang__sep {
-  opacity: 0.28;
-  user-select: none;
-  padding: 0 0.05rem;
+.hero-main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
+  margin-top: 2.35rem;
+  padding-bottom: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.header__title {
-  margin: 28px 0 0;
-  font-size: 28px;
-  font-weight: 750;
-  background: linear-gradient(180deg, #ffffff 0%, #f2ead0 42%, #d4b87a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
-  max-width: min(56.25rem, 100%);
-  text-wrap: balance;
-  overflow-wrap: break-word;
-  hyphens: auto;
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: min(34rem, 100%);
+  width: 100%;
+  min-width: 0;
 }
 
-@media (max-width: 1024px) {
-  .header__title {
-    font-size: 24px;
-  }
+.hero-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 0.85rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.hero-contacts__link {
-  -webkit-tap-highlight-color: transparent;
-}
-
-@media (max-width: 768px) {
-  .header__text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .hero-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  .hero-layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  .hero-layout__visual {
-    display: none;
-  }
-
-  .hero-layout__main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  .hero-contacts {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    width: 100%;
-    max-width: 340px;
-    border-top: 1px solid rgba(196, 163, 90, 0.35);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.2rem;
-  }
-
-  .hero-contacts__label {
-    display: block;
-  }
-
-  .hero-contacts__link {
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.3;
-    opacity: 0.9;
-    color: rgba(255, 255, 255, 0.9);
-    text-decoration: underline;
-    text-decoration-color: #c4a35a;
-    text-underline-offset: 3px;
-  }
-
-  .hero-contacts__link--email {
-    font-size: 11px;
-    opacity: 0.62;
-    text-decoration: none;
-    order: 2;
-  }
-
-  .hero-contacts__link--primary {
-    font-size: 1.05rem;
-    font-weight: 700;
-    opacity: 1;
-    order: 1;
-    margin-bottom: 0.15rem;
-  }
-
-  .hero-top {
-    display: block;
-    width: 100%;
-    margin-top: 1rem;
-    margin-bottom: 0.35rem;
-  }
-
-  .header__brand {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 0;
-    margin-left: 0;
-    transform: translateX(-10px);
-    grid-area: unset;
-  }
-
-  .hero-logo {
-    height: auto;
-    max-height: 62px;
-    max-width: 195px;
-    width: auto;
-    margin-top: 0;
-  }
-
-  .lang {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    left: auto;
-    width: auto;
-    max-width: 42%;
-    z-index: 2;
-    gap: 0;
-    font-size: 12px;
-    letter-spacing: 0.02em;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-  }
-
-  .lang__btn {
-    min-width: 0;
-    min-height: 1.5rem;
-    padding: 0.1rem 0.18rem;
-  }
-
-  .lang__sep {
-    display: inline;
-    padding: 0 0.18rem;
-    opacity: 0.32;
-  }
-
-  .header__title {
-    margin-top: 0.75rem;
-    font-size: 19px;
-    font-weight: 700;
-    line-height: 1.28;
-    max-width: 92%;
-    text-wrap: balance;
-    overflow-wrap: break-word;
-    hyphens: none;
-  }
-
-  .header__tag--desktop {
-    display: none;
-  }
-
-  .header__benefits {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0.65rem 0 0;
-    max-width: 92%;
-    font-size: 0.84rem;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.82);
-  }
-
-  .header__benefits li {
-    margin: 0;
-  }
-
-  .header__tag {
-    display: none;
-  }
-
-  .header__cta {
-    width: 100%;
-    max-width: 340px;
-    height: 52px;
-    min-height: 52px;
-    margin-top: 1.35rem;
-    margin-inline: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 1.15rem;
-  }
-
-  .header__trust {
-    display: none;
-  }
-}
-
-@media (max-width: 430px) {
-  .header__title {
-    font-size: 18px;
-    max-width: 94%;
-  }
-}
-
-.header__tag {
-  margin: 8px 0 0;
-  font-size: 1.05rem;
-  line-height: 1.45;
-  color: #ffffff;
-  opacity: 1;
-  max-width: 32rem;
-  text-wrap: balance;
-  overflow-wrap: break-word;
-}
-
-.header__benefits {
-  display: none;
+.hero-title {
   margin: 0;
-  padding: 0;
-  list-style: none;
+  max-width: 100%;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: clamp(1.55rem, 3.2vw, 2rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--allexo-hero);
+  overflow-wrap: anywhere;
 }
 
-.hero-contacts__label {
-  display: none;
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(196, 163, 90, 0.88);
+.hero-benefits {
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  font-size: clamp(0.58rem, 2.15vw, 0.86rem);
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--allexo-muted);
+  white-space: nowrap;
+  overflow-x: clip;
 }
 
-.header__cta {
-  margin: 14px 0 0;
-  min-height: 3.15rem;
-  padding: 0.78rem 1.25rem;
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-top: 0;
+  min-height: 2.35rem;
+  padding: 0.4rem 1.2rem;
   border-radius: 999px;
-  border: 1px solid #c4a35a;
-  background: #111111;
+  border: 1px solid #c4a56e;
+  background: #c4a56e;
   color: #fff;
   font: inherit;
-  font-weight: 850;
+  font-size: 0.88rem;
+  font-weight: 650;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 2px 8px rgba(196, 165, 110, 0.22);
   -webkit-tap-highlight-color: transparent;
   transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+    background var(--ease),
+    border-color var(--ease),
+    box-shadow var(--ease),
+    color var(--ease);
 }
 
-.header__cta:hover {
-  background: #c4a35a;
-  border-color: #c4a35a;
-  color: #000;
-  box-shadow: 0 12px 32px rgba(196, 163, 90, 0.18);
+.hero-cta:hover {
+  background: #b8975c;
+  border-color: #b8975c;
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(184, 151, 92, 0.28);
 }
 
-.header__cta:active {
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
-}
-
-.header__cta:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.9);
+.hero-cta:focus-visible {
+  outline: 2px solid #c4a56e;
   outline-offset: 3px;
 }
 
-.header__trust {
-  margin: 10px 0 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.82);
-  letter-spacing: 0.01em;
-  max-width: 32rem;
-  text-wrap: balance;
+.hero-contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: right;
+  margin: 0;
+}
+
+.hero-contacts__email,
+.hero-contacts__phone {
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-decoration: none;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity var(--ease);
+}
+
+.hero-contacts__email {
+  color: var(--allexo-muted);
+}
+
+.hero-contacts__phone {
+  color: var(--allexo-gold);
+  font-weight: 700;
+}
+
+.hero-contacts__email:hover,
+.hero-contacts__phone:hover {
+  opacity: 0.8;
+}
+
+.hero-contacts__email:visited {
+  color: var(--allexo-muted);
+}
+
+.hero-contacts__phone:visited {
+  color: var(--allexo-gold);
+}
+
+@media (min-width: 769px) {
+  .hero-main {
+    margin-top: 2.65rem;
+    gap: 0.95rem;
+  }
+
+  .hero-actions {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-topbar__inner {
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .hero-brand {
+    font-size: 0.94rem;
+    letter-spacing: 0.12em;
+  }
+
+  .hero-main {
+    margin-top: 1.95rem;
+    gap: 0.85rem;
+  }
+
+  .hero-copy {
+    gap: 0.7rem;
+  }
+
+  .hero-title {
+    font-size: clamp(1.4rem, 6.5vw, 1.7rem);
+  }
+
+  .hero-actions {
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .hero-cta {
+    min-height: 2.2rem;
+    padding: 0.34rem 0.95rem;
+    font-size: 0.8rem;
+  }
+
+  .hero-contacts__email,
+  .hero-contacts__phone {
+    font-size: 0.7rem;
+  }
+
+  .hero-benefits {
+    font-size: clamp(0.55rem, 2.8vw, 0.78rem);
+  }
+
+  .lang {
+    font-size: 0.68rem;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-benefits {
+    white-space: normal;
+    overflow-x: visible;
+  }
 }
 
 .unlock-backdrop {
@@ -744,19 +476,18 @@ async function submitUnlock() {
 .unlock-backdrop__bg {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(8px);
+  background: rgba(20, 22, 23, 0.55);
 }
 
 .unlock {
   position: relative;
   z-index: 1;
-  width: min(92vw, 380px);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.32);
-  padding: 1rem;
+  width: min(100%, 22rem);
+  padding: 1.15rem;
+  border: 1px solid var(--allexo-border);
+  border-radius: var(--radius-lg);
+  background: var(--allexo-surface);
+  box-shadow: var(--shadow-md);
 }
 
 .unlock__head {
@@ -768,84 +499,81 @@ async function submitUnlock() {
 
 .unlock__title {
   margin: 0;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: var(--allexo-teal);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--allexo-olive);
 }
 
 .unlock__close {
-  width: 2.5rem;
-  height: 2.5rem;
   border: none;
-  border-radius: 12px;
-  background: rgba(17, 17, 17, 0.06);
+  background: var(--allexo-bg-alt);
   color: var(--allexo-text);
-  font-size: 1.4rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 8px;
+  font-size: 1.25rem;
   cursor: pointer;
 }
 
 .unlock__hint {
-  margin: 0.45rem 0 0.75rem;
+  margin: 0.65rem 0 0.85rem;
+  font-size: 0.86rem;
   color: var(--allexo-muted);
-  font-size: 0.9rem;
-  line-height: 1.35;
 }
 
 .unlock__input {
   width: 100%;
-  min-height: 2.9rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 14px;
+  box-sizing: border-box;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
   border: 1px solid var(--allexo-border);
   background: #fff;
+  color: var(--allexo-text);
   font: inherit;
 }
 
 .unlock__input:focus {
   outline: none;
-  border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
+  border-color: var(--allexo-olive);
+  box-shadow: 0 0 0 3px var(--allexo-focus-ring);
 }
 
 .unlock__err {
-  margin: 0.5rem 0 0;
+  margin: 0.45rem 0 0;
+  font-size: 0.84rem;
   color: var(--allexo-danger);
-  font-size: 0.85rem;
-  font-weight: 650;
 }
 
 .unlock__actions {
-  margin-top: 0.9rem;
   display: flex;
-  gap: 0.6rem;
-  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 0.95rem;
 }
 
 .unlock__btn {
-  min-height: 2.7rem;
-  padding: 0.6rem 1rem;
-  border-radius: 999px;
-  border: 1px solid #111111;
-  background: #111111;
+  flex: 1;
+  min-height: 2.6rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--allexo-olive);
+  background: var(--allexo-olive);
   color: #fff;
   font: inherit;
-  font-weight: 850;
+  font-weight: 700;
   cursor: pointer;
-  transition:
-    background 0.18s,
-    color 0.18s,
-    border-color 0.18s;
 }
 
 .unlock__btn:hover {
-  background: var(--allexo-accent);
-  color: #111111;
-  border-color: var(--allexo-accent);
+  background: var(--allexo-btn-hover);
+  border-color: var(--allexo-btn-hover);
 }
 
 .unlock__btn--ghost {
   background: transparent;
-  color: var(--allexo-teal);
+  color: var(--allexo-olive);
 }
 
+.unlock__btn--ghost:hover {
+  background: var(--allexo-bg-alt);
+  color: var(--allexo-olive);
+}
 </style>

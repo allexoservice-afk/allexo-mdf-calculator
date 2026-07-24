@@ -1,2 +1,6 @@
-/* Превʼю: перемикач «Teal (оригінал)» → variant-0-teal.css */
+/**
+ * Optional theme overrides (archived).
+ * Official design system lives in main.css (:root).
+ * Teal archive: themes/variant-0-teal.css — only when html[data-theme="teal"].
+ */
 @import './themes/variant-0-teal.css';

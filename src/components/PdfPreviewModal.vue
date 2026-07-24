@@ -277,8 +277,8 @@ async function share() {
 
 .modal__btn--share {
   color: #fff;
-  background: #111111;
-  border: 1px solid #111111;
+  background: var(--allexo-teal);
+  border: 1px solid var(--allexo-teal);
 }
 
 .modal__btn--primary {

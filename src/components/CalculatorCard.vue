@@ -60,42 +60,50 @@ const ariaDescription = computed(() => {
 
 <style scoped>
 .card {
+  --card-brass: #b89a5c;
+  --card-brass-hover: #8a6e3a;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   text-align: left;
   width: 100%;
+  height: 100%;
   padding: 1.25rem;
-  border: 1px solid var(--allexo-border);
+  border: 1.5px solid #d4cfc4;
   border-radius: var(--radius-lg);
   background: var(--allexo-surface);
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(26, 25, 23, 0.04);
   cursor: pointer;
   transition:
-    border-color 0.2s,
-    box-shadow 0.2s,
-    transform 0.15s;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
 .card:hover {
-  border-color: var(--allexo-accent);
-  box-shadow: var(--shadow-md);
+  border-color: #c4beb2;
+  box-shadow: 0 10px 24px rgba(26, 25, 23, 0.09);
+  transform: translateY(-4px);
+}
+
+.card:hover .card__cta {
+  color: var(--card-brass-hover);
 }
 
 .card:focus-visible {
-  outline: 2px solid var(--allexo-accent);
+  outline: 2px solid var(--allexo-green);
   outline-offset: 2px;
 }
 
 .card:active {
-  transform: scale(0.99);
+  transform: translateY(-2px);
 }
 
 .card__visual {
-  background: linear-gradient(145deg, #f0f6f6 0%, #e8f4f3 100%);
+  background: #f5f4f1;
   border-radius: var(--radius);
   padding: 1rem;
   margin-bottom: 1rem;
@@ -107,10 +115,15 @@ const ariaDescription = computed(() => {
 
 .card__title {
   margin: 0 0 0.35rem;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--allexo-teal);
-  line-height: 1.35;
+  color: var(--allexo-olive);
+  line-height: 1.3;
+  min-height: calc(1.3em * 3);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .card__hint {
@@ -132,7 +145,8 @@ const ariaDescription = computed(() => {
 .card__cta {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--allexo-accent);
+  color: var(--card-brass);
+  transition: color 0.2s ease;
 }
 
 @media (max-width: 768px) {
@@ -144,15 +158,21 @@ const ariaDescription = computed(() => {
     overflow: hidden;
   }
 
+  .card:hover {
+    transform: translateY(-3px);
+  }
+
   .card__visual {
     padding: 0.85rem;
     margin-bottom: 0.85rem;
     min-height: 92px;
+    background: #f5f4f1;
   }
 
   .card__title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     line-height: 1.3;
+    min-height: calc(1.3em * 3);
   }
 
   .card__hint {

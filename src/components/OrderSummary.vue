@@ -884,8 +884,8 @@ function openContactEmailModal() {
 
 <style scoped>
 .summary {
-  margin-top: 2.5rem;
-  padding: 1.5rem;
+  margin-top: var(--section-y-lg);
+  padding: var(--card-pad);
   background: var(--allexo-surface);
   border: 1px solid var(--allexo-border);
   border-radius: var(--radius-lg);
@@ -896,8 +896,8 @@ function openContactEmailModal() {
   .summary {
     position: relative;
     z-index: auto;
-    margin-top: 1.25rem;
-    padding: 0.9rem max(0.9rem, env(safe-area-inset-left)) 0.9rem max(0.9rem, env(safe-area-inset-right));
+    margin-top: var(--section-y);
+    padding: var(--card-pad);
     min-width: 0;
     overflow: hidden;
   }
@@ -1474,20 +1474,20 @@ function openContactEmailModal() {
 .order-totals__row--grand {
   margin-top: 0.35rem;
   padding-top: 0.65rem;
-  border-top: 2px solid var(--allexo-accent);
+  border-top: 2px solid var(--allexo-border);
 }
 
 .order-totals__row--grand dt,
 .order-totals__row--grand dd {
   font-size: 1.2rem;
   font-weight: 800;
-  color: #111111;
+  color: var(--allexo-text);
 }
 
 .order-totals__timing {
   margin: 0.75rem 0 0;
   padding-top: 0.65rem;
-  border-top: 1px dashed rgba(196, 163, 90, 0.35);
+  border-top: 1px dashed var(--allexo-border);
   font-size: 0.86rem;
   font-weight: 600;
   color: var(--allexo-muted);
@@ -1609,17 +1609,17 @@ function openContactEmailModal() {
 
 .contact-util-btn--pdf-share {
   color: #fff;
-  background: #111111;
-  border-color: #111111;
+  background: var(--allexo-teal);
+  border-color: var(--allexo-teal);
   transition:
     background 0.18s,
     color 0.18s;
 }
 
 .contact-util-btn--pdf-share:hover {
-  color: #111111;
-  background: var(--allexo-accent);
-  border-color: var(--allexo-accent);
+  color: #fff;
+  background: var(--allexo-teal-light);
+  border-color: var(--allexo-teal-light);
 }
 
 .contact-util-btn--pdf-share:disabled {
@@ -1666,13 +1666,13 @@ function openContactEmailModal() {
   min-height: 2.75rem;
   color: var(--allexo-text);
   background: var(--allexo-surface);
-  border-color: var(--allexo-accent);
+  border-color: var(--allexo-border);
 }
 
 .contact-btn--email:hover {
-  background: var(--allexo-surface);
-  color: var(--allexo-accent);
-  border-color: var(--allexo-accent);
+  background: var(--allexo-bg);
+  color: var(--allexo-teal);
+  border-color: var(--allexo-teal);
 }
 
 .summary__quote-cta-wrap {
@@ -1687,7 +1687,7 @@ function openContactEmailModal() {
   font-weight: 800;
   font-family: inherit;
   color: #fff;
-  background: #111111;
+  background: var(--allexo-teal);
   border: none;
   border-radius: var(--radius-lg);
   cursor: pointer;
@@ -1698,8 +1698,8 @@ function openContactEmailModal() {
 }
 
 .summary__quote-cta:hover {
-  background: var(--allexo-accent);
-  color: #111111;
+  background: var(--allexo-teal-light);
+  color: #fff;
 }
 
 .line__actions {

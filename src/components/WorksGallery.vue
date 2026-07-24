@@ -36,7 +36,7 @@ function onLargeError(largeUrl) {
   }
 }
 
-/** Пари thumb + large для видимих мініатюр (large не завантажується, поки не відкрито lightbox). */
+/** Пари thumb + large для видимих карток (large не завантажується, поки не відкрито lightbox). */
 const visiblePairs = computed(() => {
   const out = []
   for (let i = 0; i < COUNT; i++) {
@@ -53,24 +53,18 @@ const lightboxIndex = ref(null)
 
 /**
  * Snapshot списку фото для поточної сесії lightbox.
- * Це робить індекси/CTA стабільними навіть якщо `visiblePairs` зміниться
- * (наприклад, через `onThumbError` під час завантаження мініатюр).
+ * Індекси/CTA стабільні навіть якщо `visiblePairs` зміниться під час сесії.
  */
 const lightboxPairs = ref(/** @type {{ thumb: string, large: string }[]} */ ([]))
 
 const photoCount = computed(() => (lightboxOpen.value ? lightboxPairs.value.length : visiblePairs.value.length))
 
-// CTA як “додатковий слайд” після останнього фото.
-// Індекси: 0..photoCount-1 = фото, ctaIndex = photoCount = CTA.
+// CTA як додатковий слайд після останнього фото.
 const ctaIndex = computed(() => photoCount.value)
 const slideCount = computed(() => (photoCount.value > 0 ? photoCount.value + 1 : 0))
 
 const lightboxOpen = computed(() => lightboxIndex.value != null)
 
-/**
- * Визначаємо CTA слайд максимально надійно:
- * - будь-який індекс >= photoCount вважаємо CTA (щоб ніколи не було "порожнього" слайду)
- */
 const onCtaSlide = computed(() => {
   const i = lightboxIndex.value
   if (i == null) return false
@@ -78,11 +72,9 @@ const onCtaSlide = computed(() => {
   return i >= ctaIndex.value
 })
 
-/** Велике зображення лише коли lightbox відкритий (img у DOM тільки тоді). */
 const lightboxLargeSrc = computed(() => {
   const i = lightboxIndex.value
   if (i == null) return null
-  // Якщо індекс вийшов за межі фото — це CTA.
   if (i >= photoCount.value) return null
   const src = (lightboxOpen.value ? lightboxPairs.value : visiblePairs.value)[i]?.large ?? null
   if (src && brokenLarge.value.includes(src)) return null
@@ -95,7 +87,6 @@ const lightboxStageKey = computed(() => {
   return lightboxLargeSrc.value ?? `photo-${lightboxIndex.value}`
 })
 
-// Якщо велике фото з якоїсь причини не визначилось — показуємо CTA замість "порожнього" екрану.
 const showCtaSlide = computed(() => {
   if (onCtaSlide.value) return true
   if (!lightboxOpen.value) return false
@@ -103,7 +94,6 @@ const showCtaSlide = computed(() => {
   return !lightboxLargeSrc.value
 })
 
-// Додатковий захист: якщо індекс вийшов за межі слайдів — переводимо на CTA.
 watch([lightboxOpen, photoCount], () => {
   if (!lightboxOpen.value) return
   const i = lightboxIndex.value
@@ -116,7 +106,15 @@ watch([lightboxOpen, photoCount], () => {
 
 const canNavigate = computed(() => slideCount.value > 1)
 
-/** @param {number} idx індекс у visiblePairs */
+const lightboxCounter = computed(() => {
+  const i = lightboxIndex.value
+  if (i == null || showCtaSlide.value) return null
+  const total = photoCount.value
+  if (total <= 0) return null
+  return `${i + 1} / ${total}`
+})
+
+/** @param {number} idx */
 function openLightbox(idx) {
   lightboxPairs.value = visiblePairs.value.slice()
   lightboxIndex.value = idx
@@ -131,7 +129,6 @@ function goToCalculatorFromCta() {
   closeLightbox()
   const el = document.getElementById('calculator')
   if (!el) return
-  // Let lightbox unmount first to avoid jank.
   window.setTimeout(() => {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, 0)
@@ -148,8 +145,6 @@ function goNext() {
   const i = lightboxIndex.value
   if (i == null) return
   if (nPhotos <= 0) return
-
-  // 0..nPhotos-1 => фото; nPhotos => CTA
   if (i < nPhotos) {
     lightboxIndex.value = i + 1
     return
@@ -228,9 +223,6 @@ watch(lightboxOpen, (open) => {
   }
 })
 
-// Не реагуємо на зміни `visiblePairs` під час відкритого lightbox — індекси/CTA рахуються
-// від snapshot `lightboxPairs`. Зміни в галереї застосуються при наступному відкритті.
-
 onBeforeUnmount(() => {
   if (typeof document === 'undefined') return
   document.removeEventListener('keydown', onKeydown)
@@ -244,18 +236,16 @@ onBeforeUnmount(() => {
     class="works"
     aria-labelledby="works-title"
   >
-    <h2 id="works-title" class="works__title">{{ t('works.title') }}</h2>
-    <div class="works__subrow">
-      <p class="works__subtitle">{{ t('works.subtitle') }}</p>
-      <p class="works__scroll-hint" aria-hidden="true">{{ t('works.scrollHint') }}</p>
+    <div class="works__head">
+      <h2 id="works-title" class="works__title">{{ t('works.title') }}</h2>
     </div>
 
-    <div class="works__strip">
+    <div class="works__grid">
       <button
         v-for="(pair, idx) in visiblePairs"
         :key="pair.thumb"
         type="button"
-        class="works__thumb"
+        class="works__card"
         :aria-label="`${t('works.openPreview')} ${idx + 1}`"
         @click="openLightbox(idx)"
       >
@@ -293,7 +283,15 @@ onBeforeUnmount(() => {
           :aria-label="t('works.closeLightbox')"
           @click="onCloseButtonClick"
         >
-          ❌
+          <svg class="lightbox__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
         </button>
         <button
           v-if="canNavigate"
@@ -302,7 +300,16 @@ onBeforeUnmount(() => {
           :aria-label="t('works.prevPhoto')"
           @click="onPrevArrowClick"
         >
-          ←
+          <svg class="lightbox__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M14.5 6.5L9 12l5.5 5.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
         </button>
         <button
           v-if="canNavigate"
@@ -311,7 +318,16 @@ onBeforeUnmount(() => {
           :aria-label="t('works.nextPhoto')"
           @click="onNextArrowClick"
         >
-          →
+          <svg class="lightbox__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M9.5 6.5L15 12l-5.5 5.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
         </button>
 
         <div
@@ -344,8 +360,8 @@ onBeforeUnmount(() => {
               </button>
             </div>
 
-            <p v-if="canNavigate && !showCtaSlide" class="lightbox__hint">
-              {{ t('works.lightboxPhotoHint') }}
+            <p v-if="lightboxCounter" class="lightbox__counter" aria-live="polite">
+              {{ lightboxCounter }}
             </p>
           </div>
         </div>
@@ -356,165 +372,134 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .works {
-  margin: 0 0 1.2rem;
+  margin: 0.35rem 0 calc(var(--section-y-lg) * 0.85);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.works__head {
+  margin: 0 0 0.75rem;
 }
 
 .works__title {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.3rem;
   font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--allexo-teal);
-  letter-spacing: -0.02em;
+  font-weight: 750;
+  color: var(--allexo-olive);
+  letter-spacing: -0.01em;
 }
 
 .works__subtitle {
-  margin: 0 0 0.65rem;
+  margin: 0;
   font-size: 0.82rem;
-  color: var(--allexo-muted);
   line-height: 1.4;
-  max-width: 34rem;
+  color: var(--allexo-muted);
+  max-width: 36rem;
 }
 
-.works__subrow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+/* Однакова сітка — підходить і для портретних, і для альбомних фото */
+.works__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  width: 100%;
 }
 
-.works__scroll-hint {
-  margin: 0 0 0.65rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: var(--allexo-teal);
-  opacity: 0.9;
-  user-select: none;
-}
-
-.works__strip {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 3px 0 6px;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x;
-  scrollbar-color: var(--allexo-border) transparent;
-}
-
-.works__strip::after {
-  content: '';
-  width: 8px;
-  flex: 0 0 8px;
-}
-
-.works__strip::-webkit-scrollbar {
-  height: 5px;
-}
-
-.works__strip::-webkit-scrollbar-thumb {
-  background: var(--allexo-border);
-  border-radius: 999px;
-}
-
-.works__thumb {
+.works__card {
+  position: relative;
   display: block;
-  width: 160px;
-  height: 110px;
-  flex-shrink: 0;
+  width: 100%;
+  aspect-ratio: 2 / 1;
   padding: 0;
-  border: none;
-  background: transparent;
-  border-radius: 14px;
+  border: 1px solid rgba(61, 66, 67, 0.1);
+  border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  background: #f0efec;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 10px rgba(26, 25, 23, 0.04);
   -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.works__thumb:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 32px rgba(17, 17, 17, 0.12);
+.works__card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(61, 66, 67, 0.16);
+  box-shadow: 0 8px 20px rgba(26, 25, 23, 0.08);
 }
 
-.works__thumb:focus-visible {
+.works__card:focus-visible {
   outline: 2px solid var(--allexo-teal);
   outline-offset: 2px;
 }
 
-.works__thumb img {
+.works__card img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 14px;
-  display: block;
+  object-position: center;
   pointer-events: none;
 }
 
-@media (min-width: 769px) {
-  .works {
-    margin-bottom: 1.5rem;
-  }
-
-  .works__title {
-    margin-bottom: 0.4rem;
-    font-size: 1.12rem;
-  }
-
-  .works__subtitle {
-    margin-bottom: 0.85rem;
-  }
-
-  .works__strip {
-    gap: 14px;
-    padding: 6px 0 10px;
-  }
-
-  .works__thumb {
-    width: 192px;
-    height: 132px;
-    border-radius: 16px;
-    box-shadow: 0 10px 28px rgba(17, 17, 17, 0.14);
-  }
-
-  .works__thumb:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 18px 42px rgba(17, 17, 17, 0.2);
-  }
-
-  .works__thumb img {
-    border-radius: 16px;
+@media (min-width: 640px) {
+  .works__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
   }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 960px) {
   .works {
-    margin-bottom: 1.1rem;
+    margin: 0.35rem 0 calc(var(--section-y-lg) * 0.85);
+  }
+
+  .works__head {
+    margin-bottom: 0.85rem;
   }
 
   .works__title {
-    margin-bottom: 0.35rem;
+    font-size: 1.08rem;
   }
 
   .works__subtitle {
-    margin-bottom: 0.5rem;
+    font-size: 0.86rem;
   }
 
-  .works__scroll-hint {
-    margin-bottom: 0.5rem;
+  .works__grid {
+    /* 3 колонки → 6 фото = рівно 3×2 (без сироти 4+2) */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
   }
 
-  .works__strip {
-    gap: 12px;
-    padding: 4px 0 8px;
+  .works__card {
+    border-radius: var(--radius-lg);
+  }
+}
+
+@media (max-width: 639px) {
+  .works {
+    margin: 0.35rem 0 calc(var(--section-y) + 0.35rem);
   }
 
-  .works__thumb {
-    width: 172px;
-    height: 127px;
+  .works__head {
+    margin-bottom: 0.75rem;
+  }
+
+  .works__title {
+    font-size: 0.98rem;
+  }
+
+  .works__subtitle {
+    font-size: 0.78rem;
+  }
+
+  .works__grid {
+    gap: 0.55rem;
   }
 }
 
@@ -532,7 +517,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(26, 25, 23, 0.72);
   cursor: pointer;
 }
 
@@ -551,9 +536,9 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.65rem;
   width: 100%;
-  animation: lightboxStageIn 180ms ease-out;
+  animation: lightboxStageIn 240ms ease-out;
 }
 
 .lightbox__img {
@@ -562,8 +547,8 @@ onBeforeUnmount(() => {
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(26, 25, 23, 0.28);
   cursor: pointer;
 }
 
@@ -571,65 +556,55 @@ onBeforeUnmount(() => {
   cursor: default;
 }
 
-.lightbox__hint {
+.lightbox__counter {
   margin: 0;
-  padding: 0 0.5rem;
-  max-width: 22rem;
-  text-align: center;
-  font-size: 0.8rem;
-  line-height: 1.35;
-  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(250, 249, 246, 0.78);
+  user-select: none;
+}
+
+.lightbox__icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.lightbox__close,
+.lightbox__nav {
+  position: fixed;
+  z-index: 2;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(250, 249, 246, 0.14);
+  border-radius: 10px;
+  background: rgba(250, 249, 246, 0.92);
+  color: #2a2824;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(26, 25, 23, 0.12);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.lightbox__close:hover,
+.lightbox__nav:hover {
+  background: #fff;
+  border-color: rgba(42, 40, 36, 0.12);
 }
 
 .lightbox__close {
-  position: fixed;
   top: 1rem;
   right: 1rem;
-  z-index: 2;
-  width: 2.6rem;
-  height: 2.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.94);
-  color: var(--allexo-text);
-  font-size: 1.05rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: background 0.15s ease;
-}
-
-.lightbox__close:hover {
-  background: #fff;
 }
 
 .lightbox__nav {
-  position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 2;
-  width: 2.6rem;
-  height: 2.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.94);
-  color: var(--allexo-text);
-  font-size: 1.3rem;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: background 0.15s ease;
-}
-
-.lightbox__nav:hover {
-  background: #fff;
 }
 
 .lightbox__nav--prev {
@@ -651,10 +626,10 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 0.85rem;
   padding: 1.25rem 1.1rem;
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 250, 249, 0.96));
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  background: rgba(250, 249, 246, 0.97);
+  border: 1px solid rgba(26, 25, 23, 0.08);
+  box-shadow: 0 4px 24px rgba(26, 25, 23, 0.28);
   text-align: center;
 }
 
@@ -680,8 +655,8 @@ onBeforeUnmount(() => {
   min-height: 2.85rem;
   padding: 0.65rem 1.05rem;
   border-radius: var(--radius);
-  border: 1px solid #111111;
-  background: #111111;
+  border: 1px solid var(--allexo-teal);
+  background: var(--allexo-teal);
   color: #fff;
   font: inherit;
   font-weight: 900;
@@ -694,22 +669,21 @@ onBeforeUnmount(() => {
 }
 
 .lightbox__cta-btn:hover {
-  background: var(--allexo-accent);
-  color: #111111;
-  border-color: var(--allexo-accent);
+  background: var(--allexo-teal-light);
+  color: #fff;
+  border-color: var(--allexo-teal-light);
 }
 
 @keyframes lightboxStageIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 
 @media (min-width: 640px) {
   .lightbox__nav--prev {

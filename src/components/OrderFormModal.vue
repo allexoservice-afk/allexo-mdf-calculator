@@ -1114,8 +1114,8 @@ const windowPreviews = computed(() => {
 
 .mode-badge__pill--pro {
   color: var(--allexo-teal);
-  background: rgba(196, 163, 90, 0.16);
-  border-color: rgba(196, 163, 90, 0.38);
+  background: rgba(63, 75, 63, 0.08);
+  border-color: rgba(63, 75, 63, 0.2);
 }
 
 .form {
@@ -1342,17 +1342,17 @@ select.field__input {
 .field__input:focus {
   outline: none;
   border-color: var(--allexo-teal);
-  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.25);
+  box-shadow: 0 0 0 3px var(--allexo-focus-ring);
 }
 
 .field__input--hint {
-  border-color: rgba(196, 163, 90, 0.65);
-  box-shadow: 0 0 0 1px rgba(196, 163, 90, 0.2);
+  border-color: rgba(63, 75, 63, 0.35);
+  box-shadow: 0 0 0 1px rgba(63, 75, 63, 0.08);
 }
 
 .field__input--hint:focus {
-  border-color: var(--allexo-accent);
-  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.22);
+  border-color: var(--allexo-teal);
+  box-shadow: 0 0 0 3px var(--allexo-focus-ring);
 }
 
 .field__input--error:focus {
@@ -1416,9 +1416,9 @@ select.field__input {
 }
 
 .btn--primary {
-  background: #111111;
+  background: var(--allexo-teal);
   color: #fff;
-  border: 1px solid #111111;
+  border: 1px solid var(--allexo-teal);
   transition:
     background 0.18s,
     color 0.18s,
@@ -1426,9 +1426,9 @@ select.field__input {
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: var(--allexo-accent);
-  color: #111111;
-  border-color: var(--allexo-accent);
+  background: var(--allexo-teal-light);
+  color: #fff;
+  border-color: var(--allexo-teal-light);
 }
 
 .btn--primary:disabled {
