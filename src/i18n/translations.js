@@ -1410,7 +1410,7 @@ export const TRANSLATIONS = {
       sectionWhy: 'Waarom ALLEXO',
       why1: '20+ jaar ervaring',
       why2: 'Geen tussenpersonen — persoonlijk werk',
-      why3: '3+ jaar bij Belgisch bedrijf',
+      why3: '3+ jaar ervaring bij een Belgisch bedrijf',
       why4: 'Nauwkeurigheid | Stiptheid | Netheid',
       badge1: '20+ jaar ervaring',
       moreAbout: 'Meer over ons',

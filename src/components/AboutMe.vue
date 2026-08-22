@@ -466,8 +466,8 @@ onBeforeUnmount(() => {
 
   .about__panel {
     display: grid;
-    grid-template-columns: 6.25rem minmax(0, 1fr);
-    column-gap: 0.6rem;
+    grid-template-columns: 7.25rem minmax(0, 1fr);
+    column-gap: 0.75rem; /* горизонтальний відступ між фото і текстом */
     row-gap: 1rem; /* ~16px: photo/lead → картка послуг */
     align-items: start;
   }
@@ -475,8 +475,8 @@ onBeforeUnmount(() => {
   .about__photo {
     grid-column: 1;
     grid-row: 1;
-    width: 6.25rem;
-    max-width: 6.25rem;
+    width: 7.25rem;
+    max-width: 7.25rem;
     aspect-ratio: 1 / 1;
     max-height: none;
     border-radius: 10px;

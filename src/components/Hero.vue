@@ -547,7 +547,8 @@ async function submitUnlock() {
 
 @media (max-width: 768px) {
   .hero-body {
-    padding-block: 0.42rem 0.42rem;
+    /* +повітря зверху / знизу; елементи без зміни розміру */
+    padding-block: 0.95rem 1.05rem;
   }
 
   .hero-head {
@@ -557,7 +558,8 @@ async function submitUnlock() {
   }
 
   .hero-main {
-    gap: 0.3rem;
+    /* ~14px додатково між логотипом і кнопкою */
+    gap: 1.15rem;
   }
 
   .hero-logotype {
