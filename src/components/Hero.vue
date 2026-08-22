@@ -3,7 +3,7 @@ import { computed, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
 import { LOCALE_SWITCH_ORDER } from '../i18n/translations.js'
-import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from '../constants/contact.js'
+import { CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF, CONTACT_VAT } from '../constants/contact.js'
 
 const { locale, setLocale, t } = useLocale()
 
@@ -60,57 +60,79 @@ async function submitUnlock() {
 
 <template>
   <div class="hero-shell">
-    <!-- Full-bleed dark bar; inner uses the same .site-container as main -->
-    <div class="hero-topbar">
-      <div class="site-container hero-topbar__inner">
-        <button type="button" class="hero-brand" @click="onBrandTap" aria-label="ALLEXO">
-          ALLEXO
-        </button>
-        <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
-          <template v-for="(code, i) in LOCALE_SWITCH_ORDER" :key="code">
-            <span v-if="i > 0" class="lang__sep" aria-hidden="true">|</span>
-            <button
-              type="button"
-              class="lang__btn"
-              :class="{ 'lang__btn--active': locale === code }"
-              @click="pickLang(code)"
-            >
-              {{ t(`lang.${code}`) }}
-            </button>
-          </template>
-        </nav>
-      </div>
-    </div>
-
     <div class="site-container hero-body">
       <div class="hero-main">
-        <div class="hero-copy">
-          <h1 class="hero-title">{{ t('hero.title') }}</h1>
-          <p class="hero-calc-hook">{{ t('hero.calcHook') }}</p>
+        <div class="hero-head">
+          <div class="hero-logotype">
+            <h1 class="hero-brand-name">
+              <button type="button" class="hero-brand-name__btn" @click="onBrandTap">ALLEXO</button>
+            </h1>
+            <p class="hero-brand-tag">{{ t('hero.brandTag') }}</p>
+            <p class="hero-service-line">{{ t('hero.serviceLine') }}</p>
+          </div>
+
+          <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
+            <template v-for="(code, i) in LOCALE_SWITCH_ORDER" :key="code">
+              <span v-if="i > 0" class="lang__sep" aria-hidden="true">|</span>
+              <button
+                type="button"
+                class="lang__btn"
+                :class="{ 'lang__btn--active': locale === code }"
+                @click="pickLang(code)"
+              >
+                {{ t(`lang.${code}`) }}
+              </button>
+            </template>
+          </nav>
         </div>
 
-        <div class="hero-actions">
-          <div class="hero-cta-block">
-            <button type="button" class="hero-cta" @click="scrollToCalculator">
-              {{ t('app.calcCta') }}
-            </button>
+        <div class="hero-body-grid">
+          <div class="hero-stack">
+            <div class="hero-cta-block">
+              <button type="button" class="hero-cta" @click="scrollToCalculator">
+                {{ t('app.calcCta') }}
+              </button>
+              <p class="hero-cta-note">{{ t('hero.ctaNote') }}</p>
+            </div>
           </div>
 
           <div class="hero-contacts" role="region" :aria-label="t('contacts.title')">
+            <p class="hero-contacts__title">{{ t('contacts.title') }}</p>
+
+            <div class="hero-contacts__phone-row">
+              <a
+                class="hero-contacts__phone"
+                :href="CONTACT_PHONE_HREF"
+                :aria-label="t('contacts.phoneAria')"
+              >
+                <svg class="hero-contacts__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011-.24 11.1 11.1 0 003.47.56 1 1 0 011 1V21a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.1 11.1 0 00.56 3.47 1 1 0 01-.24 1l-2.2 2.32z"
+                  />
+                </svg>
+                {{ t('contacts.phoneDisplay') }}
+              </a>
+              <a class="hero-contacts__call-btn" :href="CONTACT_PHONE_HREF">
+                {{ t('contacts.phoneAria') }}
+              </a>
+            </div>
+
             <a
               class="hero-contacts__email"
               :href="CONTACT_EMAIL_HREF"
               :aria-label="t('contacts.emailAria')"
             >
+              <svg class="hero-contacts__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  fill="currentColor"
+                  d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                />
+              </svg>
               {{ t('contacts.emailDisplay') }}
             </a>
-            <a
-              class="hero-contacts__phone"
-              :href="CONTACT_PHONE_HREF"
-              :aria-label="t('contacts.phoneAria')"
-            >
-              {{ t('contacts.phoneDisplay') }}
-            </a>
+
+            <span class="hero-contacts__btw" :aria-label="t('contacts.vatAria')">{{ CONTACT_VAT }}</span>
           </div>
         </div>
       </div>
@@ -158,6 +180,11 @@ async function submitUnlock() {
 
 <style scoped>
 .hero-shell {
+  /* ALLEXO — нейтральний антрацит (сірий, без зеленого/teal) */
+  --hero-bg: #383a3a;
+  --hero-bg-deep: #2c2e2e;
+  --hero-gold: #e4b34c;
+  --hero-text: #ffffff;
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -165,72 +192,72 @@ async function submitUnlock() {
   display: flex;
   flex-direction: column;
   overflow-x: clip;
+  color: var(--hero-text);
   background:
-    radial-gradient(ellipse 70% 80% at 92% 18%, rgba(197, 160, 89, 0.11), transparent 58%),
-    linear-gradient(180deg, #f3f1ec 0%, var(--allexo-bg) 62%, var(--allexo-bg) 100%);
-}
-
-.hero-topbar {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  background: var(--allexo-hero);
-  color: #fff;
-}
-
-/* Горизонталь лише з .site-container — тут тільки flex і вертикальний padding */
-.hero-topbar__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding-block: 0.88rem;
+    radial-gradient(ellipse 48% 52% at 100% 0%, rgba(228, 179, 76, 0.1), transparent 50%),
+    linear-gradient(180deg, #3e4040 0%, var(--hero-bg) 55%, var(--hero-bg-deep) 100%);
+  border-bottom: 1px solid rgba(228, 179, 76, 0.2);
 }
 
 .hero-body {
   position: relative;
   z-index: 1;
-  padding-top: 0.35rem;
-  padding-bottom: calc(var(--section-y-lg) + 0.85rem);
+  padding-block: 0.85rem 1.1rem;
 }
 
-.hero-brand {
-  margin: 0;
-  padding: 0.05rem 0 0.12rem;
-  border: none;
-  background: transparent;
-  color: var(--allexo-gold);
-  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', Times, serif;
-  font-size: 1.28rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  line-height: 1;
-  text-transform: uppercase;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  text-rendering: geometricPrecision;
-  -webkit-font-smoothing: antialiased;
-  transition: opacity 0.22s ease;
+.hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.hero-brand:hover {
-  opacity: 0.88;
+.hero-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.hero-brand:focus-visible {
-  outline: 2px solid var(--allexo-gold);
-  outline-offset: 4px;
-  border-radius: 2px;
+.hero-body-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.hero-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.hero-logotype {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.22rem;
+  min-width: 0;
 }
 
 .lang {
   display: flex;
   align-items: center;
   gap: 0.12rem;
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.05em;
-  margin: 0;
 }
 
 .lang__sep {
@@ -257,11 +284,11 @@ async function submitUnlock() {
 }
 
 .lang__btn:hover {
-  color: #fff;
+  color: var(--hero-text);
 }
 
 .lang__btn--active {
-  color: #fff;
+  color: var(--hero-text);
 }
 
 .lang__btn--active::after {
@@ -271,73 +298,84 @@ async function submitUnlock() {
   right: 0.05rem;
   bottom: 0.05rem;
   height: 1.5px;
-  background: var(--allexo-gold);
+  background: var(--hero-gold);
 }
 
-.hero-main {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1.35rem;
-  margin-top: 2.55rem;
-  padding-bottom: 0;
-  width: 100%;
+.hero-brand-name {
+  margin: 0;
   max-width: 100%;
-  min-width: 0;
+  line-height: 1;
 }
 
-.hero-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.65rem;
-  max-width: min(38rem, 100%);
-  width: 100%;
-  min-width: 0;
+.hero-brand-name__btn {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: clamp(1.95rem, 5vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hero-gold);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
+  animation: hero-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: opacity 0.22s ease;
 }
 
-.hero-actions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem 1.25rem;
-  width: 100%;
+.hero-brand-name__btn:hover {
+  opacity: 0.9;
+}
+
+.hero-brand-name__btn:focus-visible {
+  outline: 2px solid var(--hero-gold);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.hero-brand-tag {
+  margin: 0;
   max-width: 100%;
-  min-width: 0;
+  font-size: clamp(0.68rem, 1.35vw, 0.76rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+  animation: hero-rise 0.75s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-service-line {
+  margin: 0.12rem 0 0;
+  max-width: min(36rem, 100%);
+  font-size: clamp(0.72rem, 1.45vw, 0.82rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.52);
+  animation: hero-rise 0.75s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .hero-cta-block {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.55rem;
+  gap: 0.38rem;
   min-width: 0;
 }
 
-.hero-title {
+.hero-cta-note {
   margin: 0;
-  max-width: 100%;
-  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', Times, serif;
-  font-size: clamp(1.85rem, 4.2vw, 2.65rem);
-  font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  color: var(--allexo-olive);
-  overflow-wrap: anywhere;
-  animation: hero-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.hero-calc-hook {
-  margin: 0;
-  max-width: 100%;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: clamp(0.86rem, 1.7vw, 0.98rem);
+  max-width: min(18rem, 100%);
+  font-size: 0.72rem;
   font-weight: 500;
-  line-height: 1.45;
-  letter-spacing: -0.005em;
-  color: var(--allexo-muted);
-  animation: hero-rise 0.75s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.55);
+  animation: hero-rise 0.75s 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .hero-cta {
@@ -347,19 +385,20 @@ async function submitUnlock() {
   flex: 0 1 auto;
   min-width: 0;
   margin-top: 0;
-  min-height: 2.55rem;
+  min-height: 2.5rem;
   padding: 0.5rem 1.45rem;
   border-radius: 999px;
-  border: 1px solid var(--allexo-olive);
-  background: var(--allexo-olive);
-  color: #fff;
+  border: 1px solid var(--hero-gold);
+  background: var(--hero-gold);
+  color: #1a2220;
   font: inherit;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 8px 22px rgba(19, 52, 51, 0.14);
+  box-shadow:
+    0 4px 14px rgba(228, 179, 76, 0.35),
+    0 0 0 1px rgba(228, 179, 76, 0.15);
   -webkit-tap-highlight-color: transparent;
   transition:
     background 0.22s ease,
@@ -371,15 +410,17 @@ async function submitUnlock() {
 }
 
 .hero-cta:hover {
-  background: #1a4241;
-  border-color: #1a4241;
-  color: #fff;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14) inset, 0 10px 26px rgba(19, 52, 51, 0.18);
+  background: #f0c05a;
+  border-color: #f0c05a;
+  color: #1a2220;
+  box-shadow:
+    0 6px 20px rgba(228, 179, 76, 0.45),
+    0 0 0 1px rgba(240, 192, 90, 0.25);
   transform: translateY(-1px);
 }
 
 .hero-cta:focus-visible {
-  outline: 2px solid var(--allexo-gold);
+  outline: 2px solid var(--hero-gold);
   outline-offset: 3px;
 }
 
@@ -387,49 +428,130 @@ async function submitUnlock() {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.2rem;
+  gap: 0.32rem;
   flex: 0 1 auto;
   min-width: 0;
+  max-width: 100%;
   text-align: right;
   margin: 0;
   animation: hero-rise 0.75s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.hero-contacts__title {
+  margin: 0 0 0.08rem;
+  font-size: 0.66rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.hero-contacts__phone-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem 0.55rem;
+  max-width: 100%;
+}
+
+.hero-contacts__call-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 1.65rem;
+  padding: 0.18rem 0.62rem;
+  border-radius: 999px;
+  border: 1px solid var(--hero-gold);
+  background: transparent;
+  color: var(--hero-gold);
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.hero-contacts__call-btn:hover {
+  background: rgba(228, 179, 76, 0.14);
+  color: #f0c05a;
+  border-color: #f0c05a;
+}
+
+.hero-contacts__call-btn:focus-visible {
+  outline: 2px solid var(--hero-gold);
+  outline-offset: 2px;
+}
+
+.hero-contacts__icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 0.9rem;
+  opacity: 0.88;
+}
+
 .hero-contacts__email,
 .hero-contacts__phone {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.86rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
   font-weight: 500;
   line-height: 1.35;
   text-decoration: none;
-  white-space: nowrap;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transition: opacity 0.2s ease, color 0.2s ease;
 }
 
+.hero-contacts__btw {
+  margin-top: 0.06rem;
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 100%;
+}
+
 .hero-contacts__email {
-  color: var(--allexo-muted);
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.84);
 }
 
 .hero-contacts__phone {
-  color: var(--allexo-gold);
-  font-weight: 650;
+  color: var(--hero-gold);
+  font-weight: 700;
+  font-size: clamp(0.98rem, 2.2vw, 1.08rem);
   letter-spacing: 0.01em;
+}
+
+.hero-contacts__phone .hero-contacts__icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  opacity: 1;
 }
 
 .hero-contacts__email:hover,
 .hero-contacts__phone:hover {
-  opacity: 0.78;
+  opacity: 0.88;
 }
 
 .hero-contacts__email:visited {
-  color: var(--allexo-muted);
+  color: rgba(255, 255, 255, 0.84);
 }
 
 .hero-contacts__phone:visited {
-  color: var(--allexo-gold);
+  color: var(--hero-gold);
 }
 
 @keyframes hero-rise {
@@ -444,8 +566,10 @@ async function submitUnlock() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-title,
-  .hero-calc-hook,
+  .hero-brand-name__btn,
+  .hero-brand-tag,
+  .hero-service-line,
+  .hero-cta-note,
   .hero-cta,
   .hero-contacts {
     animation: none;
@@ -457,63 +581,121 @@ async function submitUnlock() {
 }
 
 @media (min-width: 769px) {
-  .hero-main {
-    margin-top: 3rem;
-    gap: 1.55rem;
+  .hero-body {
+    padding-block: 0.95rem 1.15rem;
   }
 
-  .hero-actions {
-    gap: 1.75rem;
+  .hero-head {
+    padding-bottom: 0.65rem;
   }
 
-  .hero-copy {
-    gap: 0.75rem;
+  .hero-body-grid {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.75rem 2.25rem;
+  }
+
+  .hero-stack {
+    gap: 0.6rem;
+  }
+
+  .hero-contacts {
+    align-self: end;
+    min-width: 12.5rem;
   }
 }
 
 @media (max-width: 640px) {
-  .hero-topbar__inner {
-    padding-block: 0.68rem;
+  .hero-body {
+    padding-block: 0.75rem 1rem;
   }
 
-  .hero-brand {
-    font-size: 1.12rem;
-    letter-spacing: 0.18em;
+  .hero-head {
+    align-items: flex-start;
+    padding-bottom: 0.5rem;
   }
 
   .hero-main {
-    margin-top: 2rem;
-    gap: 1.15rem;
+    gap: 0.6rem;
   }
 
-  .hero-copy {
-    gap: 0.55rem;
+  .hero-logotype {
+    gap: 0.18rem;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
-  .hero-title {
-    font-size: clamp(1.55rem, 7vw, 1.95rem);
+  .hero-brand-name__btn {
+    font-size: clamp(1.65rem, 8.5vw, 2rem);
+    letter-spacing: 0.085em;
   }
 
-  .hero-actions {
-    gap: 0.65rem;
-    align-items: flex-start;
+  .hero-brand-tag {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+  }
+
+  .hero-service-line {
+    font-size: 0.68rem;
+    line-height: 1.4;
+  }
+
+  .hero-body-grid {
+    gap: 0.75rem;
+  }
+
+  .hero-cta-block {
+    align-items: stretch;
+    width: 100%;
   }
 
   .hero-cta {
-    min-height: 2.35rem;
-    padding: 0.42rem 1.15rem;
-    font-size: 0.84rem;
+    width: 100%;
+    min-height: 2.45rem;
+    padding: 0.48rem 1.2rem;
+    font-size: 0.88rem;
   }
 
-  .hero-contacts__email,
+  .hero-cta-note {
+    font-size: 0.68rem;
+    text-align: center;
+    align-self: center;
+  }
+
+  .hero-contacts {
+    align-items: flex-start;
+    text-align: left;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .hero-contacts__phone-row {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .hero-contacts__email {
+    font-size: 0.82rem;
+  }
+
   .hero-contacts__phone {
-    font-size: 0.74rem;
+    font-size: 0.98rem;
+  }
+
+  .hero-contacts__call-btn {
+    min-height: 1.75rem;
+    padding: 0.22rem 0.72rem;
+    font-size: 0.68rem;
+  }
+
+  .hero-contacts__btw {
+    font-size: 0.6rem;
   }
 
   .lang {
     font-size: 0.68rem;
-    flex-shrink: 1;
-    min-width: 0;
+    flex-shrink: 0;
+    margin-top: 0.08rem;
   }
 }
 
