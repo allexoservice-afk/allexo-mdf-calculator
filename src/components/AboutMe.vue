@@ -610,26 +610,37 @@ onBeforeUnmount(() => {
   }
 
   .about__list {
-    gap: 0.06rem; /* −~3–4px між пунктами */
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem; /* ~11px між пунктами */
   }
 
   .about__list-item {
+    display: flex;
+    align-items: flex-start; /* іконка до першого рядка тексту */
+    gap: 0.7rem; /* ~11px між іконкою і текстом */
     font-size: 0.78rem;
     font-weight: 600;
-    line-height: 1.28;
-    gap: 0.45rem;
+    line-height: 1.35;
+  }
+
+  .about__list-item > span {
+    margin: 0;
+    line-height: 1.35;
   }
 
   .about__list-item :deep(.aci) {
     width: 1.35rem;
     height: 1.35rem;
     flex: 0 0 1.35rem;
-    margin-top: 0.02rem;
+    flex-shrink: 0;
+    margin: 0;
   }
 
   .about__list-item :deep(.aci svg) {
     width: 1.35rem;
     height: 1.35rem;
+    display: block;
   }
 
   .about__trust {
