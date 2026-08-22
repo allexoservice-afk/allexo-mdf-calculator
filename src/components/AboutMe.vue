@@ -75,7 +75,8 @@ onBeforeUnmount(() => {
       <div class="about__content">
         <header class="about__header">
           <h2 class="about__title">{{ t('about.profileTitle') }}</h2>
-          <p class="about__lead">{{ t('about.engagement') }}</p>
+          <p class="about__lead about__lead--desktop">{{ t('about.engagement') }}</p>
+          <p class="about__lead about__lead--mobile">{{ t('about.engagementMobile') }}</p>
         </header>
 
         <div class="about__columns">
@@ -267,6 +268,10 @@ onBeforeUnmount(() => {
   max-width: 40rem;
 }
 
+.about__lead--mobile {
+  display: none;
+}
+
 .about__columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -450,6 +455,134 @@ onBeforeUnmount(() => {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .about {
+    position: relative;
+    margin: 0 0 0;
+  }
+
+  .about__panel {
+    display: grid;
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+    column-gap: 0.6rem;
+    row-gap: 1rem; /* ~16px: photo/lead → картка послуг */
+    align-items: start;
+  }
+
+  .about__photo {
+    grid-column: 1;
+    grid-row: 1;
+    width: 6.25rem;
+    max-width: 6.25rem;
+    aspect-ratio: 1 / 1;
+    max-height: none;
+    border-radius: 10px;
+    align-self: start;
+  }
+
+  .about__photo-img {
+    object-position: center 18%;
+  }
+
+  .about__content {
+    display: contents;
+  }
+
+  .about__header {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 0.35rem;
+    align-self: start;
+  }
+
+  .about__title {
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+
+  .about__lead--desktop {
+    display: none;
+  }
+
+  .about__lead--mobile {
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    max-width: none;
+  }
+
+  .about__columns {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.9rem;
+    padding: 0.7rem 0.95rem;
+    border-radius: 12px;
+    background: rgba(19, 52, 51, 0.04);
+    border: 1px solid rgba(19, 52, 51, 0.09);
+  }
+
+  .about__col-title {
+    font-size: 0.66rem;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.08em;
+  }
+
+  .about__list {
+    gap: 0.28rem;
+  }
+
+  .about__list-item {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.28;
+    gap: 0.45rem;
+  }
+
+  .about__list-item :deep(.aci) {
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: 0 0 1.35rem;
+    margin-top: 0.02rem;
+  }
+
+  .about__list-item :deep(.aci svg) {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .about__trust {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 0; /* відступ від послуг = row-gap ~16px (12–16px) */
+    padding: 0.7rem 0.95rem;
+  }
+
+  .about__trust-title {
+    margin: 0 0 0.35rem;
+    font-size: 0.66rem;
+  }
+
+  .about__trust-list {
+    row-gap: 0.3rem;
+    column-gap: 0.85rem;
+  }
+
+  .about__trust-item {
+    font-size: 0.74rem;
+    line-height: 1.28;
+    gap: 0.45rem;
+  }
+
+  .about__trust-item::before {
+    margin-top: 0.28em;
+    width: 0.38rem;
+    height: 0.38rem;
+    flex-basis: 0.38rem;
   }
 }
 

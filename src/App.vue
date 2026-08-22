@@ -256,19 +256,19 @@ const mdfOrderSubtotalEuros = computed(() =>
 
       <AboutMe />
 
-      <ul class="steps" :aria-label="t('app.stepsAria')">
-        <li class="steps__item">
-          <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
-        </li>
-        <li class="steps__item">
-          <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
-        </li>
-        <li class="steps__item">
-          <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
-        </li>
-      </ul>
-
       <section id="calculator" class="calc">
+        <ul class="steps" :aria-label="t('app.stepsAria')">
+          <li class="steps__item">
+            <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
+          </li>
+          <li class="steps__item">
+            <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
+          </li>
+          <li class="steps__item">
+            <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
+          </li>
+        </ul>
+
         <div
           class="material-switch"
           role="tablist"
@@ -471,6 +471,10 @@ const mdfOrderSubtotalEuros = computed(() =>
   }
 
   .steps {
+    position: relative;
+    z-index: auto;
+    display: block;
+    margin-top: 0;
     margin-bottom: var(--section-y);
     padding: 0.75rem 0.85rem;
   }
@@ -478,7 +482,7 @@ const mdfOrderSubtotalEuros = computed(() =>
   .calc {
     position: relative;
     z-index: auto;
-    margin-top: var(--section-y);
+    padding-top: 0;
   }
 
   #summary {
@@ -629,7 +633,24 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .calc {
+  position: relative;
   margin-top: var(--section-y);
+  padding-top: 0;
+}
+
+/* Mobile: сірий проміжок 40–48px між «Чому ALLEXO» і білою карткою кроків */
+@media (max-width: 768px) {
+  .steps {
+    position: relative;
+    margin-top: 0;
+    margin-bottom: var(--section-y);
+  }
+
+  #calculator.calc {
+    position: relative;
+    margin-top: 44px;
+    padding-top: 0;
+  }
 }
 
 .material-switch {

@@ -68,7 +68,6 @@ async function submitUnlock() {
               <button type="button" class="hero-brand-name__btn" @click="onBrandTap">ALLEXO</button>
             </h1>
             <p class="hero-brand-tag">{{ t('hero.brandTag') }}</p>
-            <p class="hero-service-line">{{ t('hero.serviceLine') }}</p>
           </div>
 
           <nav class="lang" role="navigation" :aria-label="t('lang.switchAria')">
@@ -97,9 +96,7 @@ async function submitUnlock() {
           </div>
 
           <div class="hero-contacts" role="region" :aria-label="t('contacts.title')">
-            <p class="hero-contacts__title">{{ t('contacts.title') }}</p>
-
-            <div class="hero-contacts__phone-row">
+            <div class="hero-contacts__links">
               <a
                 class="hero-contacts__phone"
                 :href="CONTACT_PHONE_HREF"
@@ -113,24 +110,21 @@ async function submitUnlock() {
                 </svg>
                 {{ t('contacts.phoneDisplay') }}
               </a>
-              <a class="hero-contacts__call-btn" :href="CONTACT_PHONE_HREF">
-                {{ t('contacts.phoneAria') }}
+              <span class="hero-contacts__sep" aria-hidden="true">·</span>
+              <a
+                class="hero-contacts__email"
+                :href="CONTACT_EMAIL_HREF"
+                :aria-label="t('contacts.emailAria')"
+              >
+                <svg class="hero-contacts__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                  />
+                </svg>
+                {{ t('contacts.emailDisplay') }}
               </a>
             </div>
-
-            <a
-              class="hero-contacts__email"
-              :href="CONTACT_EMAIL_HREF"
-              :aria-label="t('contacts.emailAria')"
-            >
-              <svg class="hero-contacts__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  fill="currentColor"
-                  d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
-                />
-              </svg>
-              {{ t('contacts.emailDisplay') }}
-            </a>
 
             <span class="hero-contacts__btw" :aria-label="t('contacts.vatAria')">{{ CONTACT_VAT }}</span>
           </div>
@@ -348,17 +342,6 @@ async function submitUnlock() {
   animation: hero-rise 0.75s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.hero-service-line {
-  margin: 0.12rem 0 0;
-  max-width: min(36rem, 100%);
-  font-size: clamp(0.72rem, 1.45vw, 0.82rem);
-  font-weight: 500;
-  line-height: 1.45;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.52);
-  animation: hero-rise 0.75s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 .hero-cta-block {
   display: flex;
   flex-direction: column;
@@ -437,59 +420,17 @@ async function submitUnlock() {
   animation: hero-rise 0.75s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.hero-contacts__title {
-  margin: 0 0 0.08rem;
-  font-size: 0.66rem;
-  font-weight: 650;
-  line-height: 1.2;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.58);
-}
-
-.hero-contacts__phone-row {
+.hero-contacts__links {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.45rem 0.55rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.32rem;
+  min-width: 0;
   max-width: 100%;
 }
 
-.hero-contacts__call-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  min-height: 1.65rem;
-  padding: 0.18rem 0.62rem;
-  border-radius: 999px;
-  border: 1px solid var(--hero-gold);
-  background: transparent;
-  color: var(--hero-gold);
-  font: inherit;
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  text-decoration: none;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.hero-contacts__call-btn:hover {
-  background: rgba(228, 179, 76, 0.14);
-  color: #f0c05a;
-  border-color: #f0c05a;
-}
-
-.hero-contacts__call-btn:focus-visible {
-  outline: 2px solid var(--hero-gold);
-  outline-offset: 2px;
+.hero-contacts__sep {
+  display: none;
 }
 
 .hero-contacts__icon {
@@ -513,12 +454,12 @@ async function submitUnlock() {
 }
 
 .hero-contacts__btw {
-  margin-top: 0.06rem;
-  font-size: 0.62rem;
+  margin-top: 0.08rem;
+  font-size: 0.76rem;
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.58);
   max-width: 100%;
 }
 
@@ -529,15 +470,15 @@ async function submitUnlock() {
 
 .hero-contacts__phone {
   color: var(--hero-gold);
-  font-weight: 700;
-  font-size: clamp(0.98rem, 2.2vw, 1.08rem);
+  font-weight: 400;
+  font-size: clamp(0.88rem, 2vw, 0.94rem);
   letter-spacing: 0.01em;
 }
 
 .hero-contacts__phone .hero-contacts__icon {
-  width: 1rem;
-  height: 1rem;
-  flex: 0 0 1rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 0.9rem;
   opacity: 1;
 }
 
@@ -568,7 +509,6 @@ async function submitUnlock() {
 @media (prefers-reduced-motion: reduce) {
   .hero-brand-name__btn,
   .hero-brand-tag,
-  .hero-service-line,
   .hero-cta-note,
   .hero-cta,
   .hero-contacts {
@@ -605,59 +545,62 @@ async function submitUnlock() {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .hero-body {
-    padding-block: 0.75rem 1rem;
+    padding-block: 0.42rem 0.42rem;
   }
 
   .hero-head {
     align-items: flex-start;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.28rem;
+    gap: 0.55rem 0.75rem;
   }
 
   .hero-main {
-    gap: 0.6rem;
+    gap: 0.3rem;
   }
 
   .hero-logotype {
-    gap: 0.18rem;
+    gap: 0.1rem;
     flex: 1 1 auto;
     min-width: 0;
   }
 
   .hero-brand-name__btn {
-    font-size: clamp(1.65rem, 8.5vw, 2rem);
-    letter-spacing: 0.085em;
+    font-size: clamp(1.4rem, 7.2vw, 1.7rem);
+    letter-spacing: 0.08em;
   }
 
   .hero-brand-tag {
-    font-size: 0.62rem;
-    letter-spacing: 0.18em;
-  }
-
-  .hero-service-line {
-    font-size: 0.68rem;
-    line-height: 1.4;
+    font-size: 0.56rem;
+    letter-spacing: 0.15em;
   }
 
   .hero-body-grid {
-    gap: 0.75rem;
+    gap: 0.3rem;
+  }
+
+  .hero-stack {
+    gap: 0.26rem;
   }
 
   .hero-cta-block {
     align-items: stretch;
     width: 100%;
+    gap: 0.18rem;
   }
 
   .hero-cta {
     width: 100%;
-    min-height: 2.45rem;
-    padding: 0.48rem 1.2rem;
-    font-size: 0.88rem;
+    min-height: 2.2rem;
+    padding: 0.38rem 1.05rem;
+    font-size: 0.84rem;
   }
 
   .hero-cta-note {
-    font-size: 0.68rem;
+    max-width: 100%;
+    font-size: 0.6rem;
+    line-height: 1.28;
     text-align: center;
     align-self: center;
   }
@@ -665,37 +608,68 @@ async function submitUnlock() {
   .hero-contacts {
     align-items: flex-start;
     text-align: left;
-    padding-top: 0.55rem;
+    width: 100%;
+    padding-top: 0.22rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0.12rem;
   }
 
-  .hero-contacts__phone-row {
-    justify-content: flex-start;
+  .hero-contacts__links {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
     width: 100%;
   }
 
+  .hero-contacts__sep {
+    display: none;
+  }
+
   .hero-contacts__email {
-    font-size: 0.82rem;
+    order: 1;
+    justify-content: flex-start;
+    gap: 0.24rem;
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.82);
   }
 
   .hero-contacts__phone {
-    font-size: 0.98rem;
+    order: 2;
+    justify-content: flex-end;
+    gap: 0.24rem;
+    font-size: 0.76rem;
+    color: var(--hero-gold);
   }
 
-  .hero-contacts__call-btn {
-    min-height: 1.75rem;
-    padding: 0.22rem 0.72rem;
-    font-size: 0.68rem;
+  .hero-contacts__icon {
+    width: 0.74rem;
+    height: 0.74rem;
+    flex: 0 0 0.74rem;
+  }
+
+  .hero-contacts__phone .hero-contacts__icon {
+    width: 0.74rem;
+    height: 0.74rem;
+    flex: 0 0 0.74rem;
   }
 
   .hero-contacts__btw {
-    font-size: 0.6rem;
+    margin-top: 0;
+    align-self: center;
+    text-align: center;
+    width: 100%;
+    font-size: 0.54rem;
+    font-weight: 450;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.36);
   }
 
   .lang {
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     flex-shrink: 0;
-    margin-top: 0.08rem;
+    margin-top: 0;
   }
 }
 

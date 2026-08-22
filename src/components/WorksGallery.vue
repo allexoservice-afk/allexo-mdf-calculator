@@ -48,6 +48,9 @@ const visiblePairs = computed(() => {
   return out
 })
 
+/** Публічна вітрина — перші 6 фото. */
+const showcasePairs = computed(() => visiblePairs.value.slice(0, 6))
+
 /** @type {import('vue').Ref<number | null>} */
 const lightboxIndex = ref(null)
 
@@ -239,7 +242,7 @@ onBeforeUnmount(() => {
     <div class="works__showcase">
       <div class="works__row">
         <button
-          v-for="(pair, idx) in visiblePairs.slice(0, 6)"
+          v-for="(pair, idx) in showcasePairs"
           :key="pair.thumb"
           type="button"
           class="works__card"
@@ -370,19 +373,21 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .works {
-  margin: 0.35rem 0 calc(var(--section-y-lg) * 0.85);
+  margin: 1.5rem 0 calc(var(--section-y-lg) * 0.85);
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   overflow-x: clip;
 }
 
-/* Один ряд — 6 фото (на вузьких екранах горизонтальний скрол) */
+/* Один ряд — 6 фото; ширина = контентна сітка .site-container (як Hero / AboutMe) */
 .works__showcase {
   width: 100%;
   max-width: 100%;
-  margin-inline: 0;
   min-width: 0;
+  margin-inline: 0;
+  box-sizing: border-box;
 }
 
 .works__row {
@@ -444,7 +449,7 @@ onBeforeUnmount(() => {
 
 @media (min-width: 960px) {
   .works {
-    margin: 0.5rem 0 calc(var(--section-y-lg) * 0.85);
+    margin: 1.5rem 0 calc(var(--section-y-lg) * 0.85);
   }
 
   .works__row {
@@ -452,31 +457,42 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 768px) {
   .works {
-    margin: 0.35rem 0 calc(var(--section-y) + 0.35rem);
-    overflow-x: visible;
+    margin: 1.25rem 0 1.25rem; /* повітря: hero ↔ галерея ↔ AboutMe */
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   .works__showcase {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    scroll-snap-type: x mandatory;
+    gap: 0.45rem;
+    scrollbar-width: none;
+    box-sizing: border-box;
+  }
+
+  .works__showcase::-webkit-scrollbar {
+    display: none;
   }
 
   .works__row {
-    display: flex;
-    width: max-content;
-    min-width: 100%;
-    gap: 0.55rem;
-    padding-bottom: 0.15rem;
+    display: contents;
   }
 
+  /* ~2 повні картки + ~35% peek наступної */
   .works__card {
-    flex: 0 0 auto;
-    width: min(38vw, 9.5rem);
-    border-radius: 12px;
+    flex: 0 0 calc((100% - 0.45rem) / 2.4);
+    width: calc((100% - 0.45rem) / 2.4);
+    aspect-ratio: 1.7 / 1;
+    scroll-snap-align: start;
+    border-radius: 10px;
   }
 
   .works__card:hover {
