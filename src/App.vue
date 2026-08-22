@@ -638,18 +638,28 @@ const mdfOrderSubtotalEuros = computed(() =>
   padding-top: 0;
 }
 
-/* Mobile: сірий проміжок 40–48px між «Чому ALLEXO» і білою карткою кроків */
+/* Mobile: менше повітря між WhatsApp (сервіс) і Stap 1 (розрахунок) */
 @media (max-width: 768px) {
   .steps {
     position: relative;
+    width: 100%;
+    max-width: none;
     margin-top: 0;
+    margin-inline: 0;
     margin-bottom: var(--section-y);
+    box-sizing: border-box;
+    /* без тіні — зовнішні краї як у карток About (інакше blur «вилазить») */
+    box-shadow: none;
   }
 
   #calculator.calc {
     position: relative;
-    margin-top: 44px;
+    width: 100%;
+    max-width: none;
+    margin-top: 20px; /* було 44px; −24px — два шляхи ближче */
+    margin-inline: 0;
     padding-top: 0;
+    box-sizing: border-box;
   }
 }
 

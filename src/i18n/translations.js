@@ -266,6 +266,10 @@ export const TRANSLATIONS = {
       why2: 'Без посередників — працюю особисто',
       why3: '3+ роки досвіду в бельгійській компанії',
       why4: 'Точність | Пунктуальність | Чистота',
+      waServiceCta: 'Потрібен монтаж чи сервіс? Напишіть у WhatsApp',
+      waServiceAria: 'Написати в WhatsApp про монтаж або сервіс',
+      waServiceMessage:
+        'Добрий день! Потрібен монтаж / сервіс (оберіть потрібне). Адреса / коротко про задачу:',
       badge1: '20+ років досвіду',
       moreAbout: 'Більше про нас',
       moreAboutHide: 'Сховати',
@@ -837,6 +841,10 @@ export const TRANSLATIONS = {
       why2: 'No middlemen — I work personally',
       why3: '3+ years at a Belgian company',
       why4: 'Accuracy | Punctuality | Cleanliness',
+      waServiceCta: 'Need installation or service? WhatsApp me',
+      waServiceAria: 'Message on WhatsApp about installation or service',
+      waServiceMessage:
+        'Hello! I need installation / service (please choose). Address / short description:',
       badge1: '20+ years experience',
       moreAbout: 'More about us',
       moreAboutHide: 'Hide',
@@ -1412,6 +1420,10 @@ export const TRANSLATIONS = {
       why2: 'Geen tussenpersonen — persoonlijk werk',
       why3: '3+ jaar ervaring bij een Belgisch bedrijf',
       why4: 'Nauwkeurigheid | Stiptheid | Netheid',
+      waServiceCta: 'Montage of service nodig? WhatsApp mij',
+      waServiceAria: 'WhatsApp-bericht over montage of service',
+      waServiceMessage:
+        'Goedendag! Ik heb montage / service nodig (kies wat van toepassing is). Adres / korte beschrijving:',
       badge1: '20+ jaar ervaring',
       moreAbout: 'Meer over ons',
       moreAboutHide: 'Verbergen',
@@ -1993,6 +2005,10 @@ export const TRANSLATIONS = {
       why2: 'Sans intermédiaires — travail en personne',
       why3: '3+ ans en entreprise belge',
       why4: 'Précision | Ponctualité | Propreté',
+      waServiceCta: 'Pose ou service ? Écrivez-moi sur WhatsApp',
+      waServiceAria: 'Écrire sur WhatsApp pour pose ou service',
+      waServiceMessage:
+        'Bonjour ! J’ai besoin d’une pose / d’un service (précisez). Adresse / courte description :',
       badge1: '20+ ans d’expérience',
       moreAbout: 'En savoir plus',
       moreAboutHide: 'Masquer',
