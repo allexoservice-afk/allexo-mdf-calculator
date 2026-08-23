@@ -52,6 +52,8 @@ const isProMode = computed(() => !isClientMode.value)
 const isEditMode = computed(() => Boolean(props.initialLine?.key))
 
 const modalEl = ref(/** @type {HTMLElement | null} */ (null))
+/** Skip auto-opening quantity dropdown when focus arrived via Enter navigation. */
+let skipSelectAutoOpen = false
 
 function isDesktopKeyboardFriendly() {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
@@ -83,13 +85,28 @@ function focusNextFromElement(el) {
   if (i < 0) return
   const next = focusables[i + 1]
   if (next && typeof next.focus === 'function') {
+    if (next.tagName === 'SELECT') {
+      skipSelectAutoOpen = true
+    }
     next.focus()
+    void nextTick(() => {
+      skipSelectAutoOpen = false
+    })
     return
   }
-  // If last field in block, jump to submit.
+  focusPrimarySubmit()
+}
+
+function focusPrimarySubmit() {
   const root = modalEl.value
   const submit = root?.querySelector?.('.actions .btn--primary')
-  if (submit && typeof submit.focus === 'function') submit.focus()
+  if (
+    submit instanceof HTMLButtonElement &&
+    !submit.disabled &&
+    typeof submit.focus === 'function'
+  ) {
+    submit.focus()
+  }
 }
 
 /** @param {import('../composables/useOrder.js').OrderLine} line */
@@ -250,31 +267,23 @@ function focusNextFieldOnEnter(e) {
   if (!isEnter) return
   const target = /** @type {HTMLElement | null} */ (e.target)
   const block = target?.closest?.('.window-block')
+  const inActions = target?.closest?.('.actions')
+
+  if (inActions && target instanceof HTMLButtonElement && target.type === 'submit') {
+    e.preventDefault()
+    onSubmit()
+    return
+  }
+
   if (!block) return
 
-  // Special handling for <select>: first Enter opens dropdown, second Enter advances.
   if (target && target.tagName === 'SELECT') {
+    e.preventDefault()
     const sel = /** @type {HTMLSelectElement} */ (/** @type {any} */ (target))
-    const armed = sel.dataset.allexoEnterArmed === '1'
-    if (!armed) {
-      e.preventDefault()
-      sel.dataset.allexoEnterArmed = '1'
-      sel.dataset.allexoAutoAdvance = '1'
-      // Try to open dropdown
-      openNativeSelect(sel)
-      // Safety: if user doesn't pick, don't keep it armed forever.
-      window.setTimeout(() => {
-        try {
-          if (sel.dataset.allexoEnterArmed === '1') sel.dataset.allexoEnterArmed = '0'
-        } catch {
-          /* ignore */
-        }
-      }, 2500)
-      return
-    }
-    // If it was armed, treat Enter as "confirm & next"
     sel.dataset.allexoEnterArmed = '0'
     sel.dataset.allexoAutoAdvance = '0'
+    focusNextFromElement(target)
+    return
   }
 
   if (target) {
@@ -287,8 +296,9 @@ function focusNextFieldOnEnter(e) {
 function onSelectFocus(e) {
   const sel = /** @type {HTMLSelectElement | null} */ (e.target)
   if (!sel || sel.tagName !== 'SELECT') return
+  if (skipSelectAutoOpen) return
   if (!isDesktopKeyboardFriendly()) return
-  // Open on focus (desktop), and allow auto-advance after selection.
+  // Open on focus only after explicit click/tab — not when arrived via Enter chain.
   sel.dataset.allexoAutoAdvance = '1'
   openNativeSelect(sel)
   window.setTimeout(() => {
@@ -312,16 +322,38 @@ function onSelectChange(e) {
     focusNextFromElement(sel)
   })
 }
-function parseNum(v) {
-  const n = Number(String(v).replace(',', '.'))
-  return Number.isFinite(n) ? n : NaN
+/**
+ * @param {unknown} v
+ * @returns {{ status: 'empty' } | { status: 'invalid' } | { status: 'ok', mm: number }}
+ */
+function classifyMmInput(v) {
+  const raw = String(v ?? '').trim()
+  if (!raw) return { status: 'empty' }
+  const normalized = raw.replace(/\s/g, '').replace(',', '.')
+  if (!/^\d+(?:\.\d+)?$/.test(normalized)) return { status: 'invalid' }
+  const mm = Number(normalized)
+  if (!Number.isFinite(mm) || mm <= 0) return { status: 'invalid' }
+  return { status: 'ok', mm }
 }
 
 /** Користувач вводить мм. */
 function parseMm(v) {
-  const mm = parseNum(v)
-  if (!Number.isFinite(mm) || mm <= 0) return NaN
-  return mm
+  const parsed = classifyMmInput(v)
+  return parsed.status === 'ok' ? parsed.mm : NaN
+}
+
+/**
+ * @param {unknown} raw
+ * @param {string} requiredMsg
+ * @param {string} invalidMsg
+ * @param {string} minMsg
+ */
+function validateMmField(raw, requiredMsg, invalidMsg, minMsg) {
+  const parsed = classifyMmInput(raw)
+  if (parsed.status === 'empty') return fieldIssue(requiredMsg, 'hint')
+  if (parsed.status === 'invalid') return fieldIssue(invalidMsg, 'error')
+  if (parsed.mm < MIN_WINDOW_SIDE_MM) return fieldIssue(minMsg, 'error')
+  return undefined
 }
 
 /** @param {string} msg @param {'hint' | 'error'} [level] */
@@ -345,16 +377,24 @@ const windowErrors = computed(() => {
   const tid = props.typeId
   return windows.value.map((formW) => {
     const e = {}
-    const wMm = parseMm(formW.widthMm)
-    if (!Number.isFinite(wMm) || wMm <= 0) e.widthMm = fieldIssue(t('form.errWidth'), 'hint')
-    else if (wMm < MIN_WINDOW_SIDE_MM) e.widthMm = fieldIssue(t('form.errMinWindowSize'), 'error')
+    const widthIssue = validateMmField(
+      formW.widthMm,
+      t('form.errWidth'),
+      t('form.errInvalidNumber'),
+      t('form.errMinWindowSize'),
+    )
+    if (widthIssue) e.widthMm = widthIssue
 
     // У режимі “Клієнт” показуємо лише ширину/висоту/кількість і підставляємо інші параметри автоматично.
     if (isClientMode.value) {
       if (tid !== 'windowsill' && tid !== 'roller_box') {
-        const hMm = parseMm(formW.heightMm)
-        if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
-        else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = fieldIssue(t('form.errMinWindowSize'), 'error')
+        const heightIssue = validateMmField(
+          formW.heightMm,
+          t('form.errHeight'),
+          t('form.errInvalidNumber'),
+          t('form.errMinWindowSize'),
+        )
+        if (heightIssue) e.heightMm = heightIssue
       }
       return e
     }
@@ -363,9 +403,13 @@ const windowErrors = computed(() => {
       return e
     }
 
-    const hMm = parseMm(formW.heightMm)
-    if (!Number.isFinite(hMm) || hMm <= 0) e.heightMm = fieldIssue(t('form.errHeight'), 'hint')
-    else if (hMm < MIN_WINDOW_SIDE_MM) e.heightMm = fieldIssue(t('form.errMinWindowSize'), 'error')
+    const heightIssue = validateMmField(
+      formW.heightMm,
+      t('form.errHeight'),
+      t('form.errInvalidNumber'),
+      t('form.errMinWindowSize'),
+    )
+    if (heightIssue) e.heightMm = heightIssue
 
     if (formW.slopeDeepOver25Cm) {
       const pct = Number(formW.slopeDeepSurchargePct)
@@ -401,7 +445,9 @@ const formHasAnyOversized = computed(() => windows.value.some((formW) => formWin
 const primarySubmitLabel = computed(() => {
   void locale.value
   if (isEditMode.value) return t('form.saveChanges')
-  return formHasAnyOversized.value ? t('form.getExactQuote') : t('form.addToOrder')
+  if (formHasAnyOversized.value) return t('form.getExactQuote')
+  if (isClientMode.value) return t('form.saveToCart')
+  return t('form.addToOrder')
 })
 
 /** @param {number} index */
@@ -462,20 +508,6 @@ function onSubmit() {
   if (!payload) return
   emit('submit', payload)
   emit('close')
-}
-
-function addWindow() {
-  // In client/public UX: treat “add another window” as “add this item and pick another type”.
-  if (!isValid.value) return
-  const payload = buildSubmitPayload({ uiIntent: 'pickType' })
-  if (!payload) return
-  emit('submit', payload)
-  emit('close')
-  window.setTimeout(() => {
-    const el = document.getElementById('calculator')
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, 0)
 }
 
 function onBackdrop(e) {
@@ -613,17 +645,15 @@ const windowPreviews = computed(() => {
               {{ isProMode ? t('form.modePro') : t('form.modeClient') }}
             </span>
           </div>
-          <form id="allexo-order-modal-form" class="form" @submit.prevent="onSubmit">
+          <form id="allexo-order-modal-form" class="form" @submit.prevent="onSubmit" @keydown="focusNextFieldOnEnter">
             <div
               v-for="(win, idx) in windows"
               :key="win.id"
               class="window-block"
-              @keydown="focusNextFieldOnEnter"
             >
             <div class="window-block__head">
               <h3 class="window-block__title">
                 {{ t('form.window') }} {{ idx + 1 }}
-                <span class="window-block__sub">{{ t('form.enterWindowDims') }}</span>
               </h3>
               <button
                 v-if="windows.length > 1"
@@ -648,7 +678,6 @@ const windowPreviews = computed(() => {
                   class="field__input"
                   :placeholder="t('form.placeholderWidth')"
                   :class="fieldInputClass(windowErrors[idx]?.widthMm)"
-                  @keydown="focusNextFieldOnEnter"
                 />
                 <span
                   v-if="windowErrors[idx]?.widthMm"
@@ -683,7 +712,6 @@ const windowPreviews = computed(() => {
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
                   :class="fieldInputClass(windowErrors[idx]?.heightMm)"
-                  @keydown="focusNextFieldOnEnter"
                 />
                 <span
                   v-if="windowErrors[idx]?.heightMm"
@@ -718,7 +746,6 @@ const windowPreviews = computed(() => {
                   class="field__input"
                   :placeholder="t('form.placeholderHeight')"
                   :class="fieldInputClass(windowErrors[idx]?.heightMm)"
-                  @keydown="focusNextFieldOnEnter"
                 />
                 <span
                   v-if="windowErrors[idx]?.heightMm"
@@ -738,6 +765,7 @@ const windowPreviews = computed(() => {
               >
                 <option v-for="q in WINDOW_QUANTITIES" :key="q" :value="q">{{ q }}</option>
               </select>
+              <span class="field__hint field__hint--static">{{ t('form.windowQuantityHint') }}</span>
             </label>
             <p v-if="!isSimplifiedLine" class="dims-hint">{{ t('form.minSizeHint') }}</p>
             <p v-else class="dims-hint">{{ t('form.minSizeHintSimplified') }}</p>
@@ -807,21 +835,11 @@ const windowPreviews = computed(() => {
               {{ t('form.largeSizesInfo') }}
             </p>
             </div>
-
-            <button
-              v-if="!isEditMode"
-              type="button"
-              class="btn-add-window"
-              :class="{ 'btn-add-window--subtle': isClientMode }"
-              @click="addWindow"
-            >
-              {{ t('form.addWindow') }}
-            </button>
           </form>
         </div>
 
         <div class="modal__footer">
-          <div class="actions">
+          <div class="actions" @keydown="focusNextFieldOnEnter">
             <button type="button" class="btn btn--ghost" @click="emit('close')">{{ t('form.cancel') }}</button>
             <button
               type="submit"
@@ -1155,20 +1173,6 @@ const windowPreviews = computed(() => {
   color: var(--allexo-teal);
 }
 
-.window-block__sub {
-  margin-left: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--allexo-muted);
-}
-
-@media (max-width: 420px) {
-  .window-block__sub {
-    display: block;
-    margin: 0.2rem 0 0;
-  }
-}
-
 .field--checkbox {
   flex-direction: row;
   align-items: center;
@@ -1369,6 +1373,10 @@ select.field__input {
   font-size: 0.75rem;
   color: var(--allexo-muted);
   line-height: 1.35;
+}
+
+.field__hint--static {
+  margin-top: 0.2rem;
 }
 
 .dims-hint {

@@ -8,8 +8,8 @@ import { windowProfileLengthMeters } from '../utils/mdfFormulas.js'
 
 /** @type {Record<import('../constants/materialTypes.js').MaterialId, { slopes: number, sill: number, roller: number }>} */
 const _RATES = {
-  mdf: { slopes: 37, sill: 40, roller: 78 },
-  pvc: { slopes: 45, sill: 55, roller: 0 },
+  mdf: { slopes: 48, sill: 65, roller: 115 },
+  pvc: { slopes: 58, sill: 75, roller: 0 },
 }
 
 /** @param {import('../constants/materialTypes.js').MaterialId | unknown} [materialId] */

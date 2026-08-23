@@ -277,9 +277,9 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: clamp(1.05rem, 2.2vw, 1.22rem);
   font-weight: 750;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   color: var(--allexo-olive);
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .about__lead {
@@ -417,8 +417,8 @@ onBeforeUnmount(() => {
   padding: 0.55rem 1rem;
   border: 1.5px solid var(--allexo-olive);
   border-radius: var(--radius-btn);
-  background: transparent;
-  color: var(--allexo-olive);
+  background: var(--allexo-olive);
+  color: #fff;
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;
@@ -431,7 +431,8 @@ onBeforeUnmount(() => {
 }
 
 .about__wa:hover {
-  background: var(--allexo-olive);
+  background: var(--allexo-btn-hover);
+  border-color: var(--allexo-btn-hover);
   color: #fff;
 }
 
@@ -453,6 +454,22 @@ onBeforeUnmount(() => {
     width: 100%;
     max-width: none;
     align-self: stretch;
+  }
+
+  .about__list-item {
+    align-items: center;
+  }
+
+  .about__list-item :deep(.aci) {
+    margin-top: 0;
+  }
+
+  .about__trust-item {
+    align-items: center;
+  }
+
+  .about__trust-item::before {
+    margin-top: 0;
   }
 }
 

@@ -1,6 +1,6 @@
 import { CONTACT_EMAIL, CONTACT_PHONE_HREF } from '../constants/contact.js'
 import { translate } from '../i18n/translations.js'
-import { formatEuroExclVat, formatEuroNumber } from './priceDisplay.js'
+import { formatEuroEmailExclVat, formatEuroEmailPlain, formatEuroExclVat } from './priceDisplay.js'
 import {
   collectClientLineItems,
   collectOwnerLineItems,
@@ -73,7 +73,7 @@ function ownerHeader() {
 function clientItemCardHtml(locale, item) {
   const cost =
     item.lineTotalEur != null && item.lineTotalEur > 0
-      ? formatEuroExclVat(item.lineTotalEur, locale)
+      ? formatEuroEmailExclVat(item.lineTotalEur, locale)
       : '—'
   const qty = `${item.quantity} ${translate(locale, 'emailHtml.qtyUnit')}`
 
@@ -122,9 +122,9 @@ function localeToHtmlLang(locale) {
   return locale === 'uk' ? 'uk' : locale
 }
 
-/** @param {number} amount */
-function formatEuroAmount(amount) {
-  return `${formatEuroNumber(amount)}€`
+/** @param {number} amount @param {import('../i18n/translations.js').Locale} locale */
+function formatEuroAmount(amount, locale) {
+  return formatEuroEmailPlain(amount, locale)
 }
 
 /**
@@ -145,7 +145,7 @@ function clientWorkTimeText(locale, totalHours) {
  * @param {boolean} [skipCta]
  */
 function clientGrandTotalHtml(locale, amount, skipCta = false) {
-  const euro = formatEuroAmount(amount)
+  const euro = formatEuroAmount(amount, locale)
   const vat = translate(locale, 'price.exVat')
   const cta = skipCta
     ? ''
@@ -299,7 +299,7 @@ export function buildClientEmailPlain(leadData) {
   const itemBlocks = items.flatMap((item) => {
     const cost =
       item.lineTotalEur != null && item.lineTotalEur > 0
-        ? formatEuroExclVat(item.lineTotalEur, locale)
+        ? formatEuroEmailExclVat(item.lineTotalEur, locale)
         : '—'
     return [
       item.title,
@@ -326,7 +326,7 @@ export function buildClientEmailPlain(leadData) {
     '━━━━━━━━━━━━━━━━━━━━',
     translate(locale, 'emailHtml.grandTotalLabel').toUpperCase(),
     '',
-    formatEuroAmount(totalAmount),
+    formatEuroAmount(totalAmount, locale),
     `(${vat})`,
     '━━━━━━━━━━━━━━━━━━━━',
     '',
@@ -370,7 +370,7 @@ export function buildClientEmailWhatsApp(leadData) {
   const itemBlocks = items.flatMap((item) => {
     const cost =
       item.lineTotalEur != null && item.lineTotalEur > 0
-        ? formatEuroExclVat(item.lineTotalEur, locale)
+        ? formatEuroEmailExclVat(item.lineTotalEur, locale)
         : '—'
     return [
       '',
@@ -399,7 +399,7 @@ export function buildClientEmailWhatsApp(leadData) {
     sep,
     waBold(translate(locale, 'emailHtml.grandTotalLabel').toUpperCase()),
     '',
-    waBold(formatEuroAmount(totalAmount)),
+    waBold(formatEuroAmount(totalAmount, locale)),
     `(${vat})`,
     sep,
     '',

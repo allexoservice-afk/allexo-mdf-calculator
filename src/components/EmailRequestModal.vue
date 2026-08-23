@@ -59,6 +59,11 @@ function validateEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
+function validatePhone(v) {
+  const digits = String(v).replace(/\D/g, '')
+  return digits.length >= 8
+}
+
 function buildLeadPayload() {
   const calculation_data = buildCalculationData(props.lines, {
     estimatedTotalEur: props.estimatedTotalEur,
@@ -74,7 +79,7 @@ function buildLeadPayload() {
 
   return {
     name: name.value.trim(),
-    phone: phone.value.trim(),
+    phone: phone.value.trim() || null,
     email: email.value.trim(),
     city: address.value.trim() || null,
     comment: comment.value.trim() || null,
@@ -119,7 +124,7 @@ async function onSubmit() {
       return
     }
   } else {
-    if (!n || !p) {
+    if (!n) {
       formError.value = t('lead.errRequired')
       return
     }
@@ -129,6 +134,10 @@ async function onSubmit() {
     }
     if (!validateEmail(em)) {
       formError.value = t('lead.errInvalidEmail')
+      return
+    }
+    if (p && !validatePhone(p)) {
+      formError.value = t('getQuote.errInvalidPhone')
       return
     }
   }
@@ -213,13 +222,14 @@ async function onSubmit() {
             </label>
 
             <label v-if="!isSelf()" class="field">
-              <span class="field__label">{{ t('lead.phone') }} <span class="req">{{ t('lead.required') }}</span></span>
+              <span class="field__label">{{ t('lead.phone') }}</span>
               <input
                 v-model="phone"
                 type="tel"
                 autocomplete="tel"
                 class="field__input"
-                :class="{ 'field__input--error': formError && !phone.trim() }"
+                :placeholder="t('getQuote.phonePlaceholder')"
+                :class="{ 'field__input--error': formError && phone.trim() && !validatePhone(phone) }"
                 @input="formError = ''"
               />
             </label>

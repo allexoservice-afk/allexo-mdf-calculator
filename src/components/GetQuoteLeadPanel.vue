@@ -87,10 +87,8 @@ function validateForm() {
     fieldErrors.name = t('getQuote.errNameRequired')
     ok = false
   }
-  if (!phone.value.trim()) {
-    fieldErrors.phone = t('getQuote.errPhoneRequired')
-    ok = false
-  } else if (!validatePhone(phone.value)) {
+  const phoneTrimmed = phone.value.trim()
+  if (phoneTrimmed && !validatePhone(phoneTrimmed)) {
     fieldErrors.phone = t('getQuote.errInvalidPhone')
     ok = false
   }
@@ -129,7 +127,7 @@ function buildLeadPayload() {
     id,
     created_at: new Date().toISOString(),
     name: name.value.trim(),
-    phone: phone.value.trim(),
+    phone: phone.value.trim() || null,
     email: email.value.trim(),
     city: city.value.trim() || null,
     preferred_contact_method: 'email',
@@ -220,13 +218,14 @@ async function onSubmit() {
 
       <div class="gq__row">
         <label class="gq__field">
-          <span class="gq__label">{{ t('getQuote.phone') }} *</span>
+          <span class="gq__label">{{ t('getQuote.phone') }}</span>
           <input
             v-model="phone"
             type="tel"
             autocomplete="tel"
             class="gq__input"
             inputmode="tel"
+            :placeholder="t('getQuote.phonePlaceholder')"
             :class="{ 'gq__input--error': fieldErrors.phone }"
             @input="fieldErrors.phone = ''"
           />

@@ -10,7 +10,7 @@ import {
   clientEmailSubject,
   ownerEmailSubject,
 } from '../utils/emailHtmlTemplates.js'
-import { formatEuroExclVat } from '../utils/priceDisplay.js'
+import { formatEuroEmailExclVat } from '../utils/priceDisplay.js'
 
 const OWNER_EMAIL = CONTACT_EMAIL
 const ALLEXO_PHONE = '+32 493 86 07 53'
@@ -80,7 +80,7 @@ function buildSharedParams(leadData) {
   const locale = /** @type {import('../i18n/translations.js').Locale} */ (
     typeof leadData.language === 'string' ? leadData.language : 'uk'
   )
-  const price = formatEuroExclVat(Number(leadData.total_price) || 0, locale)
+  const price = formatEuroEmailExclVat(Number(leadData.total_price) || 0, locale)
 
   return {
     client_name: String(leadData.name || '').trim(),

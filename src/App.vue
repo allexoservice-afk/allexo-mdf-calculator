@@ -110,6 +110,12 @@ function scrollToSummary() {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function scrollToCalculator() {
+  const el = document.getElementById('calculator')
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 const summaryFlash = ref(false)
 let _flashTimer = /** @type {number | null} */ (null)
 function flashSummary() {
@@ -226,6 +232,10 @@ const showStickyTotal = computed(
   () => !isMobileLayout.value && Array.isArray(lines.value) && lines.value.length > 0,
 )
 
+const showMobileStickyCart = computed(
+  () => isMobileLayout.value && Array.isArray(lines.value) && lines.value.length > 0,
+)
+
 /** @param {Record<string, unknown>} line */
 function lineSubtotalEuros(line) {
   return windowsForLine(line).reduce(
@@ -311,6 +321,7 @@ const mdfOrderSubtotalEuros = computed(() =>
             @remove="removeLine"
             @edit="openEditForm"
             @clear="clearOrder"
+            @add-another="scrollToCalculator"
           />
         </div>
       </section>
@@ -363,9 +374,32 @@ const mdfOrderSubtotalEuros = computed(() =>
             class="sticky-total__btn sticky-total__btn--primary"
             @click="openQuoteLeadModal"
           >
-            {{ t('getQuote.title') }}
+            {{ t('getQuote.submitQuote') }}
           </button>
         </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showMobileStickyCart"
+      class="mobile-sticky-cart"
+      role="region"
+      :aria-label="t('summary.stickyTotalAria')"
+    >
+      <div class="mobile-sticky-cart__inner site-container">
+        <p class="mobile-sticky-cart__sum">
+          <template v-if="proActive">
+            {{ t('summary.workSubtotal') }} {{ formatEuroExclVat(payableOrderTotalEuros, locale) }}
+            <span class="mobile-sticky-cart__exvat">({{ t('price.exVat') }})</span>
+          </template>
+          <template v-else>
+            {{ t('summary.stickyPublicLine') }}
+          </template>
+        </p>
+        <button type="button" class="mobile-sticky-cart__btn" @click="scrollToSummary">
+          <span class="mobile-sticky-cart__btn-label-full">{{ t('summary.title') }}</span>
+          <span class="mobile-sticky-cart__btn-label-short">{{ t('summary.stickySummaryShort') }}</span>
+        </button>
       </div>
     </div>
 
@@ -537,6 +571,16 @@ const mdfOrderSubtotalEuros = computed(() =>
   padding-bottom: 7.5rem;
 }
 
+@media (max-width: 768px) {
+  .app:has(.mobile-sticky-cart) .main {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app:has(.mobile-sticky-cart) .footer {
+    padding-bottom: calc(var(--section-y) + 5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (min-width: 769px) {
   .app:has(.sticky-total) .main {
     padding-bottom: 6.25rem;
@@ -557,6 +601,10 @@ const mdfOrderSubtotalEuros = computed(() =>
 @media (max-width: 768px) {
   .main {
     padding-top: 0;
+    padding-bottom: max(var(--space-8), env(safe-area-inset-bottom));
+  }
+
+  .app:has(.sticky-total) .main {
     padding-bottom: max(var(--space-8), env(safe-area-inset-bottom));
   }
 }
@@ -863,6 +911,103 @@ const mdfOrderSubtotalEuros = computed(() =>
   background: var(--allexo-bg);
   color: var(--allexo-green);
   border-color: var(--allexo-green);
+}
+
+.mobile-sticky-cart {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-sticky-cart {
+    display: block;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 45;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.55rem 0 max(0.55rem, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .mobile-sticky-cart__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    min-width: 0;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    border: 1px solid var(--allexo-border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-md);
+    pointer-events: auto;
+  }
+
+  .mobile-sticky-cart__sum {
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(0.78rem, 2.8vw, 0.92rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--allexo-graphite);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-sticky-cart__exvat {
+    font-weight: 650;
+    color: var(--allexo-muted);
+  }
+
+  .mobile-sticky-cart__btn {
+    flex: 0 0 auto;
+    max-width: 52%;
+    min-height: 2.75rem;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--allexo-border);
+    border-radius: var(--radius);
+    background: var(--allexo-btn);
+    color: #fff;
+    font: inherit;
+    font-size: clamp(0.78rem, 2.7vw, 0.88rem);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background 0.18s,
+      border-color 0.18s;
+  }
+
+  .mobile-sticky-cart__btn:hover {
+    background: var(--allexo-btn-hover);
+    border-color: var(--allexo-btn-hover);
+  }
+
+  .mobile-sticky-cart__btn-label-short {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .mobile-sticky-cart__inner {
+    gap: 0.4rem;
+  }
+
+  .mobile-sticky-cart__btn-label-full {
+    display: none;
+  }
+
+  .mobile-sticky-cart__btn-label-short {
+    display: inline;
+  }
 }
 
 @media (max-width: 430px) {

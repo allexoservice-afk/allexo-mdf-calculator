@@ -90,7 +90,9 @@ function formatHoursForOffer(h) {
 export function buildAllexoOfferText(lines, locale, travelMeta, options) {
   if (!Array.isArray(lines) || !lines.length) return ''
 
-  const proPricing = options?.forceClientProposalPricing === true || isProUnlocked()
+  const clientProposal = options?.forceClientProposalPricing === true
+  const proPricing = clientProposal || isProUnlocked()
+  const showProLinearDetails = isProUnlocked() && !clientProposal
   const parts = []
   parts.push(translate(locale, 'offer.header'))
   parts.push('')
@@ -120,7 +122,7 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
         let winHead = `- ${itemTitle}: ${wMm} ${translate(locale, 'common.mm')}`
         if (qty > 1) winHead += ` × ${qty} ${translate(locale, 'offer.pcs')}`
         parts.push(winHead)
-        if (proPricing && L.typeId === 'windowsill') {
+        if (showProLinearDetails && L.typeId === 'windowsill') {
           const sillM = windowSillLinearMetersTotal('windowsill', win, qty)
           if (sillM != null) {
             parts.push(
@@ -152,7 +154,7 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
             )
           }
         }
-        if (proPricing) {
+        if (showProLinearDetails) {
           const slopesM = windowSlopesLinearMetersTotal(String(L.typeId), win, qty)
           if (slopesM != null) {
             parts.push(
@@ -260,22 +262,24 @@ export function buildAllexoOfferText(lines, locale, travelMeta, options) {
   parts.push(`${translate(locale, 'offer.totalWindows')} ${totalWin}`)
 
   if (proPricing) {
-    const linearTotals = orderLinearMetersTotals(lines, windowsForLine, (w) =>
-      normalizeWindowQuantity(w.quantity),
-    )
-    if (linearTotals.hasSlopes) {
-      parts.push(
-        `${translate(locale, 'summary.totalSlopesLinearM')}: ${formatLinearMeters(linearTotals.slopesM)} ${translate(locale, 'common.linearMeter')}`,
+    if (showProLinearDetails) {
+      const linearTotals = orderLinearMetersTotals(lines, windowsForLine, (w) =>
+        normalizeWindowQuantity(w.quantity),
       )
+      if (linearTotals.hasSlopes) {
+        parts.push(
+          `${translate(locale, 'summary.totalSlopesLinearM')}: ${formatLinearMeters(linearTotals.slopesM)} ${translate(locale, 'common.linearMeter')}`,
+        )
+      }
+      if (linearTotals.hasSill) {
+        parts.push(
+          `${translate(locale, 'summary.totalSillLinearM')}: ${formatLinearMeters(linearTotals.sillM)} ${translate(locale, 'common.linearMeter')}`,
+        )
+      }
     }
-    if (linearTotals.hasSill) {
-      parts.push(
-        `${translate(locale, 'summary.totalSillLinearM')}: ${formatLinearMeters(linearTotals.sillM)} ${translate(locale, 'common.linearMeter')}`,
-      )
-    }
-    const material = orderMaterialStock(lines, windowsForLine, (w) =>
-      normalizeWindowQuantity(w.quantity),
-    )
+    const material = showProLinearDetails
+      ? orderMaterialStock(lines, windowsForLine, (w) => normalizeWindowQuantity(w.quantity))
+      : { hasSlopes: false, hasSill: false, hasTrim: false }
     const pieceLabel = (count, meters) =>
       translate(locale, 'materials.pieceLine').replace('{n}', String(count)).replace('{m}', meters)
     if (material.hasSlopes) {

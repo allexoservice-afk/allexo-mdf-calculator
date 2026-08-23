@@ -52,7 +52,7 @@ const props = defineProps({
   quoteOpen: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['remove', 'edit', 'clear', 'update:quoteOpen'])
+const emit = defineEmits(['remove', 'edit', 'clear', 'update:quoteOpen', 'addAnother'])
 
 const { locale, t } = useLocale()
 const { manualDiscountPct, setManualDiscount, toggleManualDiscount, PRO_MANUAL_DISCOUNT_OPTIONS } =
@@ -138,6 +138,61 @@ function windowDimsLabelPublic(line, win) {
   return windowDimsLabel(line, win)
 }
 
+/** Розміри з пробілами навколо × (компактна картка). */
+function windowDimsDisplay(line, win) {
+  if (line.typeId === 'roller_box' || line.typeId === 'windowsill') {
+    return `${Math.round(Number(win.widthMm))} ${t('common.mm')}`
+  }
+  const w = Math.round(Number(win.widthMm))
+  const h = Math.round(Number(win.heightMm))
+  return `${w} × ${h} ${t('common.mm')}`
+}
+
+/** @param {Record<string, unknown>} line */
+function showLineSubtotal(line) {
+  return windowsForLine(line).length > 1
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowSpecsInline(line, win) {
+  const parts = []
+  if (isSimplifiedProductLine(line.typeId)) {
+    const sill = windowSillLinearLabel(line, win)
+    if (sill) parts.push(`${t('summary.specSill')}: ${sill}`)
+  } else {
+    const slopes = windowSlopesLinearLabel(line, win)
+    if (slopes) parts.push(`${t('summary.specSlopes')}: ${slopes}`)
+    const sill = windowSillLinearLabel(line, win)
+    if (sill) parts.push(`${t('summary.specSill')}: ${sill}`)
+    const deep = slopeDeepLineSummary(line, win)
+    if (deep) parts.push(deep)
+  }
+  if (!isPublicMode.value && windowDisplayHours(line, win) > 0) {
+    parts.push(
+      `${t('summary.specTime')}: ${formatWorkHoursDisplay(windowDisplayHours(line, win), locale.value)} ${t('summary.hoursUnit')}`,
+    )
+  }
+  return parts.join(' | ')
+}
+
+/** @param {Record<string, unknown>} line @param {Record<string, unknown>} win */
+function windowPriceInline(line, win) {
+  if (lineWindowOversized(line.typeId, win)) {
+    return t('summary.individualQuote')
+  }
+  const unit = windowPriceEuros(line, win)
+  const q = windowQty(win)
+  if (!(unit > 0)) return '—'
+  const unitStr = formatEuroExclVat(unit, locale.value)
+  if (q > 1) {
+    return translate(locale.value, 'summary.priceCompact')
+      .replace('{unit}', unitStr)
+      .replace('{qty}', String(q))
+      .replace('{total}', formatEuroExclVat(unit * q, locale.value))
+  }
+  return translate(locale.value, 'summary.priceSingle').replace('{unit}', unitStr)
+}
+
 const proActive = ref(false)
 function syncProActive() {
   proActive.value = isProUnlocked()
@@ -189,12 +244,16 @@ const publicLeadTimeDaysApprox = computed(() => {
   return days > 0 ? days : 1
 })
 
-const publicLeadTimeNoteDisplay = computed(() =>
-  translate(locale.value, 'summary.publicLeadTimeNote').replace(
+const publicLeadTimeNoteDisplay = computed(() => {
+  if (locale.value === 'nl') {
+    const daysLabel = formatWorkDaysApproxLabel(orderTotalBufferedHours.value, 'nl')
+    return translate('nl', 'summary.publicLeadTimeNote').replace('{d}', daysLabel)
+  }
+  return translate(locale.value, 'summary.publicLeadTimeNote').replace(
     /\{d\}/g,
     String(publicLeadTimeDaysApprox.value),
-  ),
-)
+  )
+})
 
 const orderWorkTime = computed(() => {
   let perWindowTotal = 0
@@ -510,139 +569,99 @@ function openContactEmailModal() {
     <template v-else>
       <ul class="list">
         <li v-for="line in lines" :key="line.key" class="line">
-          <div class="line__main">
-            <h3 class="line__type">{{ lineTypeTitle(line) }}</h3>
+          <h3 class="line__type">{{ lineTypeTitle(line) }}</h3>
 
+          <div
+            v-for="(win, wIdx) in windowsForLine(line)"
+            :key="wIdx"
+            class="window-card"
+          >
+            <p class="window-card__position">
+              {{ t('summary.windowLabel') }} {{ globalWindowIndex(line.key, wIdx) }}
+            </p>
             <div
-              v-for="(win, wIdx) in windowsForLine(line)"
-              :key="wIdx"
-              class="window-entry window-entry--with-visual"
+              class="window-card__visual"
+              :aria-label="`${t('summary.windowLabel')} ${globalWindowIndex(line.key, wIdx)}, ${windowDimsDisplay(line, win)}`"
             >
-              <span class="window-entry__position">
-                {{ t('summary.positionLabel').replace('{n}', String(globalWindowIndex(line.key, wIdx))) }}
-              </span>
-              <div class="window-entry__visual-wrap">
-                <WindowSchematicPreview :type-id="line.typeId" :win="win" :material-id="line.materialId" />
-                <div class="window-entry__visual-meta">
-                  <p class="window-entry__dims-short">
-                    {{ windowDimsLabelPublic(line, win) }}
-                    <span v-if="isPublicMode" class="window-entry__qty">
-                      · {{ windowQty(win) }} {{ t('summary.pcs') }}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <dl v-if="!isPublicMode && isSimplifiedProductLine(line.typeId)" class="dims">
-                <div class="dims__row">
-                  <dt>{{ t('summary.dtWidth') }}</dt>
-                  <dd>{{ formatWindowMm(win.widthMm) }}</dd>
-                </div>
-                <div
-                  v-if="line.typeId === 'windowsill' && windowSillLinearLabel(line, win)"
-                  class="dims__row"
-                >
-                  <dt>{{ t('summary.dtSillLinearM') }}</dt>
-                  <dd>{{ windowSillLinearLabel(line, win) }}</dd>
-                </div>
-              </dl>
-              <dl v-else-if="!isPublicMode" class="dims">
-                <div
-                  v-if="slopeDeepLineSummary(line, win)"
-                  class="dims__row"
-                >
-                  <dt>{{ t('summary.dtDepth') }}</dt>
-                  <dd>{{ slopeDeepLineSummary(line, win) }}</dd>
-                </div>
-                <div
-                  v-if="getTypeById(line.typeId)?.hasSill"
-                  class="dims__row"
-                >
-                  <dt>{{ t('summary.dtSill') }}</dt>
-                  <dd>
-                    <template v-if="windowsillAddonWidthMm(win) != null">
-                      {{ windowsillAddonWidthMm(win) }} {{ t('common.mm') }}
-                    </template>
-                    <template v-else>—</template>
-                  </dd>
-                </div>
-                <div v-if="windowSlopesLinearLabel(line, win)" class="dims__row">
-                  <dt>{{ t('summary.dtSlopesLinearM') }}</dt>
-                  <dd>{{ windowSlopesLinearLabel(line, win) }}</dd>
-                </div>
-                <div v-if="windowSillLinearLabel(line, win)" class="dims__row">
-                  <dt>{{ t('summary.dtSillLinearM') }}</dt>
-                  <dd>{{ windowSillLinearLabel(line, win) }}</dd>
-                </div>
-              </dl>
-              <template
-                v-if="!isPublicMode && lineWindowOversized(line.typeId, win)"
-              >
-                <p class="window-price window-price--individual">
-                  {{ t('summary.priceLabel') }} {{ t('summary.individualQuote') }}
+              <WindowSchematicPreview
+                :type-id="line.typeId"
+                :win="win"
+                :material-id="line.materialId"
+                class="window-card__schematic"
+              />
+              <div class="window-card__meta">
+                <p class="window-card__label">
+                  {{ t('summary.windowLabel') }} {{ globalWindowIndex(line.key, wIdx) }}
                 </p>
-              </template>
-              <template v-else-if="!isPublicMode && windowPriceEuros(line, win) > 0">
-                <dl class="dims dims--price">
-                  <div class="dims__row">
-                    <dt>{{ t('summary.dtPricePerUnit') }}</dt>
-                    <dd>{{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}</dd>
-                  </div>
-                  <div class="dims__row">
-                    <dt>{{ t('summary.dtQuantity') }}</dt>
-                    <dd>{{ windowQty(win) }}</dd>
-                  </div>
-                  <div class="dims__row">
-                    <dt>{{ t('summary.dtLineTotal') }}</dt>
-                    <dd>{{ formatEuroExclVat(windowPriceEuros(line, win) * windowQty(win), locale) }}</dd>
-                  </div>
-                  <div v-if="getTypeById(line.typeId)?.hasSill" class="dims__row">
-                    <dt>{{ t('summary.dtSillPrice') }}</dt>
-                    <dd>{{ formatEuroExclVat(windowsillAddonPriceEuros(line, win), locale) }}</dd>
-                  </div>
-                </dl>
-              </template>
-              <p v-else-if="!isPublicMode" class="window-price">
-                {{ t('summary.priceLabel') }} {{ formatEuroExclVat(windowPriceEuros(line, win), locale) }}
-              </p>
-
-              <div
-                v-if="!isPublicMode && windowDisplayHours(line, win) > 0"
-                class="window-time"
-              >
-                <p class="window-time__main">
-                  {{ t('summary.windowTimeLabel') }}
-                  {{ formatWorkHoursDisplay(windowDisplayHours(line, win), locale) }}
-                  {{ t('summary.hoursUnit') }}
-                </p>
-                <p class="window-time__note">{{ t('summary.windowTimeDisclaimer') }}</p>
+                <p class="window-card__dims">{{ windowDimsDisplay(line, win) }}</p>
               </div>
             </div>
 
-            <p v-if="!isPublicMode" class="line-subtotal">
-              {{ t('summary.lineSubtotal') }} {{ formatEuroExclVat(lineSubtotalEuros(line), locale) }}
-            </p>
+            <div class="window-card__body">
+              <p v-if="!isPublicMode && windowSpecsInline(line, win)" class="window-card__specs">
+                {{ windowSpecsInline(line, win) }}
+              </p>
+              <p
+                v-if="isPublicMode && windowQty(win) > 1"
+                class="window-card__specs window-card__specs--qty"
+              >
+                {{ t('summary.dtQuantity') }}: {{ windowQty(win) }} {{ t('summary.pcs') }}
+              </p>
+              <p
+                v-if="!isPublicMode"
+                class="window-card__price"
+                :class="{ 'window-card__price--individual': lineWindowOversized(line.typeId, win) }"
+              >
+                {{ windowPriceInline(line, win) }}
+              </p>
+            </div>
+
+            <div class="window-card__actions">
+              <button
+                type="button"
+                class="line__edit line__icon-btn"
+                :aria-label="t('summary.editAriaPrefix') + ' ' + lineTypeTitle(line)"
+                @click="emit('edit', line.key)"
+              >
+                <svg class="line__icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                  />
+                </svg>
+                <span class="line__icon-label">{{ t('summary.edit') }}</span>
+              </button>
+              <button
+                type="button"
+                class="line__remove line__icon-btn"
+                :aria-label="t('summary.removeAriaPrefix') + ' ' + lineTypeTitle(line)"
+                @click="emit('remove', line.key)"
+              >
+                <svg class="line__icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                  />
+                </svg>
+                <span class="line__icon-label">{{ t('summary.remove') }}</span>
+              </button>
+            </div>
           </div>
-          <div class="line__actions">
-            <button
-              type="button"
-              class="line__edit"
-              :aria-label="t('summary.editAriaPrefix') + ' ' + lineTypeTitle(line)"
-              @click="emit('edit', line.key)"
-            >
-              {{ t('summary.edit') }}
-            </button>
-            <button
-              type="button"
-              class="line__remove"
-              :aria-label="t('summary.removeAriaPrefix') + ' ' + lineTypeTitle(line)"
-              @click="emit('remove', line.key)"
-            >
-              {{ t('summary.remove') }}
-            </button>
-          </div>
+
+          <p v-if="!isPublicMode && showLineSubtotal(line)" class="line-subtotal">
+            {{ t('summary.lineSubtotal') }} {{ formatEuroExclVat(lineSubtotalEuros(line), locale) }}
+          </p>
         </li>
       </ul>
+
+      <button
+        v-if="lines.length"
+        type="button"
+        class="summary__add-window"
+        @click="emit('addAnother')"
+      >
+        {{ t('summary.addAnotherWindow') }}
+      </button>
 
       <p v-if="minOrderApplied" class="summary__min-order">
         {{ t('summary.publicMinOrderNote').replace('{amount}', formatEuroExclVat(MIN_ORDER_EUR, locale)) }}
@@ -654,7 +673,7 @@ function openContactEmailModal() {
 
       <div v-if="isPublicMode" class="summary__quote-cta-wrap">
         <button type="button" class="summary__quote-cta" @click="emit('update:quoteOpen', true)">
-          {{ t('getQuote.title') }}
+          {{ t('getQuote.submitQuote') }}
         </button>
       </div>
 
@@ -903,13 +922,65 @@ function openContactEmailModal() {
   }
 
   .summary__quote-cta,
-  .line__actions {
+  .summary__add-window {
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: stretch;
   }
 
-  .line__edit,
-  .line__remove,
+  .window-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'position position'
+      'visual actions'
+      'body body';
+    gap: 0.4rem 0.5rem;
+    align-items: start;
+  }
+
+  .window-card__position {
+    grid-area: position;
+    margin: 0 0 0.15rem;
+  }
+
+  .window-card__visual {
+    grid-area: visual;
+  }
+
+  .window-card__schematic :deep(.window-schematic) {
+    width: 104px;
+  }
+
+  .window-card__meta .window-card__label {
+    display: none;
+  }
+
+  .window-card__dims {
+    display: block;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  .window-card__body {
+    grid-area: body;
+  }
+
+  .window-card__actions {
+    grid-area: actions;
+    width: auto;
+    flex-direction: column;
+    flex-shrink: 0;
+    align-self: start;
+    gap: 0.35rem;
+  }
+
+  .window-card__actions .line__icon-btn {
+    width: auto;
+    max-width: none;
+  }
+
+  .line__icon-btn,
   .pro-discount__btn {
     width: 100%;
     max-width: 100%;
@@ -1003,192 +1074,224 @@ function openContactEmailModal() {
 .line {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
   background: var(--allexo-surface);
   border-radius: var(--radius);
   border: 1px solid var(--allexo-border);
 }
 
-@media (min-width: 560px) {
-  .line {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-}
-
 .line__type {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  font-weight: 650;
   color: var(--allexo-teal);
+  line-height: 1.25;
 }
 
-.window-entry {
-  margin-bottom: 0.85rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--allexo-border);
+.window-card {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  gap: 0.55rem 0.85rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--allexo-border);
 }
 
-.window-entry:last-of-type {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+.window-card:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 
-.window-entry__title {
-  margin: 0 0 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--allexo-muted);
-}
-
-.window-entry--with-visual {
-  position: relative;
-  padding-right: 4.5rem;
-}
-
-.window-entry__position {
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--allexo-teal);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.window-entry__visual-wrap {
+.window-card__visual {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.65rem;
-}
-
-.window-entry__visual-meta {
+  gap: 0.2rem;
   min-width: 0;
-  flex: 1;
+  max-width: 100%;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
-.window-entry__dims-short {
+.window-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.window-card__position {
   margin: 0;
-  font-size: 0.82rem;
-  color: var(--allexo-muted);
-}
-
-.window-entry__title--public {
-  font-size: 0.95rem;
+  font-size: 0.84rem;
   font-weight: 750;
   color: var(--allexo-text);
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.window-entry__qty {
-  font-weight: 600;
+.window-card__label {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 750;
+  color: var(--allexo-text);
+  text-align: left;
+  line-height: 1.2;
+}
+
+.window-card__dims {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--allexo-text);
+  text-align: left;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+.window-card__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  padding-top: 0.08rem;
+}
+
+.window-card__specs {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.38;
   color: var(--allexo-muted);
 }
 
-.window-entry__price-public {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.5rem;
-  margin: 0.4rem 0 0;
-  padding-top: 0.45rem;
-  border-top: 1px solid var(--allexo-border);
-  font-size: 0.92rem;
+.window-card__specs--qty {
+  font-weight: 600;
+}
+
+.window-card__price {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--allexo-text);
   line-height: 1.35;
 }
 
-.window-entry__price-label {
-  font-weight: 650;
-  color: var(--allexo-muted);
-}
-
-.window-entry__price-value {
-  font-weight: 800;
-  color: var(--allexo-teal);
-}
-
-.window-entry__price-public--hidden .window-entry__price-value {
-  font-weight: 600;
-  color: var(--allexo-muted);
-}
-
-.dims {
-  margin: 0;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.dims--price {
-  margin-top: 0.35rem;
-}
-
-.dims__row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  font-size: 0.875rem;
-}
-
-.dims__row dt {
-  margin: 0;
-  color: var(--allexo-muted);
-  font-weight: 500;
-}
-
-.dims__row dd {
-  margin: 0;
-  font-weight: 600;
-  text-align: right;
-}
-
-.dims-explicit {
-  margin: 0.15rem 0 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--allexo-text);
-  line-height: 1.4;
-}
-
-.window-price {
-  margin: 0.5rem 0 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--allexo-text);
-}
-
-.window-price--individual {
+.window-card__price--individual {
   color: var(--allexo-teal-light);
 }
 
-.window-time {
-  margin-top: 0.55rem;
+.window-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  align-self: center;
 }
 
-.window-time__main {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--allexo-muted);
+.line__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.55rem;
 }
 
-.window-time__note {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--allexo-muted);
-  opacity: 0.9;
+.line__icon-svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 1.05rem;
+}
+
+@media (min-width: 769px) {
+  .window-card__position {
+    display: none;
+  }
+
+  .window-card__visual {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    width: auto;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .window-card__schematic :deep(.window-schematic) {
+    width: 130px;
+  }
+
+  .window-card__dims {
+    font-size: 1rem;
+  }
+
+  .window-card__label {
+    font-size: 0.88rem;
+  }
+
+  .window-card__specs,
+  .window-card__price {
+    font-size: 0.84rem;
+  }
+
+  .window-card__actions {
+    flex-direction: row;
+    align-self: center;
+  }
+
+  .line__icon-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .line__icon-btn {
+    min-width: 2.35rem;
+    padding: 0.4rem;
+  }
 }
 
 .line-subtotal {
-  margin: 0.85rem 0 0;
-  font-size: 0.95rem;
+  margin: 0.15rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--allexo-border);
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--allexo-teal);
+}
+
+.summary__add-window {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.85rem;
+  min-height: 2.65rem;
+  padding: 0.55rem 1rem;
+  border: 1.5px dashed rgba(19, 52, 51, 0.35);
+  border-radius: var(--radius);
+  background: rgba(19, 52, 51, 0.03);
+  color: var(--allexo-teal);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.summary__add-window:hover {
+  background: rgba(19, 52, 51, 0.06);
+  border-color: rgba(19, 52, 51, 0.5);
 }
 
 .pro-topbar {
@@ -1702,13 +1805,6 @@ function openContactEmailModal() {
   color: #fff;
 }
 
-.line__actions {
-  display: flex;
-  flex-shrink: 0;
-  align-self: flex-start;
-  gap: 0.5rem;
-}
-
 .line__edit,
 .line__remove {
   min-height: 2.75rem;
@@ -1718,6 +1814,7 @@ function openContactEmailModal() {
   border-radius: var(--radius);
   cursor: pointer;
   white-space: nowrap;
+  font-family: inherit;
 }
 
 .line__edit {

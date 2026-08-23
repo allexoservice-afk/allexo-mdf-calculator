@@ -89,9 +89,9 @@ async function submitUnlock() {
           <div class="hero-stack">
             <div class="hero-cta-block">
               <button type="button" class="hero-cta" @click="scrollToCalculator">
-                {{ t('app.calcCta') }}
+                <span class="hero-cta__main">{{ t('app.calcCta') }}</span>
+                <span class="hero-cta__sub">{{ t('hero.ctaNote') }}</span>
               </button>
-              <p class="hero-cta-note">{{ t('hero.ctaNote') }}</p>
             </div>
           </div>
 
@@ -202,7 +202,7 @@ async function submitUnlock() {
 .hero-main {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 1rem;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -215,8 +215,6 @@ async function submitUnlock() {
   gap: 1rem 1.25rem;
   width: 100%;
   min-width: 0;
-  padding-bottom: 0.55rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hero-body-grid {
@@ -346,38 +344,25 @@ async function submitUnlock() {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.38rem;
   min-width: 0;
-}
-
-.hero-cta-note {
-  margin: 0;
-  max-width: min(18rem, 100%);
-  font-size: 0.72rem;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.55);
-  animation: hero-rise 0.75s 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .hero-cta {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   flex: 0 1 auto;
   min-width: 0;
   margin-top: 0;
-  min-height: 2.5rem;
-  padding: 0.5rem 1.45rem;
+  min-height: 2.85rem;
+  padding: 0.55rem 1.45rem 0.6rem;
   border-radius: 999px;
   border: 1px solid var(--hero-gold);
   background: var(--hero-gold);
-  color: #1a2220;
+  color: var(--allexo-olive);
   font: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.015em;
   cursor: pointer;
   box-shadow:
     0 4px 14px rgba(228, 179, 76, 0.35),
@@ -387,15 +372,31 @@ async function submitUnlock() {
     background 0.22s ease,
     border-color 0.22s ease,
     box-shadow 0.22s ease,
-    transform 0.22s ease,
-    color 0.22s ease;
+    transform 0.22s ease;
   animation: hero-rise 0.75s 0.14s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-cta__main {
+  font-size: clamp(1.05rem, 2.4vw, 1.375rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.015em;
+  color: var(--allexo-olive);
+}
+
+.hero-cta__sub {
+  font-size: clamp(0.6875rem, 1.6vw, 0.75rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--allexo-olive);
+  opacity: 0.65;
+  white-space: nowrap;
 }
 
 .hero-cta:hover {
   background: #f0c05a;
   border-color: #f0c05a;
-  color: #1a2220;
   box-shadow:
     0 6px 20px rgba(228, 179, 76, 0.45),
     0 0 0 1px rgba(240, 192, 90, 0.25);
@@ -509,7 +510,6 @@ async function submitUnlock() {
 @media (prefers-reduced-motion: reduce) {
   .hero-brand-name__btn,
   .hero-brand-tag,
-  .hero-cta-note,
   .hero-cta,
   .hero-contacts {
     animation: none;
@@ -525,8 +525,8 @@ async function submitUnlock() {
     padding-block: 0.95rem 1.15rem;
   }
 
-  .hero-head {
-    padding-bottom: 0.65rem;
+  .hero-main {
+    gap: 1.15rem;
   }
 
   .hero-body-grid {
@@ -553,13 +553,11 @@ async function submitUnlock() {
 
   .hero-head {
     align-items: flex-start;
-    padding-bottom: 0.28rem;
     gap: 0.55rem 0.75rem;
   }
 
   .hero-main {
-    /* ~14px додатково між логотипом і кнопкою */
-    gap: 1.15rem;
+    gap: 1.35rem;
   }
 
   .hero-logotype {
@@ -589,22 +587,20 @@ async function submitUnlock() {
   .hero-cta-block {
     align-items: stretch;
     width: 100%;
-    gap: 0.18rem;
   }
 
   .hero-cta {
     width: 100%;
-    min-height: 2.2rem;
-    padding: 0.38rem 1.05rem;
-    font-size: 0.84rem;
+    min-height: 2.55rem;
+    padding: 0.42rem 1.05rem 0.46rem;
   }
 
-  .hero-cta-note {
-    max-width: 100%;
-    font-size: 0.6rem;
-    line-height: 1.28;
-    text-align: center;
-    align-self: center;
+  .hero-cta__main {
+    font-size: 1rem;
+  }
+
+  .hero-cta__sub {
+    font-size: 0.6875rem;
   }
 
   .hero-contacts {

@@ -3,7 +3,7 @@
  */
 import { CONTACT_EMAIL } from '../constants/contact.js'
 import { translate } from '../i18n/translations.js'
-import { formatEuroNumber } from './priceDisplay.js'
+import { formatEuroEmailPlain, formatEuroNumber } from './priceDisplay.js'
 import { collectClientLineItemsForPdf, computeBufferedWorkHours } from './proposalLineItems.js'
 import { buildWindowSchematicSvg } from './windowSchematicSvg.js'
 import { formatWorkTimePdfLines } from './workTimeDisplay.js'
@@ -21,8 +21,9 @@ function esc(s) {
     .replace(/>/g, '&gt;')
 }
 
-/** @param {number} amount */
-function formatEuroPlain(amount) {
+/** @param {number} amount @param {import('../i18n/translations.js').Locale} locale @param {boolean} isEmailVariant */
+function formatEuroPlain(amount, locale, isEmailVariant) {
+  if (locale === 'nl' && isEmailVariant) return formatEuroEmailPlain(amount, locale)
   return `${formatEuroNumber(amount)}€`
 }
 
@@ -97,7 +98,9 @@ export function buildProposalContentHtml(opts) {
   const itemBlocks = items
     .map((item) => {
       const cost =
-        item.lineTotalEur != null && item.lineTotalEur > 0 ? formatEuroPlain(item.lineTotalEur) : '—'
+        item.lineTotalEur != null && item.lineTotalEur > 0
+          ? formatEuroPlain(item.lineTotalEur, locale, isEmail)
+          : '—'
       const svg = buildWindowSchematicSvg(item.typeId, item.win, mm, item.materialId)
       const positionLabel =
         item.windowIndex > 0
@@ -119,7 +122,7 @@ ${positionLabel ? `<p style="position:absolute;top:8px;right:10px;margin:0;font-
 
   const discountBlock =
     discountEur > 0
-      ? `<p style="margin:0 0 6px;font-size:${footerFs};color:${MUTED};">${esc(translate(locale, 'summary.discountLabel'))} −${esc(formatEuroPlain(discountEur))} (${discountPct}%)</p>`
+      ? `<p style="margin:0 0 6px;font-size:${footerFs};color:${MUTED};">${esc(translate(locale, 'summary.discountLabel'))} −${esc(formatEuroPlain(discountEur, locale, isEmail))} (${discountPct}%)</p>`
       : ''
 
   const workHours = computeBufferedWorkHours(opts.lines)
@@ -134,7 +137,7 @@ ${positionLabel ? `<p style="position:absolute;top:8px;right:10px;margin:0;font-
     let travelStr = translate(locale, 'summary.travelDiscussedShort')
     if (t.over100) travelStr = translate(locale, 'summary.travelDiscussedShort')
     else if (t.travelEur === 0) travelStr = translate(locale, 'summary.travelFree')
-    else if (typeof t.travelEur === 'number') travelStr = formatEuroPlain(t.travelEur)
+    else if (typeof t.travelEur === 'number') travelStr = formatEuroPlain(t.travelEur, locale, isEmail)
     travelBlock = `<p style="margin:0 0 6px;font-size:${footerFs};color:${MUTED};">${esc(translate(locale, 'summary.travelTransportTotal'))} ${esc(travelStr)}</p>`
   }
 
@@ -165,7 +168,7 @@ ${headerBlock}
 ${itemBlocks || `<p style="color:${MUTED};font-size:${bodyFs};">${esc(translate(locale, 'emailHtml.noLineItems'))}</p>`}
 <div style="margin:16px 0 0;padding:${isEmail ? '18px 12px' : '12px 8px'};text-align:center;border-top:2px solid ${GOLD};">
 <p style="margin:0 0 6px;font-size:${totalLabelFs};font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};">${esc(translate(locale, 'emailHtml.grandTotalLabel'))}</p>
-<p style="margin:0;font-size:${totalFs};font-weight:800;line-height:1.1;color:${TEAL};">${esc(formatEuroPlain(total))}</p>
+<p style="margin:0;font-size:${totalFs};font-weight:800;line-height:1.1;color:${TEAL};">${esc(formatEuroPlain(total, locale, isEmail))}</p>
 <p style="margin:6px 0 0;font-size:${footerFs};color:${MUTED};">(${esc(vat)})</p>
 ${discountBlock}
 ${travelBlock}
