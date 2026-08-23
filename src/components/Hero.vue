@@ -88,8 +88,27 @@ async function submitUnlock() {
         <div class="hero-body-grid">
           <div class="hero-stack">
             <div class="hero-cta-block">
-              <button type="button" class="hero-cta" @click="scrollToCalculator">
-                <span class="hero-cta__main">{{ t('app.calcCta') }}</span>
+              <button
+                type="button"
+                class="hero-cta"
+                :class="{ 'hero-cta--nl': locale === 'nl' }"
+                @click="scrollToCalculator"
+              >
+                <span class="hero-cta__lead">
+                  <svg
+                    v-if="locale === 'nl'"
+                    class="hero-cta__icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M7 2h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2zm0 2v16h10V4H7zm2 2h2v2H9V6zm3 0h2v2h-2V6zM9 9h2v2H9V9zm3 0h2v2h-2V9zM9 12h2v2H9v-2zm3 0h2v2h-2v-2z"
+                    />
+                  </svg>
+                  <span class="hero-cta__main">{{ t('app.calcCta') }}</span>
+                </span>
                 <span class="hero-cta__sub">{{ t('hero.ctaNote') }}</span>
               </button>
             </div>
@@ -384,6 +403,32 @@ async function submitUnlock() {
   color: var(--allexo-olive);
 }
 
+.hero-cta__lead {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  max-width: 100%;
+}
+
+.hero-cta__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 1.125rem;
+}
+
+.hero-cta--nl .hero-cta__main {
+  font-size: clamp(1.12rem, 2.55vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.hero-cta--nl .hero-cta__sub {
+  font-size: clamp(0.625rem, 1.35vw, 0.6875rem);
+  font-weight: 400;
+  opacity: 0.58;
+}
+
 .hero-cta__sub {
   font-size: clamp(0.6875rem, 1.6vw, 0.75rem);
   font-weight: 500;
@@ -597,6 +642,20 @@ async function submitUnlock() {
 
   .hero-cta__main {
     font-size: 1rem;
+  }
+
+  .hero-cta--nl .hero-cta__main {
+    font-size: 1.0625rem;
+  }
+
+  .hero-cta--nl .hero-cta__sub {
+    font-size: 0.625rem;
+  }
+
+  .hero-cta--nl .hero-cta__icon {
+    width: 1rem;
+    height: 1rem;
+    flex-basis: 1rem;
   }
 
   .hero-cta__sub {

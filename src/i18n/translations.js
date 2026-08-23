@@ -1203,7 +1203,7 @@ export const TRANSLATIONS = {
       step3Label: 'Stap 3:',
       step3: 'Schatting per e-mail',
       intro: 'De berekening is indicatief. De definitieve prijs wordt bevestigd na opmeting.',
-      calcCta: 'Bereken je richtprijs',
+      calcCta: 'Bereken je offerte',
     },
     hero: {
       brandTag: 'RAAMAFWERKING',

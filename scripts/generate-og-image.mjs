@@ -31,7 +31,7 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
   <text x="92" y="330" fill="#f5f1ea" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="600">Professionele binnenafwerking van ramen</text>
   <text x="92" y="382" fill="#f5f1ea" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="600">MDF &amp; PVC · België</text>
 
-  <text x="92" y="470" fill="#c4a35a" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="600" letter-spacing="1">Netjes afgewerkt · Kwaliteit · Factuur mogelijk</text>
+  <text x="92" y="470" fill="#c4a35a" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="600" letter-spacing="1">Nauwkeurigheid | Stiptheid | Netheid</text>
 
   <text x="92" y="545" fill="#9a948c" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="500">allexo.be</text>
 </svg>`
