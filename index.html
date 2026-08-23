@@ -78,6 +78,17 @@
         alt=""
       />
     </noscript>
+    <script>
+      ;(function () {
+        try {
+          var params = new URLSearchParams(window.location.search)
+          var lang = params.get('lang') || params.get('locale')
+          if (lang === 'nl' || lang === 'fr' || lang === 'en' || lang === 'uk') {
+            localStorage.setItem('allexo-mdf-locale', lang)
+          }
+        } catch (e) {}
+      })()
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
