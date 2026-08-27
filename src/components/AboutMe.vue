@@ -66,8 +66,8 @@ onBeforeUnmount(() => {
             class="about__photo-img"
             :src="PHOTO_SRC"
             alt=""
-            width="1024"
-            height="768"
+            width="1600"
+            height="1694"
             decoding="async"
             fetchpriority="low"
           />
@@ -190,7 +190,7 @@ onBeforeUnmount(() => {
 .about__photo {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1600 / 1694;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--allexo-border);
@@ -220,7 +220,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 28%;
+  object-position: center center;
   transition: transform 0.35s ease;
   will-change: transform;
 }
@@ -574,7 +574,8 @@ onBeforeUnmount(() => {
   }
 
   .about__photo-img {
-    object-position: center 18%;
+    object-fit: cover;
+    object-position: center center;
   }
 
   .about__content {
@@ -727,9 +728,9 @@ onBeforeUnmount(() => {
     flex: 0 0 clamp(16.5rem, 22vw, 19.5rem);
     width: clamp(16.5rem, 22vw, 19.5rem);
     max-width: 19.5rem;
-    aspect-ratio: auto;
+    aspect-ratio: 1600 / 1694;
     height: auto;
-    align-self: stretch;
+    align-self: flex-start;
   }
 
   .about__photo-btn {
@@ -742,7 +743,8 @@ onBeforeUnmount(() => {
     inset: 0;
     width: 100%;
     height: 100%;
-    object-position: center 24%;
+    object-fit: cover;
+    object-position: center center;
   }
 
   .about__photo-placeholder {

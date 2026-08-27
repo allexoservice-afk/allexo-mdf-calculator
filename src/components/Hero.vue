@@ -371,12 +371,12 @@ async function submitUnlock() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   flex: 0 1 auto;
   min-width: 0;
   margin-top: 0;
-  min-height: 2.85rem;
-  padding: 0.55rem 1.45rem 0.6rem;
+  min-height: 2.45rem;
+  padding: 0.42rem 1.2rem 0.46rem;
   border-radius: 999px;
   border: 1px solid var(--hero-gold);
   background: var(--hero-gold);
@@ -384,8 +384,8 @@ async function submitUnlock() {
   font: inherit;
   cursor: pointer;
   box-shadow:
-    0 4px 14px rgba(228, 179, 76, 0.35),
-    0 0 0 1px rgba(228, 179, 76, 0.15);
+    0 2px 8px rgba(228, 179, 76, 0.22),
+    0 0 0 1px rgba(228, 179, 76, 0.08);
   -webkit-tap-highlight-color: transparent;
   transition:
     background 0.22s ease,
@@ -396,7 +396,7 @@ async function submitUnlock() {
 }
 
 .hero-cta__main {
-  font-size: clamp(1.05rem, 2.4vw, 1.375rem);
+  font-size: clamp(0.95rem, 2.1vw, 1.2rem);
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: 0.015em;
@@ -407,35 +407,35 @@ async function submitUnlock() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   max-width: 100%;
 }
 
 .hero-cta__icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  flex: 0 0 1.125rem;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
 }
 
 .hero-cta--nl .hero-cta__main {
-  font-size: clamp(1.12rem, 2.55vw, 1.5rem);
-  font-weight: 800;
+  font-size: clamp(0.98rem, 2.2vw, 1.25rem);
+  font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .hero-cta--nl .hero-cta__sub {
-  font-size: clamp(0.625rem, 1.35vw, 0.6875rem);
+  font-size: clamp(0.58rem, 1.25vw, 0.64rem);
   font-weight: 400;
-  opacity: 0.58;
+  opacity: 0.55;
 }
 
 .hero-cta__sub {
-  font-size: clamp(0.6875rem, 1.6vw, 0.75rem);
+  font-size: clamp(0.625rem, 1.45vw, 0.6875rem);
   font-weight: 500;
   line-height: 1.15;
   letter-spacing: 0.01em;
   color: var(--allexo-olive);
-  opacity: 0.65;
+  opacity: 0.62;
   white-space: nowrap;
 }
 
@@ -443,8 +443,8 @@ async function submitUnlock() {
   background: #f0c05a;
   border-color: #f0c05a;
   box-shadow:
-    0 6px 20px rgba(228, 179, 76, 0.45),
-    0 0 0 1px rgba(240, 192, 90, 0.25);
+    0 3px 12px rgba(228, 179, 76, 0.28),
+    0 0 0 1px rgba(240, 192, 90, 0.16);
   transform: translateY(-1px);
 }
 
@@ -630,36 +630,43 @@ async function submitUnlock() {
   }
 
   .hero-cta-block {
-    align-items: stretch;
+    align-items: center;
     width: 100%;
   }
 
   .hero-cta {
-    width: 100%;
-    min-height: 2.55rem;
-    padding: 0.42rem 1.05rem 0.46rem;
+    width: 93%;
+    max-width: 22rem;
+    min-height: 2.15rem;
+    padding: 0.3rem 0.9rem 0.34rem;
   }
 
   .hero-cta__main {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .hero-cta--nl .hero-cta__main {
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
   }
 
   .hero-cta--nl .hero-cta__sub {
-    font-size: 0.625rem;
+    font-size: 0.55rem;
   }
 
   .hero-cta--nl .hero-cta__icon {
-    width: 1rem;
-    height: 1rem;
-    flex-basis: 1rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-basis: 0.875rem;
   }
 
   .hero-cta__sub {
-    font-size: 0.6875rem;
+    font-size: 0.58rem;
+  }
+
+  .hero-cta__icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-basis: 0.875rem;
   }
 
   .hero-contacts {
@@ -667,7 +674,6 @@ async function submitUnlock() {
     text-align: left;
     width: 100%;
     padding-top: 0.22rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
     gap: 0.12rem;
   }
 
