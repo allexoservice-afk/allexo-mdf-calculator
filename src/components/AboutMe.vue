@@ -654,7 +654,7 @@ onBeforeUnmount(() => {
 
   .about__col-title {
     margin: 0 0 0.4rem;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.2;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -670,10 +670,10 @@ onBeforeUnmount(() => {
   .about__list-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
-    font-size: 13px;
+    gap: 0.45rem;
+    font-size: 12px;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.3;
     min-width: 0;
   }
 
@@ -688,22 +688,22 @@ onBeforeUnmount(() => {
 
   .about__list-item--highlight,
   .about__list-item--highlight span {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.3;
   }
 
   .about__list-item :deep(.aci) {
-    width: 1.35rem;
-    height: 1.35rem;
-    flex: 0 0 1.35rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    flex: 0 0 1.2rem;
     flex-shrink: 0;
     margin: 0;
   }
 
   .about__list-item :deep(.aci svg) {
-    width: 1.35rem;
-    height: 1.35rem;
+    width: 1.2rem;
+    height: 1.2rem;
     display: block;
   }
 
