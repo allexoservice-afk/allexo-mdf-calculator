@@ -13,6 +13,7 @@ import {
   CONTACT_EMAIL,
   CONTACT_EMAIL_HREF,
   CONTACT_PHONE_HREF,
+  CONTACT_VAT,
   GOOGLE_REVIEWS_HREF,
 } from './constants/contact.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
@@ -592,6 +593,7 @@ const mdfOrderSubtotalEuros = computed(() =>
             :aria-label="t('contacts.emailAria')"
           >{{ t('contacts.emailDisplay') }}</a>
         </p>
+        <p class="footer__vat" :aria-label="t('contacts.vatAria')">BTW {{ CONTACT_VAT }}</p>
         <p class="footer__privacy-wrap">
           <button type="button" class="footer__privacy" @click="privacyOpen = true">
             {{ t('privacy.link') }}
@@ -1347,24 +1349,30 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 .footer__contacts {
   margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--allexo-muted);
+}
+
+.footer__vat {
+  margin: 0.35rem 0 0;
   font-size: 0.86rem;
   line-height: 1.45;
+  color: var(--allexo-green);
+  font-weight: 800;
 }
 
 .footer__link {
   display: inline-block;
-  color: var(--allexo-green);
-  font-weight: 800;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
   word-break: break-word;
-  padding: 0.2rem 0;
-  min-height: 2.75rem;
-  line-height: 2.35rem;
+  padding: 0.15rem 0;
 }
 
 .footer__link:hover {
-  color: var(--allexo-btn-hover);
+  color: var(--allexo-muted);
 }
 
 .footer__sep {

@@ -1,14 +1,106 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { CONTACT_WHATSAPP_HREF } from '../constants/contact.js'
 import AboutCardIcon from './AboutCardIcon.vue'
 import aboutPhoto from '../assets/about/oleksandr.jpg'
 
-const { t } = useLocale()
+const { t, locale } = useLocale()
 
 const PHOTO_SRC = aboutPhoto
 const lightboxOpen = ref(false)
+
+/** Mobile collapsed: готове коротке речення з i18n (без auto-truncate). */
+
+/** @param {string} text */
+function splitParagraphs(text) {
+  return String(text || '')
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+const engagementParagraphs = computed(() => splitParagraphs(t('about.engagement')))
+const engagementPreview = computed(() => String(t('about.engagementPreview') || '').trim())
+const engagementMoreParagraphs = computed(() => splitParagraphs(t('about.engagementMore')))
+
+const aboutIntroOpen = ref(false)
+const mobileLeadRef = ref(/** @type {HTMLElement | null} */ (null))
+const leadClipMax = ref(/** @type {string | null} */ (null))
+const leadClipAnimating = ref(false)
+
+function isMobileAboutLayout() {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+}
+
+async function syncLeadClip(open = aboutIntroOpen.value) {
+  await nextTick()
+  leadClipAnimating.value = false
+  if (!isMobileAboutLayout()) {
+    leadClipMax.value = null
+    return
+  }
+  const el = mobileLeadRef.value
+  if (!el) return
+  leadClipMax.value = open ? `${Math.ceil(el.scrollHeight)}px` : '0px'
+}
+
+async function toggleIntro() {
+  if (!isMobileAboutLayout()) return
+  const el = mobileLeadRef.value
+  if (!el) {
+    aboutIntroOpen.value = !aboutIntroOpen.value
+    return
+  }
+
+  if (!aboutIntroOpen.value) {
+    leadClipAnimating.value = true
+    leadClipMax.value = '0px'
+    aboutIntroOpen.value = true
+    await nextTick()
+    const to = Math.ceil(el.scrollHeight)
+    requestAnimationFrame(() => {
+      leadClipMax.value = `${to}px`
+    })
+    return
+  }
+
+  const from = Math.ceil(el.scrollHeight)
+  leadClipAnimating.value = true
+  leadClipMax.value = `${from}px`
+  aboutIntroOpen.value = false
+  void el.offsetHeight
+  requestAnimationFrame(() => {
+    leadClipMax.value = '0px'
+  })
+}
+
+/** @param {TransitionEvent} e */
+function onLeadClipTransitionEnd(e) {
+  if (e.propertyName !== 'max-height') return
+  if (!isMobileAboutLayout()) return
+  leadClipAnimating.value = false
+  if (!aboutIntroOpen.value) {
+    leadClipMax.value = '0px'
+  } else {
+    const el = mobileLeadRef.value
+    if (el) leadClipMax.value = `${Math.ceil(el.scrollHeight)}px`
+  }
+}
+
+watch(locale, async () => {
+  aboutIntroOpen.value = false
+  await syncLeadClip(false)
+})
+
+function onViewportChange() {
+  syncLeadClip(aboutIntroOpen.value)
+}
+
+onMounted(() => {
+  syncLeadClip(false)
+  window.addEventListener('resize', onViewportChange, { passive: true })
+})
 
 const finishing = [
   { key: 'main1', icon: 'reveal-mdf' },
@@ -48,68 +140,102 @@ watch(lightboxOpen, (open) => {
 
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
+  window.removeEventListener('resize', onViewportChange)
 })
 </script>
 
 <template>
   <section class="about" :aria-label="t('about.aria')">
     <div class="about__panel">
-      <div class="about__photo">
-        <button
-          v-if="PHOTO_SRC"
-          type="button"
-          class="about__photo-btn"
-          :aria-label="t('about.photoExpandAria')"
-          @click="openPhotoLightbox"
-        >
-          <img
-            class="about__photo-img"
-            :src="PHOTO_SRC"
-            alt=""
-            width="1600"
-            height="1694"
-            decoding="async"
-            fetchpriority="low"
-          />
-        </button>
-        <div v-else class="about__photo-placeholder">
-          <span class="about__photo-initials">{{ t('about.photoInitials') }}</span>
-          <span class="about__photo-hint">{{ t('about.photoPlaceholder') }}</span>
+      <div class="about__intro" :class="{ 'about__intro--open': aboutIntroOpen }">
+        <div class="about__photo">
+          <button
+            v-if="PHOTO_SRC"
+            type="button"
+            class="about__photo-btn"
+            :aria-label="t('about.photoExpandAria')"
+            @click="openPhotoLightbox"
+          >
+            <img
+              class="about__photo-img"
+              :src="PHOTO_SRC"
+              alt=""
+              width="1600"
+              height="1694"
+              decoding="async"
+              fetchpriority="low"
+            />
+          </button>
+          <div v-else class="about__photo-placeholder">
+            <span class="about__photo-initials">{{ t('about.photoInitials') }}</span>
+            <span class="about__photo-hint">{{ t('about.photoPlaceholder') }}</span>
+          </div>
         </div>
-      </div>
 
-      <div class="about__content">
-        <header class="about__header">
-          <h2 class="about__title">{{ t('about.profileTitle') }}</h2>
-          <p class="about__lead about__lead--desktop">{{ t('about.engagement') }}</p>
-          <p class="about__lead about__lead--mobile">{{ t('about.engagementMobile') }}</p>
-        </header>
+        <div class="about__stack">
+          <header class="about__header">
+            <h2 class="about__title">{{ t('about.profileTitle') }}</h2>
+            <div class="about__copy">
+              <div class="about__lead about__lead--desktop">
+                <p v-for="(para, i) in engagementParagraphs" :key="'d-' + i">{{ para }}</p>
+              </div>
+              <div class="about__lead about__lead--mobile about__lead--preview">
+                <p>{{ engagementPreview }}</p>
+              </div>
+            </div>
+            <div
+              id="about-engagement-more"
+              class="about__lead-clip"
+              :class="{
+                'about__lead-clip--open': aboutIntroOpen,
+                'about__lead-clip--animating': leadClipAnimating,
+              }"
+              :style="leadClipMax != null ? { maxHeight: leadClipMax } : undefined"
+              :aria-hidden="!aboutIntroOpen"
+              @transitionend="onLeadClipTransitionEnd"
+            >
+              <div ref="mobileLeadRef" class="about__lead about__lead--mobile about__lead--more">
+                <p v-for="(para, i) in engagementMoreParagraphs" :key="'more-' + i">{{ para }}</p>
+              </div>
+            </div>
+          </header>
 
-        <div class="about__columns">
-          <section class="about__col" :aria-labelledby="'about-col-finishing'">
-            <h3 id="about-col-finishing" class="about__col-title">{{ t('about.sectionMain') }}</h3>
-            <ul class="about__list" role="list">
-              <li v-for="item in finishing" :key="item.key" class="about__list-item">
-                <AboutCardIcon :name="item.icon" />
-                <span>{{ t(`about.${item.key}`) }}</span>
-              </li>
-            </ul>
-          </section>
+          <button
+            type="button"
+            class="about__more"
+            :aria-expanded="aboutIntroOpen"
+            aria-controls="about-engagement-more"
+            @click="toggleIntro"
+          >
+            {{ aboutIntroOpen ? t('about.toggleCollapse') : t('about.toggleExpand') }}
+          </button>
 
-          <section class="about__col" :aria-labelledby="'about-col-service'">
-            <h3 id="about-col-service" class="about__col-title">{{ t('about.sectionService') }}</h3>
-            <ul class="about__list" role="list">
-              <li
-                v-for="item in service"
-                :key="item.key"
-                class="about__list-item"
-                :class="{ 'about__list-item--highlight': item.highlight }"
-              >
-                <AboutCardIcon :name="item.icon" />
-                <span>{{ t(`about.${item.key}`) }}</span>
-              </li>
-            </ul>
-          </section>
+          <div class="about__columns">
+            <section class="about__col" :aria-labelledby="'about-col-finishing'">
+              <h3 id="about-col-finishing" class="about__col-title">{{ t('about.sectionMain') }}</h3>
+              <ul class="about__list" role="list">
+                <li v-for="item in finishing" :key="item.key" class="about__list-item">
+                  <AboutCardIcon :name="item.icon" />
+                  <span>{{ t(`about.${item.key}`) }}</span>
+                </li>
+              </ul>
+            </section>
+
+            <section class="about__col" :aria-labelledby="'about-col-service'">
+              <h3 id="about-col-service" class="about__col-title">{{ t('about.sectionService') }}</h3>
+              <ul class="about__list" role="list">
+                <li
+                  v-for="item in service"
+                  :key="item.key"
+                  class="about__list-item"
+                  :class="{ 'about__list-item--highlight': item.highlight }"
+                >
+                  <AboutCardIcon :name="item.icon" />
+                  <span>{{ t(`about.${item.key}`) }}</span>
+                </li>
+              </ul>
+            </section>
+          </div>
         </div>
 
         <section class="about__trust" aria-labelledby="about-trust-title">
@@ -267,10 +393,32 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.about__intro {
+  min-width: 0;
+}
+
+.about__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.about__more {
+  display: none;
+}
+
 .about__header {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.55rem;
+}
+
+.about__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .about__title {
@@ -283,15 +431,37 @@ onBeforeUnmount(() => {
 }
 
 .about__lead {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin: 0;
   font-size: 0.84rem;
   line-height: 1.55;
   color: var(--allexo-text);
-  max-width: 40rem;
+  max-width: 42rem;
+}
+
+.about__lead p {
+  margin: 0;
 }
 
 .about__lead--mobile {
   display: none;
+}
+
+.about__lead-clip {
+  display: none;
+  min-width: 0;
+}
+
+@media (min-width: 769px) {
+  .about__lead-clip {
+    display: none;
+  }
+
+  .about__lead--desktop {
+    line-height: 1.67; /* was 1.55 (+~7.7%) */
+  }
 }
 
 .about__columns {
@@ -558,21 +728,43 @@ onBeforeUnmount(() => {
     overflow-x: clip;
   }
 
-  /* Фото | текст справа; висота фото = висота текстового блоку */
   .about__panel {
-    display: grid;
-    grid-template-columns: 6.75rem minmax(0, 1fr);
-    column-gap: 0.9rem;
-    row-gap: 0.65rem;
-    align-items: stretch;
+    display: block;
     width: 100%;
     max-width: 100%;
     min-width: 0;
   }
 
+  .about__intro {
+    display: grid;
+    grid-template-columns: 6.75rem minmax(0, 1fr);
+    column-gap: 0.9rem;
+    row-gap: 0;
+    align-items: start;
+  }
+
+  .about__stack {
+    display: contents;
+  }
+
+  .about__header {
+    display: contents;
+  }
+
+  /* Full-width title above photo + preview — keeps preview beside the photo only */
+  .about__title {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    margin: 0 0 0.45rem;
+    font-size: 14px;
+    line-height: 1.3;
+    font-weight: 700;
+    min-width: 0;
+  }
+
   .about__photo {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 2;
     float: none;
     width: 6.75rem;
     max-width: 6.75rem;
@@ -582,7 +774,7 @@ onBeforeUnmount(() => {
     max-height: none;
     margin: 0;
     border-radius: 10px;
-    align-self: stretch;
+    align-self: stretch; /* grow with preview so text never continues under the photo */
   }
 
   .about__photo-btn {
@@ -597,49 +789,89 @@ onBeforeUnmount(() => {
     object-position: center 20%;
   }
 
-  .about__content {
-    display: contents;
-  }
-
-  .about__header {
+  .about__copy {
     grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+    grid-row: 2;
+    gap: 0;
     min-width: 0;
-    align-self: stretch;
-  }
-
-  .about__title {
-    margin: 0;
-    font-size: 14.5px;
-    line-height: 1.25;
-    font-weight: 700;
+    align-self: start;
   }
 
   .about__lead--desktop {
     display: none;
   }
 
+  .about__lead-clip {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 4;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    transition: max-height 300ms ease-in-out;
+  }
+
+  .about__lead-clip--animating {
+    overflow: hidden;
+  }
+
   .about__lead--mobile {
     display: block;
     margin: 0;
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 19px;
     font-weight: 400;
     max-width: none;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .about__lead--mobile p + p {
+    margin-top: 0.55em;
+  }
+
+  .about__lead--preview {
+    max-width: 100%;
+  }
+
+  .about__more {
+    display: inline-flex;
+    align-items: center;
+    grid-column: 1;
+    grid-row: 3;
+    clear: none;
+    align-self: start;
+    justify-self: start;
+    margin: 0.75rem 0 0; /* ~12px under photo */
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--allexo-olive);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .about__more:focus-visible {
+    outline: 2px solid var(--allexo-olive);
+    outline-offset: 3px;
   }
 
   .about__columns {
     grid-column: 1 / -1;
-    grid-row: 2;
+    grid-row: 5;
+    clear: none;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.3rem 0.75rem;
     width: 100%;
     max-width: 100%;
-    margin: 0;
+    margin: 1.25rem 0 0; /* ~20px after Lees meer */
     margin-inline: 0;
     box-sizing: border-box;
     padding: 0.3rem 0.85rem;
@@ -709,10 +941,11 @@ onBeforeUnmount(() => {
 
   .about__trust {
     grid-column: 1 / -1;
-    grid-row: 3;
+    grid-row: 6;
+    clear: none;
     width: 100%;
     max-width: 100%;
-    margin: 0;
+    margin: 0.55rem 0 0;
     margin-inline: 0;
     box-sizing: border-box;
     padding: 0.28rem 0.85rem 0.32rem;
@@ -752,11 +985,12 @@ onBeforeUnmount(() => {
 
   .about__wa {
     grid-column: 1 / -1;
-    grid-row: 4;
+    grid-row: 7;
+    clear: none;
     display: flex;
     width: 100%;
     max-width: 100%;
-    margin: 0;
+    margin: 0.55rem 0 0;
     margin-inline: 0;
     box-sizing: border-box;
     min-height: 2.45rem;
@@ -764,6 +998,40 @@ onBeforeUnmount(() => {
     font-size: 14px;
     line-height: 1.2;
     font-weight: 600;
+  }
+
+  .about__intro--open .about__lead-clip {
+    margin-top: 0.55rem;
+  }
+}
+
+/* Narrow phones ≤430px: WAAROM single column + tighter Lees meer gap */
+@media (max-width: 430px) {
+  .about__more {
+    margin-top: 0.2rem; /* ~3px — ~9px closer to photo/text than 0.75rem */
+  }
+
+  .about__trust-list {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: 0.8rem; /* ~13px */
+  }
+
+  /* Order: why1 (20+) → why3 (Brugge) → why2 (contact) → why4 (quality) */
+  .about__trust-item:nth-child(1) {
+    order: 1;
+  }
+
+  .about__trust-item:nth-child(2) {
+    order: 3;
+  }
+
+  .about__trust-item:nth-child(3) {
+    order: 2;
+  }
+
+  .about__trust-item:nth-child(4) {
+    order: 4;
   }
 }
 
@@ -775,20 +1043,30 @@ onBeforeUnmount(() => {
 
 @media (min-width: 900px) {
   .about__panel {
-    display: flex;
-    align-items: stretch;
-    gap: 1.35rem;
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .about__intro {
+    display: grid;
+    grid-template-columns: 14.5rem minmax(0, 1fr);
+    column-gap: 1.75rem;
+    row-gap: 1.15rem;
+    align-items: start;
   }
 
   .about__photo {
-    flex: 0 0 clamp(16.5rem, 22vw, 19.5rem);
-    width: clamp(16.5rem, 22vw, 19.5rem);
-    max-width: 19.5rem;
-    /* Stretch to content column so bottom aligns with WhatsApp CTA */
-    aspect-ratio: auto;
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    flex: none;
+    width: 14.5rem;
+    max-width: 14.5rem;
+    aspect-ratio: 4 / 5;
     height: auto;
     min-height: 0;
-    align-self: stretch;
   }
 
   .about__photo-btn {
@@ -802,7 +1080,7 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center center;
+    object-position: center 18%;
   }
 
   .about__photo-placeholder {
@@ -810,10 +1088,71 @@ onBeforeUnmount(() => {
     inset: 0;
   }
 
-  .about__content {
-    flex: 1 1 auto;
-    gap: 0.9rem;
-    padding-top: 0.15rem;
+  .about__stack {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 56.25rem; /* 900px */
+    min-width: 0;
+  }
+
+  .about__header {
+    min-width: 0;
+    gap: 0.45rem;
+  }
+
+  .about__more {
+    display: none;
+  }
+
+  .about__columns {
+    margin-top: 1.15rem; /* ~18px after description */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 4.5rem; /* ~72px */
+    row-gap: 0.4rem;
+    width: 100%;
+  }
+
+  .about__col-title {
+    margin-bottom: 0.3rem;
+  }
+
+  .about__list {
+    gap: 0.28rem;
+  }
+
+  .about__trust {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 0;
+    padding: 0.48rem 0.7rem 0.52rem;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+
+  .about__trust-title {
+    margin-bottom: 0.32rem;
+  }
+
+  .about__trust-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.75rem;
+    row-gap: 0.28rem;
+  }
+
+  .about__wa {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    width: 100%;
+    max-width: none;
+    align-self: stretch;
+    margin-top: 0;
+    box-sizing: border-box;
   }
 
   .about__lead {
@@ -822,10 +1161,6 @@ onBeforeUnmount(() => {
 
   .about__list-item {
     font-size: 0.8rem;
-  }
-
-  .about__trust-list {
-    column-gap: 1.1rem;
   }
 
   .about__trust-item {
@@ -841,6 +1176,10 @@ onBeforeUnmount(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .about__photo-img {
+    transition: none;
+  }
+
+  .about__lead-clip {
     transition: none;
   }
 

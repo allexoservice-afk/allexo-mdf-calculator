@@ -16,7 +16,7 @@ export function isSupportedLocale(v) {
 export const TRANSLATIONS = {
   uk: {
     app: {
-      footer: '© ALLEXO · Калькулятор MDF',
+      footer: '© ALLEXO',
       stepsAria: 'Кроки роботи з калькулятором',
       step1Label: 'Крок 1:',
       step1: 'Оберіть тип оздоблення',
@@ -266,11 +266,13 @@ export const TRANSLATIONS = {
     about: {
       aria: 'Про ALLEXO',
       hello: 'Привіт, я <strong>Oleksandr.</strong>',
-      profileTitle: 'Я Oleksandr і працюю під назвою ALLEXO',
+      profileTitle: 'Мій досвід: багаторічна практика у Західній Фландрії',
       engagement:
-        'Професійне внутрішнє оздоблення після встановлення вікон — відкоси, підвіконня та короби ролет. Також монтаж, обслуговування та ремонт ролет, вікон, дверей і гаражних воріт.',
-      engagementMobile:
-        'Професійне внутрішнє оздоблення після встановлення вікон — відкоси, підвіконня та короби ролет. Також монтаж, обслуговування та ремонт ролет, вікон, дверей і гаражних воріт.',
+        'Перед тим як почати працювати самостійно, я понад 3 роки працював професійним монтажником у спеціалізованій компанії з продажу та встановлення вікон і дверей у регіоні Брюгге. За цей час я успішно реалізував сотні проєктів та здобув глибокий практичний досвід у монтажі, оздобленні й обслуговування.\n\nЦей досвід я сьогодні привношу в кожен проєкт ALLEXO: професійна майстерність, бездоганна точність та особистий контакт — безпосередньо з майстром, який фактично виконує роботу.',
+      engagementPreview:
+        'Перед тим як почати працювати самостійно, я понад 3 роки працював професійним монтажником у спеціалізованій компанії з продажу та встановлення вікон і дверей у регіоні Брюгге.',
+      engagementMore:
+        'За цей час я успішно реалізував сотні проєктів та здобув глибокий практичний досвід у монтажі, оздобленні й обслуговування.\n\nЦей досвід я сьогодні привношу в кожен проєкт ALLEXO: професійна майстерність, бездоганна точність та особистий контакт — безпосередньо з майстром, який фактично виконує роботу.',
       intro1: 'Олександр — самозайнятий майстер з оздоблення вікон (ALLEXO).',
       intro3:
         'Понад 3 роки — у провідній бельгійській компанії з повним циклом віконно-дверних робіт: від демонтажу до фінішної обробки. Там набув досвід за бельгійськими стандартами якості.',
@@ -301,11 +303,11 @@ export const TRANSLATIONS = {
       extra8: 'Вентиляційні решітки MDF',
       extra9: 'Підготовлено під фарбування',
       sectionWhy: 'Чому ALLEXO',
-      why1: '20+ років досвіду',
-      why2: 'Без посередників — працюю особисто',
-      why3: '3+ роки досвіду в бельгійській компанії',
-      why4: 'Точність | Пунктуальність | Чистота',
-      waServiceCta: 'Потрібен монтаж чи сервіс? Напишіть у WhatsApp',
+      why1: '20+ років досвіду у справі',
+      why2: 'Прямий контакт — одна контактна особа без посередників',
+      why3: '3+ роки досвіду в регіоні Брюгге',
+      why4: 'Гарантована якість: точність, пунктуальність і чистота',
+      waServiceCta: 'Потрібен монтаж чи сервіс? WhatsApp',
       waServiceAria: 'Написати в WhatsApp про монтаж або сервіс',
       waServiceMessage:
         'Добрий день! Потрібен монтаж / сервіс (оберіть потрібне). Адреса / коротко про задачу:',
@@ -647,7 +649,7 @@ export const TRANSLATIONS = {
   },
   en: {
     app: {
-      footer: '© ALLEXO · MDF calculator',
+      footer: '© ALLEXO',
       stepsAria: 'How to use the calculator',
       step1Label: 'Step 1:',
       step1: 'Choose a finishing type',
@@ -890,11 +892,13 @@ export const TRANSLATIONS = {
     about: {
       aria: 'About ALLEXO',
       hello: 'Hello, I’m <strong>Oleksandr.</strong>',
-      profileTitle: 'I am Oleksandr and I work under the name ALLEXO',
+      profileTitle: 'My background: years of experience in West Flanders',
       engagement:
-        'Professional interior finishing after window installation — reveals, window sills and shutter boxes. Also installation, maintenance and repair of shutters, windows, doors and garage doors.',
-      engagementMobile:
-        'Professional interior finishing after window installation — reveals, window sills and shutter boxes. Also installation, maintenance and repair of shutters, windows, doors and garage doors.',
+        'Before I started as an independent craftsman under the name ALLEXO, I worked for over 3 years as a professional installer at a specialised window and door company in the Bruges region. During that time I worked on hundreds of projects and built up extensive hands-on experience in the installation, finishing and maintenance.\n\nI bring that experience to every ALLEXO project today: professional craftsmanship, precise work and personal contact — directly with the craftsman who actually carries out the work.',
+      engagementPreview:
+        'Before I started as an independent craftsman under the name ALLEXO, I worked for over 3 years as a professional installer at a specialised window and door company in the Bruges region.',
+      engagementMore:
+        'During that time I worked on hundreds of projects and built up extensive hands-on experience in the installation, finishing and maintenance.\n\nI bring that experience to every ALLEXO project today: professional craftsmanship, precise work and personal contact — directly with the craftsman who actually carries out the work.',
       intro1: 'Oleksandr — self-employed window finishing specialist (ALLEXO).',
       intro3:
         'Over 3 years with a leading Belgian company handling the full window and door cycle — from removal to final finishing. There I gained experience to Belgian quality standards.',
@@ -925,11 +929,11 @@ export const TRANSLATIONS = {
       extra8: 'MDF ventilation grilles',
       extra9: 'Paint-ready finish',
       sectionWhy: 'Why ALLEXO',
-      why1: '20+ years experience',
-      why2: 'No middlemen — I work personally',
-      why3: '3+ years at a Belgian company',
-      why4: 'Accuracy | Punctuality | Cleanliness',
-      waServiceCta: 'Need installation or service? WhatsApp me',
+      why1: '20+ years of trade experience',
+      why2: 'Direct contact — one point of contact, no middlemen',
+      why3: '3+ years of experience in the Bruges region',
+      why4: 'Guaranteed quality: accuracy, punctuality and cleanliness',
+      waServiceCta: 'Need installation or service? WhatsApp',
       waServiceAria: 'Message on WhatsApp about installation or service',
       waServiceMessage:
         'Hello! I need installation / service (please choose). Address / short description:',
@@ -1272,7 +1276,7 @@ export const TRANSLATIONS = {
   },
   nl: {
     app: {
-      footer: '© ALLEXO · MDF-rekenmachine',
+      footer: '© ALLEXO',
       stepsAria: 'Stappen voor gebruik',
       step1Label: 'Stap 1:',
       step1: 'Kies het type afwerking',
@@ -1518,15 +1522,17 @@ export const TRANSLATIONS = {
     about: {
       aria: 'Over ALLEXO',
       hello: 'Hallo, ik ben <strong>Oleksandr.</strong>',
-      profileTitle: 'Ik ben Oleksandr en werk onder de naam ALLEXO',
+      profileTitle: 'Mijn achtergrond: jarenlange ervaring in West-Vlaanderen',
       engagement:
-        'Professionele binnenafwerking na plaatsing van ramen — dagkanten, vensterbanken en rolluikkasten. Ook plaatsing, onderhoud en herstelling van rolluiken, ramen, deuren en garagepoorten.',
-      engagementMobile:
-        'Professionele binnenafwerking na plaatsing van ramen — dagkanten, vensterbanken en rolluikkasten. Ook plaatsing, onderhoud en herstelling van rolluiken, ramen, deuren en garagepoorten.',
+        'Voordat ik als zelfstandige onder de naam ALLEXO begon, werkte ik ruim 3 jaar als professioneel monteur bij een gespecialiseerd bedrijf in de verkoop en plaatsing van ramen en deuren in de regio Brugge. In die periode heb ik aan honderden projecten gewerkt en ruime praktijkervaring opgebouwd in de plaatsing, afwerking en het onderhoud van ramen en deuren.\n\nDie ervaring neem ik vandaag mee naar elk ALLEXO-project: professioneel vakmanschap, nauwkeurig werk en persoonlijk contact — rechtstreeks met de vakman die het werk daadwerkelijk uitvoert.',
+      engagementPreview:
+        'Voordat ik als zelfstandige onder de naam ALLEXO begon, werkte ik ruim 3 jaar als professioneel monteur bij een gespecialiseerd bedrijf in de verkoop en plaatsing van ramen en deuren in de regio Brugge.',
+      engagementMore:
+        'In die periode heb ik aan honderden projecten gewerkt en ruime praktijkervaring opgebouwd in de plaatsing, afwerking en het onderhoud van ramen en deuren.\n\nDie ervaring neem ik vandaag mee naar elk ALLEXO-project: professioneel vakmanschap, nauwkeurig werk en persoonlijk contact — rechtstreeks met de vakman die het werk daadwerkelijk uitvoert.',
       intro1: 'Oleksandr — zelfstandige specialist in raamafwerking (ALLEXO).',
       intro3:
         'Meer dan 3 jaar bij een toonaangevend Belgisch bedrijf met het volledige gamma: van démontage tot finale afwerking. Daar deed ik ervaring op met Belgische kwaliteitsnormen.',
-      toggleExpand: 'Meer info',
+      toggleExpand: 'Lees meer',
       toggleCollapse: 'Minder tonen',
       photoInitials: 'O',
       photoPlaceholder: 'Foto volgt hier',
@@ -1553,11 +1559,11 @@ export const TRANSLATIONS = {
       extra8: 'Ventilatieroosters in MDF',
       extra9: 'Schilderklaar afgewerkt',
       sectionWhy: 'Waarom ALLEXO',
-      why1: '20+ jaar ervaring',
-      why2: 'Geen tussenpersonen — persoonlijk werk',
-      why3: '3+ jaar ervaring bij een Belgisch bedrijf',
-      why4: 'Nauwkeurigheid | Stiptheid | Netheid',
-      waServiceCta: 'Montage of service nodig? WhatsApp mij',
+      why1: '20+ jaar ervaring in het vak',
+      why2: 'Rechtstreeks contact — één aanspreekpunt zonder tussenpersonen',
+      why3: '3+ jaar ervaring in regio Brugge',
+      why4: 'Nauwkeurigheid, stiptheid en netheid',
+      waServiceCta: 'Montage of service nodig? WhatsApp',
       waServiceAria: 'WhatsApp-bericht over montage of service',
       waServiceMessage:
         'Goedendag! Ik heb montage / service nodig (kies wat van toepassing is). Adres / korte beschrijving:',
@@ -1900,7 +1906,7 @@ export const TRANSLATIONS = {
   },
   fr: {
     app: {
-      footer: '© ALLEXO · Calculateur MDF',
+      footer: '© ALLEXO',
       stepsAria: 'Étapes d’utilisation',
       step1Label: 'Étape 1 :',
       step1: 'Choisissez le type de finition',
@@ -2152,11 +2158,13 @@ export const TRANSLATIONS = {
     about: {
       aria: 'À propos d’ALLEXO',
       hello: 'Bonjour, je suis <strong>Oleksandr.</strong>',
-      profileTitle: 'Je suis Oleksandr et je travaille sous le nom ALLEXO',
+      profileTitle: 'Mon parcours : de longues années d’expérience en Flandre occidentale',
       engagement:
-        'Finition intérieure professionnelle après pose de fenêtres — tableaux, appuis de fenêtre et caissons de volets. Aussi pose, entretien et réparation de volets, fenêtres, portes et portes de garage.',
-      engagementMobile:
-        'Finition intérieure professionnelle après pose de fenêtres — tableaux, appuis de fenêtre et caissons de volets. Aussi pose, entretien et réparation de volets, fenêtres, portes et portes de garage.',
+        'Avant de me lancer comme indépendant sous le nom d’ALLEXO, j’ai travaillé plus de 3 ans comme installateur professionnel au sein d’une entreprise spécialisée en portes et fenêtres dans la région de Bruges. Durant cette période, j’ai collaboré à des centaines de projets et acquis une solide expérience pratique dans la pose, la finition et l’entretien.\n\nAujourd’hui, j’apporte cette expertise à chaque projet ALLEXO : un savoir-faire professionnel, un travail de précision et un contact personnel — directement avec l’artisan qui réalise concrètement les travaux.',
+      engagementPreview:
+        'Avant de me lancer comme indépendant sous le nom d’ALLEXO, j’ai travaillé plus de 3 ans comme installateur professionnel au sein d’une entreprise spécialisée en portes et fenêtres dans la région de Bruges.',
+      engagementMore:
+        'Durant cette période, j’ai collaboré à des centaines de projets et acquis une solide expérience pratique dans la pose, la finition et l’entretien.\n\nAujourd’hui, j’apporte cette expertise à chaque projet ALLEXO : un savoir-faire professionnel, un travail de précision et un contact personnel — directement avec l’artisan qui réalise concrètement les travaux.',
       intro1: 'Oleksandr — indépendant spécialisé en finition de fenêtres (ALLEXO).',
       intro3:
         'Plus de 3 ans dans une entreprise belge reconnue pour tout le cycle fenêtres et portes — du démontage à la finition complète. J’y ai acquis une expérience selon les standards de qualité belges.',
@@ -2187,11 +2195,11 @@ export const TRANSLATIONS = {
       extra8: 'Grilles de ventilation MDF',
       extra9: 'Prêt à peindre',
       sectionWhy: 'Pourquoi ALLEXO',
-      why1: '20+ ans d’expérience',
-      why2: 'Sans intermédiaires — travail en personne',
-      why3: '3+ ans en entreprise belge',
-      why4: 'Précision | Ponctualité | Propreté',
-      waServiceCta: 'Pose ou service ? Écrivez-moi sur WhatsApp',
+      why1: '20+ ans d’expérience dans le métier',
+      why2: 'Contact direct — un seul interlocuteur, sans intermédiaires',
+      why3: '3+ ans d’expérience dans la région de Bruges',
+      why4: 'Qualité garantie : précision, ponctualité et propreté',
+      waServiceCta: 'Pose ou service ? WhatsApp',
       waServiceAria: 'Écrire sur WhatsApp pour pose ou service',
       waServiceMessage:
         'Bonjour ! J’ai besoin d’une pose / d’un service (précisez). Adresse / courte description :',

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, Teleport, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, Teleport, ref } from 'vue'
 import { useLocale } from '../i18n/useLocale.js'
 import { isProUnlocked, setProUnlocked, verifyProCode } from '../constants/proUnlock.js'
 import { LOCALE_SWITCH_ORDER } from '../i18n/translations.js'
@@ -10,9 +10,15 @@ const { locale, setLocale, t } = useLocale()
 const unlockOpen = ref(false)
 const unlockCode = ref('')
 const unlockErr = ref('')
-const isProNow = computed(() => isProUnlocked())
+/** Reactive Pro flag — localStorage alone is not tracked by Vue. */
+const proUnlocked = ref(isProUnlocked())
+const isProNow = computed(() => proUnlocked.value)
 let tapCount = 0
 let tapTimer = /** @type {number | null} */ (null)
+
+function syncProUnlocked() {
+  proUnlocked.value = isProUnlocked()
+}
 
 function scrollToCalculator() {
   if (isProNow.value) {
@@ -58,8 +64,19 @@ async function submitUnlock() {
     return
   }
   setProUnlocked(!isProUnlocked())
+  syncProUnlocked()
   unlockOpen.value = false
 }
+
+onMounted(() => {
+  syncProUnlocked()
+  window.addEventListener('allexo-pro-change', syncProUnlocked)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('allexo-pro-change', syncProUnlocked)
+  if (tapTimer != null) window.clearTimeout(tapTimer)
+})
 </script>
 
 <template>
