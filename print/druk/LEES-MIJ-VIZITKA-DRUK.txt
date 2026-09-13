@@ -1,0 +1,29 @@
+ALLEXO — visitekaartje voor de drukkerij
+========================================
+
+BESTAND OM AF TE GEVEN
+  → ALLEXO-vizitka-DRUK-85x55.pdf
+
+Dit is 1 bestand, 2 pagina’s:
+  pagina 1 = voorzijde
+  pagina 2 = achterzijde
+
+FORMAT
+  Snijlijn (trim):     85 × 55 mm
+  Afloop (bleed):      3 mm rondom — al in het bestand
+  Bestandsformaat:     91 × 61 mm
+  Resolutie:           300 dpi
+  Kleur:               RGB (drukkerij kan naar CMYK converteren)
+
+BESTELGEGEVENS (NL)
+  Formaat snijlijn: 85 × 55 mm
+  Afloop: 3 mm — reeds in bestand
+  Dubbelzijdig
+  Mat zwart / soft-touch indien mogelijk
+  Oplage: bv. 100 of 250 stuks
+
+CONTROLE VÓÓR DRUK
+  1) Open de PDF — 2 pagina’s zichtbaar
+  2) Scan de QR-code met je telefoon → https://allexo.be/
+  3) Geef enkel ALLEXO-vizitka-DRUK-85x55.pdf af
+

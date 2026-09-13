@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .about {
-  margin: 0.5rem 0 var(--section-y-lg);
+  margin: 1.15rem 0 var(--section-y-lg);
   padding: 0;
   width: 100%;
   max-width: 100%;
@@ -551,31 +551,50 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .about {
     position: relative;
-    margin: 0 0 0;
+    margin: 0.35rem 0 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
   }
 
+  /* Фото | текст справа; висота фото = висота текстового блоку */
   .about__panel {
     display: grid;
-    grid-template-columns: 7.25rem minmax(0, 1fr);
-    column-gap: 0.75rem; /* горизонтальний відступ між фото і текстом */
-    row-gap: 1rem; /* photo/lead → AFWERKING без змін */
-    align-items: start;
+    grid-template-columns: 6.75rem minmax(0, 1fr);
+    column-gap: 0.9rem;
+    row-gap: 0.65rem;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .about__photo {
     grid-column: 1;
     grid-row: 1;
-    width: 7.25rem;
-    max-width: 7.25rem;
-    aspect-ratio: 1 / 1;
+    float: none;
+    width: 6.75rem;
+    max-width: 6.75rem;
+    height: auto;
+    min-height: 6.75rem;
+    aspect-ratio: auto;
     max-height: none;
+    margin: 0;
     border-radius: 10px;
-    align-self: start;
+    align-self: stretch;
+  }
+
+  .about__photo-btn {
+    height: 100%;
+    min-height: 6.75rem;
   }
 
   .about__photo-img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    object-position: center center;
+    object-position: center 20%;
   }
 
   .about__content {
@@ -585,13 +604,18 @@ onBeforeUnmount(() => {
   .about__header {
     grid-column: 2;
     grid-row: 1;
-    gap: 0.35rem;
-    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    align-self: stretch;
   }
 
   .about__title {
-    font-size: 0.95rem;
+    margin: 0;
+    font-size: 14.5px;
     line-height: 1.25;
+    font-weight: 700;
   }
 
   .about__lead--desktop {
@@ -600,8 +624,10 @@ onBeforeUnmount(() => {
 
   .about__lead--mobile {
     display: block;
-    font-size: 0.78rem;
+    margin: 0;
+    font-size: 13px;
     line-height: 1.45;
+    font-weight: 400;
     max-width: none;
   }
 
@@ -610,40 +636,60 @@ onBeforeUnmount(() => {
     grid-row: 2;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem 0.9rem;
+    gap: 0.3rem 0.75rem;
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    margin: 0;
     margin-inline: 0;
     box-sizing: border-box;
-    padding: 0.28rem 0.95rem; /* −~7px top/bottom */
+    padding: 0.3rem 0.85rem;
     border-radius: 12px;
     background: rgba(19, 52, 51, 0.04);
     border: 1px solid rgba(19, 52, 51, 0.09);
   }
 
+  .about__col {
+    min-width: 0;
+  }
+
   .about__col-title {
-    font-size: 0.66rem;
-    margin-bottom: 0.3rem;
-    letter-spacing: 0.08em;
+    margin: 0 0 0.4rem;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .about__list {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem; /* ~11px між пунктами */
+    gap: 0.28rem;
   }
 
   .about__list-item {
     display: flex;
-    align-items: flex-start; /* іконка до першого рядка тексту */
-    gap: 0.7rem; /* ~11px між іконкою і текстом */
-    font-size: 0.78rem;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 13px;
     font-weight: 600;
     line-height: 1.35;
+    min-width: 0;
   }
 
   .about__list-item > span {
     margin: 0;
+    min-width: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    overflow-wrap: break-word;
+  }
+
+  .about__list-item--highlight,
+  .about__list-item--highlight span {
+    font-size: 13px;
+    font-weight: 600;
     line-height: 1.35;
   }
 
@@ -665,49 +711,59 @@ onBeforeUnmount(() => {
     grid-column: 1 / -1;
     grid-row: 3;
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    margin: 0;
     margin-inline: 0;
-    margin-top: -0.375rem; /* −6px до WAAROM; gap photo→AFWERKING без змін */
     box-sizing: border-box;
-    padding: 0.7rem 0.95rem;
+    padding: 0.28rem 0.85rem 0.32rem;
   }
 
   .about__trust-title {
-    margin: 0 0 0.35rem;
-    font-size: 0.66rem;
+    margin: 0 0 0.4rem;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .about__trust-list {
-    row-gap: 0.3rem;
-    column-gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0.75rem;
+    row-gap: 0.16rem;
   }
 
-  .about__trust-item {
-    font-size: 0.74rem;
-    line-height: 1.28;
+  .about__trust-item,
+  .about__trust-item:first-child,
+  .about__trust-item:last-child {
+    min-width: 0;
+    font-size: 12.5px;
+    line-height: 1.35;
+    font-weight: 600;
     gap: 0.45rem;
   }
 
   .about__trust-item::before {
-    margin-top: 0.28em;
+    margin-top: 0.35em;
     width: 0.38rem;
     height: 0.38rem;
-    flex-basis: 0.38rem;
+    flex: 0 0 0.38rem;
   }
 
   .about__wa {
     grid-column: 1 / -1;
     grid-row: 4;
     display: flex;
-    align-self: stretch;
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    margin: 0;
     margin-inline: 0;
-    margin-top: 0.15rem;
     box-sizing: border-box;
     min-height: 2.45rem;
-    padding: 0.5rem 0.9rem;
-    font-size: 0.8rem;
+    padding: 0.5rem 0.85rem;
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 600;
   }
 }
 
@@ -728,9 +784,11 @@ onBeforeUnmount(() => {
     flex: 0 0 clamp(16.5rem, 22vw, 19.5rem);
     width: clamp(16.5rem, 22vw, 19.5rem);
     max-width: 19.5rem;
-    aspect-ratio: 1600 / 1694;
+    /* Stretch to content column so bottom aligns with WhatsApp CTA */
+    aspect-ratio: auto;
     height: auto;
-    align-self: flex-start;
+    min-height: 0;
+    align-self: stretch;
   }
 
   .about__photo-btn {

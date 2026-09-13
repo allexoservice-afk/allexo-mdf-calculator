@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { MATERIAL_SWITCH_ORDER, normalizeMaterialId, typesForMaterial } from './constants/materialTypes.js'
 import { useOrder } from './composables/useOrder.js'
 import { useLocale } from './i18n/useLocale.js'
@@ -9,7 +9,12 @@ import AboutMe from './components/AboutMe.vue'
 import CalculatorCard from './components/CalculatorCard.vue'
 import OrderFormModal from './components/OrderFormModal.vue'
 import OrderSummary from './components/OrderSummary.vue'
-import { CONTACT_EMAIL, CONTACT_EMAIL_HREF, CONTACT_PHONE_HREF } from './constants/contact.js'
+import {
+  CONTACT_EMAIL,
+  CONTACT_EMAIL_HREF,
+  CONTACT_PHONE_HREF,
+  GOOGLE_REVIEWS_HREF,
+} from './constants/contact.js'
 import PrivacyPolicyModal from './components/PrivacyPolicyModal.vue'
 import { normalizeStoredWindow, normalizeWindowQuantity } from './constants/sizeCategories.js'
 import {
@@ -21,9 +26,11 @@ import {
 import { quoteLineWindowEuros } from './pricing/quoteLineWindow.js'
 import { formatEuroExclVat } from './utils/priceDisplay.js'
 import { isProUnlocked } from './constants/proUnlock.js'
+import { canShowCatalog } from './constants/partnerCatalog.js'
 import { useProManualDiscount } from './composables/useProManualDiscount.js'
 import { PUBLISHED_REVIEWS } from './constants/publishedReviews.js'
 import { trackMetaViewContent } from './services/metaPixel.js'
+import PartnerCatalog from './components/PartnerCatalog.vue'
 
 const { lines, addLine, updateLine, removeLine, clearOrder } = useOrder()
 const { locale, t } = useLocale()
@@ -88,13 +95,17 @@ function onSubmit(payload) {
   const { uiMode, uiIntent, editKey, ...rest } = /** @type {any} */ (payload)
   if (editKey) {
     updateLine(editKey, rest)
-    scrollToSummary()
-    flashSummary()
+    nextTick(() => {
+      scrollToSummary()
+      flashSummary()
+    })
   } else {
     addLine(rest)
     if (uiMode === 'client' && uiIntent !== 'pickType') {
-      scrollToSummary()
-      flashSummary()
+      nextTick(() => {
+        scrollToSummary()
+        flashSummary()
+      })
     }
   }
 }
@@ -129,14 +140,70 @@ function flashSummary() {
 
 const proActive = ref(false)
 const { manualDiscountPct } = useProManualDiscount()
+/**
+ * Pro «сторінки»: null = головна (галерея); reveals = калькулятор;
+ * oak = каталог; windowsDoors / garage / shutters = заглушки послуг.
+ * @type {import('vue').Ref<'reveals' | 'oak' | 'windowsDoors' | 'garage' | 'shutters' | null>}
+ */
+const proNav = ref(null)
+const showCatalog = computed(() => canShowCatalog(proActive.value))
+/** Публічно — завжди; у Pro — лише сторінка «Відкоси». */
+const showCalculator = computed(() => !showCatalog.value || proNav.value === 'reveals')
+/** Головна стрічка Pro / публічна: галерея + about + reviews. */
+const showLanding = computed(() => !showCatalog.value || proNav.value == null)
+const showOakCatalog = computed(() => showCatalog.value && proNav.value === 'oak')
+const showWindowsPage = computed(() => showCatalog.value && proNav.value === 'windowsDoors')
+const showGaragePage = computed(() => showCatalog.value && proNav.value === 'garage')
+const showShuttersPage = computed(() => showCatalog.value && proNav.value === 'shutters')
+
 function syncProActive() {
   proActive.value = isProUnlocked()
+  if (!canShowCatalog(proActive.value)) {
+    proNav.value = null
+  }
+}
+
+function openCatalog() {
+  if (!canShowCatalog(proActive.value)) return
+  proNav.value = 'oak'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function openHome() {
+  proNav.value = null
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function openReveals() {
+  if (!canShowCatalog(proActive.value)) return
+  proNav.value = 'reveals'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  window.setTimeout(() => scrollToCalculator(), 80)
+}
+
+function openWindowsDoors() {
+  if (!canShowCatalog(proActive.value)) return
+  proNav.value = 'windowsDoors'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function openGarage() {
+  if (!canShowCatalog(proActive.value)) return
+  proNav.value = 'garage'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function openShutters() {
+  if (!canShowCatalog(proActive.value)) return
+  proNav.value = 'shutters'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 onMounted(() => {
   syncProActive()
   if (typeof window !== 'undefined') {
     window.addEventListener('allexo-pro-change', syncProActive)
+    window.addEventListener('allexo-open-reveals', openReveals)
     mobileMq = window.matchMedia('(max-width: 768px)')
     syncMobileLayout = () => {
       isMobileLayout.value = mobileMq?.matches ?? false
@@ -149,6 +216,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('allexo-pro-change', syncProActive)
+    window.removeEventListener('allexo-open-reveals', openReveals)
     if (mobileMq && syncMobileLayout) mobileMq.removeEventListener('change', syncMobileLayout)
   }
   if (_flashTimer != null) window.clearTimeout(_flashTimer)
@@ -228,12 +296,19 @@ let mobileMq = null
 /** @type {(() => void) | null} */
 let syncMobileLayout = null
 
+/** Підсумок і sticky — лише коли є хоч одна позиція з розмірами. */
+const hasOrderDimensions = computed(
+  () => Array.isArray(lines.value) && lines.value.length > 0,
+)
+
+const showOrderSummary = computed(() => showCalculator.value && hasOrderDimensions.value)
+
 const showStickyTotal = computed(
-  () => !isMobileLayout.value && Array.isArray(lines.value) && lines.value.length > 0,
+  () => showOrderSummary.value && !isMobileLayout.value,
 )
 
 const showMobileStickyCart = computed(
-  () => isMobileLayout.value && Array.isArray(lines.value) && lines.value.length > 0,
+  () => showOrderSummary.value && isMobileLayout.value,
 )
 
 /** @param {Record<string, unknown>} line */
@@ -259,87 +334,185 @@ const mdfOrderSubtotalEuros = computed(() =>
   <div class="app">
     <header class="header site-header">
       <Hero />
+      <nav
+        v-if="showCatalog"
+        class="pro-nav site-container"
+        :aria-label="t('catalog.aria')"
+      >
+        <button
+          v-if="proNav != null"
+          type="button"
+          class="pro-nav__btn"
+          @click="openHome"
+        >
+          {{ t('catalog.navMain') }}
+        </button>
+        <button
+          type="button"
+          class="pro-nav__btn"
+          :class="{ 'pro-nav__btn--active': proNav === 'reveals' }"
+          @click="openReveals"
+        >
+          {{ t('catalog.navReveals') }}
+        </button>
+        <button
+          type="button"
+          class="pro-nav__btn"
+          :class="{ 'pro-nav__btn--active': proNav === 'oak' }"
+          @click="openCatalog"
+        >
+          {{ t('catalog.navOakDoors') }}
+        </button>
+        <button
+          type="button"
+          class="pro-nav__btn"
+          :class="{ 'pro-nav__btn--active': proNav === 'windowsDoors' }"
+          @click="openWindowsDoors"
+        >
+          {{ t('catalog.navWindowsDoors') }}
+        </button>
+        <button
+          type="button"
+          class="pro-nav__btn"
+          :class="{ 'pro-nav__btn--active': proNav === 'garage' }"
+          @click="openGarage"
+        >
+          {{ t('catalog.navGarage') }}
+        </button>
+        <button
+          type="button"
+          class="pro-nav__btn"
+          :class="{ 'pro-nav__btn--active': proNav === 'shutters' }"
+          @click="openShutters"
+        >
+          {{ t('catalog.navShutters') }}
+        </button>
+      </nav>
     </header>
 
     <main class="main site-container">
-      <WorksGallery />
+      <PartnerCatalog v-if="showOakCatalog" @back="openHome" />
 
-      <AboutMe />
-
-      <section id="calculator" class="calc">
-        <ul class="steps" :aria-label="t('app.stepsAria')">
-          <li class="steps__item">
-            <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
-          </li>
-          <li class="steps__item">
-            <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
-          </li>
-          <li class="steps__item">
-            <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
-          </li>
-        </ul>
-
-        <div
-          class="material-switch"
-          role="tablist"
-          :aria-label="t('material.switchAria')"
-        >
-          <button
-            v-for="code in MATERIAL_SWITCH_ORDER"
-            :key="code"
-            type="button"
-            role="tab"
-            class="material-switch__btn"
-            :class="{ 'material-switch__btn--active': selectedMaterial === code }"
-            :aria-selected="selectedMaterial === code"
-            @click="pickMaterial(code)"
-          >
-            {{ t(`material.${code}`) }}
-          </button>
-          <span
-            class="material-switch__slide"
-            :class="{ 'material-switch__slide--pvc': selectedMaterial === 'pvc' }"
-            aria-hidden="true"
-          />
-        </div>
-
-        <div class="grid">
-          <CalculatorCard
-            v-for="ty in calculatorTypes"
-            :key="ty.id"
-            :type-id="ty.id"
-            :material-id="selectedMaterial"
-            :visual="ty.visual"
-            @select="openForm(ty.id)"
-          />
-        </div>
-
-        <div id="summary" :class="{ 'summary-flash': summaryFlash }">
-          <OrderSummary
-            v-model:quote-open="quoteLeadOpen"
-            :lines="lines"
-            @remove="removeLine"
-            @edit="openEditForm"
-            @clear="clearOrder"
-            @add-another="scrollToCalculator"
-          />
-        </div>
+      <section
+        v-else-if="showWindowsPage"
+        class="pro-page"
+        :aria-label="t('catalog.navWindowsDoors')"
+      >
+        <h1 class="pro-page__title">{{ t('catalog.navWindowsDoors') }}</h1>
+        <p class="pro-page__lead">{{ t('catalog.pageSoon') }}</p>
       </section>
 
-      <section class="reviews" :aria-label="t('reviews.aria')">
-        <div class="reviews__card">
-          <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
-          <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
-            <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
-              <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
-              <blockquote class="reviews__item-quote">
-                {{ reviewQuoteText(rev) }}
-              </blockquote>
-              <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
+      <section
+        v-else-if="showGaragePage"
+        class="pro-page"
+        :aria-label="t('catalog.navGarage')"
+      >
+        <h1 class="pro-page__title">{{ t('catalog.navGarage') }}</h1>
+        <p class="pro-page__lead">{{ t('catalog.pageSoon') }}</p>
+      </section>
+
+      <section
+        v-else-if="showShuttersPage"
+        class="pro-page"
+        :aria-label="t('catalog.navShutters')"
+      >
+        <h1 class="pro-page__title">{{ t('catalog.navShutters') }}</h1>
+        <p class="pro-page__lead">{{ t('catalog.pageSoon') }}</p>
+      </section>
+
+      <template v-else>
+        <template v-if="showLanding">
+          <WorksGallery />
+          <AboutMe />
+        </template>
+
+        <section v-if="showCalculator" id="calculator" class="calc">
+          <ul class="steps" :aria-label="t('app.stepsAria')">
+            <li class="steps__item">
+              <span class="steps__label">{{ t('app.step1Label') }}</span> {{ t('app.step1') }}
+            </li>
+            <li class="steps__item">
+              <span class="steps__label">{{ t('app.step2Label') }}</span> {{ t('app.step2') }}
+            </li>
+            <li class="steps__item">
+              <span class="steps__label">{{ t('app.step3Label') }}</span> {{ t('app.step3') }}
             </li>
           </ul>
-        </div>
-      </section>
+
+          <div
+            class="material-switch"
+            role="tablist"
+            :aria-label="t('material.switchAria')"
+          >
+            <button
+              v-for="code in MATERIAL_SWITCH_ORDER"
+              :key="code"
+              type="button"
+              role="tab"
+              class="material-switch__btn"
+              :class="{ 'material-switch__btn--active': selectedMaterial === code }"
+              :aria-selected="selectedMaterial === code"
+              @click="pickMaterial(code)"
+            >
+              {{ t(`material.${code}`) }}
+            </button>
+            <span
+              class="material-switch__slide"
+              :class="{ 'material-switch__slide--pvc': selectedMaterial === 'pvc' }"
+              aria-hidden="true"
+            />
+          </div>
+
+          <div class="grid">
+            <CalculatorCard
+              v-for="ty in calculatorTypes"
+              :key="ty.id"
+              :type-id="ty.id"
+              :material-id="selectedMaterial"
+              :visual="ty.visual"
+              @select="openForm(ty.id)"
+            />
+          </div>
+
+          <div
+            v-if="showOrderSummary"
+            id="summary"
+            :class="{ 'summary-flash': summaryFlash }"
+          >
+            <OrderSummary
+              v-model:quote-open="quoteLeadOpen"
+              :lines="lines"
+              @remove="removeLine"
+              @edit="openEditForm"
+              @clear="clearOrder"
+              @add-another="scrollToCalculator"
+            />
+          </div>
+        </section>
+
+        <section v-if="showLanding" class="reviews" :aria-label="t('reviews.aria')">
+          <div class="reviews__card">
+            <h2 class="reviews__title">{{ t('reviews.title') }}</h2>
+            <ul v-if="PUBLISHED_REVIEWS.length" class="reviews__list" role="list">
+              <li v-for="rev in PUBLISHED_REVIEWS" :key="rev.id" class="reviews__item">
+                <p class="reviews__item-stars" aria-hidden="true">★★★★★</p>
+                <blockquote class="reviews__item-quote">
+                  {{ reviewQuoteText(rev) }}
+                </blockquote>
+                <p class="reviews__item-meta">{{ rev.author }} · {{ rev.location }}</p>
+              </li>
+            </ul>
+            <a
+              class="reviews__google"
+              :href="GOOGLE_REVIEWS_HREF"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ t('reviews.ctaGoogle') }}
+            </a>
+          </div>
+        </section>
+      </template>
     </main>
 
     <div v-if="showStickyTotal" class="sticky-total" role="region" :aria-label="t('summary.stickyTotalAria')">
@@ -472,13 +645,74 @@ const mdfOrderSubtotalEuros = computed(() =>
   display: none;
 }
 
+.pro-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.55rem 0 0.85rem;
+  background: #383a3a;
+}
+
+.pro-nav__btn {
+  border: 1px solid rgba(228, 179, 76, 0.35);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 0.38rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .pro-nav__btn {
+    font-size: 0.68rem;
+    padding: 0.34rem 0.65rem;
+  }
+}
+
+.pro-nav__btn--active {
+  background: var(--hero-gold, #e4b34c);
+  border-color: var(--hero-gold, #e4b34c);
+  color: #1a2a2a;
+}
+
+.pro-nav__btn:hover {
+  border-color: rgba(228, 179, 76, 0.7);
+}
+
+.pro-page {
+  margin: 1.25rem 0 2.5rem;
+  padding: 1.5rem 1.25rem;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(61, 66, 67, 0.08);
+  box-shadow: 0 8px 24px rgba(26, 25, 23, 0.05);
+}
+
+.pro-page__title {
+  margin: 0 0 0.55rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--allexo-text, #1a2a2a);
+}
+
+.pro-page__lead {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--allexo-muted, #5c6b6b);
+}
+
 @media (max-width: 768px) {
   .app {
     overflow-x: clip;
   }
 
   .reviews {
-    margin: 0 0 var(--section-y);
+    margin: var(--section-y-lg) 0 var(--section-y);
   }
 
   .reviews__card {
@@ -531,7 +765,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 
 @media (min-width: 769px) {
   .reviews {
-    margin: 0 0 var(--section-y-lg);
+    margin: var(--section-y-lg) 0;
   }
 
   .reviews__card {
@@ -762,7 +996,7 @@ const mdfOrderSubtotalEuros = computed(() =>
 }
 
 .reviews {
-  margin: 0 0 var(--section-y-lg);
+  margin: var(--section-y-lg) 0;
 }
 
 .reviews__card {
@@ -818,6 +1052,22 @@ const mdfOrderSubtotalEuros = computed(() =>
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--allexo-muted);
+}
+
+.reviews__google {
+  display: inline-block;
+  margin-top: 0.95rem;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--allexo-olive);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--allexo-accent) 55%, transparent);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.reviews__google:hover {
+  color: var(--allexo-accent);
+  border-bottom-color: var(--allexo-accent);
 }
 
 .sticky-total {

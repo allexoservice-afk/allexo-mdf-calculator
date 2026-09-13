@@ -15,6 +15,10 @@ let tapCount = 0
 let tapTimer = /** @type {number | null} */ (null)
 
 function scrollToCalculator() {
+  if (isProNow.value) {
+    window.dispatchEvent(new CustomEvent('allexo-open-reveals'))
+    return
+  }
   const el = document.getElementById('calculator')
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
